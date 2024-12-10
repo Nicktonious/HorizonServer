@@ -1,0 +1,5 @@
+# строки начинающиеся на # - это комментарии, они не учитываются
+res/nikita/*
+.vscode/*
+*.code-workspace
+node_modules
