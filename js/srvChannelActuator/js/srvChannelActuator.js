@@ -5,9 +5,15 @@ const COM_DM_DEVLIST_SET = 'dm-deviceslist-set';
 const COM_ALL_INIT1 = 'all-init-stage1-set';
 const COM_ALL_CLOSE = 'all-close';
 const COM_DM_NEW_CH = 'dm-new-channel';
+const COM_ALL_ACT_SET = 'all-actuator-set';
+const COM_DATA_FINE_SET     = 'all-data-fine-set';
 
 const STATUS_ACTIVE = 'active';
 const STATUS_INACTIVE = 'inactive';
+const CONST_UNKNOWN = 'unknown';
+
+const COM_ALL_CH_STATUS_GET = 'all-ch-status-get';
+const COM_ALL_CH_STATUS_SET = 'all-ch-status-set';
 
 /**
  * @typedef SensorOptsType 
@@ -68,6 +74,7 @@ class ClassChannelActuator extends ClassBaseService_S {
     #_DeviceIdHash;
     #_Address;
     #_MappingCompleted = false;
+    #_Activated = false;
 
     #_ChangeThreshold;
     #_Tasks = { };
@@ -104,9 +111,9 @@ class ClassChannelActuator extends ClassBaseService_S {
         this.#_Address      = _advOpts.Address;
 
         /****** */
-        this.Setup(_advOpts);
-        // получение имени шины, которая связывает канал с источником
-        this.FillEventOnList('sysBus', [ COM_ALL_INIT1, COM_ALL_CLOSE ]);
+        this.SetupMathChannel(_advOpts);
+        this.FillEventOnList('sysBus', [ COM_ALL_INIT1, COM_ALL_CLOSE]);
+        this.FillEventOnList('dataBus', [ COM_ALL_ACT_SET]);
     }
 
     get DeviceInfo()  { return this.#_DeviceInfo; }
@@ -167,12 +174,14 @@ class ClassChannelActuator extends ClassBaseService_S {
     get DeviceIdHash() { return this.#_DeviceIdHash; }
 
     get Address() { return this.#_Address; }
+
     /**
      * @getter
-     * Возвращает статус службы: active/inactive - служба сопоставлена/не сопоставлена с каналом источника
+     * Возвращает статус службы: active/inactive
+     * active - служба сопоставлена с каналом источника, подключение к источнику есть
      */
     get Status() {
-        return this.SourcesState?.[this.#_SourceName]?.IsConnected && this.#_MappingCompleted ? STATUS_ACTIVE : STATUS_INACTIVE;
+        return (this.SourcesState[this.#_SourceName]?.IsConnected && this.#_MappingCompleted && this.#_Activated) ? STATUS_ACTIVE : STATUS_INACTIVE;
     }
     /**
      * @getter
@@ -200,7 +209,7 @@ class ClassChannelActuator extends ClassBaseService_S {
     HandlerEvents_all_init_stage1_set(_topic, _msg) {
         super.HandlerEvents_all_init_stage1_set(_topic, _msg);
 
-        this.FillEventOnList(this.ProtocolBusName, [ COM_DM_DEVLIST_SET, COM_ALL_DEVINFO_SET ]);
+        this.FillEventOnList(this.ProtocolBusName, [ COM_DM_DEVLIST_SET, COM_ALL_DEVINFO_SET  ]);
         this.EmitEvents_dm_new_channel();
     }
 
@@ -213,8 +222,10 @@ class ClassChannelActuator extends ClassBaseService_S {
 
         const ch_note = `${this.#_DeviceId}-${this.#_ChNum}`; 
         const list_includes_ch = sens_act_lists[this.#_ChType]?.find(_note => _note.includes(ch_note));
-        if (list_includes_ch && source_name === this.SourceName) 
+        if (list_includes_ch && source_name === this.SourceName) {
             this.#_MappingCompleted = true;
+            this.#_Activated = true;
+        }
     }
 
     /**
@@ -234,12 +245,24 @@ class ClassChannelActuator extends ClassBaseService_S {
         }
            
         try {
-            this.#_DeviceInfo = new ClassSensorInfo(device);
+            this.#_DeviceInfo = new ClassActuatorInfo(device);
         } catch (e) {
             this.EmitEvents_logger_log({ level: 'E', msg: 'Failed to create DeviceInfo obj', obj: device });
         }
     }
-
+    /**
+     * @method
+     * @public
+     * @description Вызывает команду изменения состояния актуатора согласно полученной команде 'all-actuator-set'
+     * @param {string} _topic 
+     * @param {*} _msg 
+     */
+    HandlerEvents_all_actuator_set(_topic, _msg) {
+        const [ch_name] = _msg.arg;
+        const [val_input] = _msg.value;
+        if (ch_name === this.Name && typeof val_input === 'number') 
+            this.SetValue(val_input);
+    }
     /**
      * @typedef TransformOpts
      * @property {number} k
@@ -275,7 +298,7 @@ class ClassChannelActuator extends ClassBaseService_S {
      * @description Конфигурирует обработку данных на канале 
      * @param {ChConfigOpts} _config 
      */
-    Setup(_config={}) {
+    SetupMathChannel(_config={}) {
         this.#_Transform   = new ClassTransform(_config.transform);
         this.#_Suppression = new ClassSuppression(_config.suppression);
         this.#_Alarms = null;
@@ -310,6 +333,54 @@ class ClassChannelActuator extends ClassBaseService_S {
         return this._Actuator.InitTasks(this._ChNum);
     }
 
+    /**
+     * @method
+     * @public
+     * @description Обрабатывает событие об отключении источника: проверяет не относится ли данный канал к нему
+     * @returns 
+     */
+    HandlerEvents_all_source_disconnected(_topic, _msg) {
+        let [ source_name ] = _msg.arg;
+        if (source_name == this.SourceName)
+            this.EmitEvents_all_ch_status_get();
+    }
+
+    /**
+     * @method
+     * @public
+     * @description Обрабатывает событие об отключении источника: проверяет не относится ли канал к нему
+     * @returns 
+     */
+    HandlerEvents_all_ch_status_set(_topic, _msg) {
+        let [ source_name ] = _msg.arg;
+        let [ status ] = _msg.value;
+        if (source_name == this.SourceName) {
+            this.#_Activated = status.toLowerCase() == STATUS_ACTIVE;
+            this.EmitEvents_all_ch_status_get();
+        }
+    }
+
+    /**
+     * @method
+     * @public
+     * @description Отправляет сообщение о деактивации канала
+     * @returns 
+     */
+    EmitEvents_all_ch_status_get() {
+        const msg = {
+            dest: 'all',
+            com: COM_ALL_CH_STATUS_GET,
+            arg: [this.Name],
+            value: [this.Status]
+        }
+        this.EmitMsg('dataBus', msg.com, msg);
+    }
+    
+    /**
+     * @method
+     * @public
+     * @description Отправляет на шину сообщение о своей инициализации
+     */
     EmitEvents_dm_new_channel() {
         const msg = {
             dest: 'dm',
@@ -364,7 +435,28 @@ class ClassChannelActuator extends ClassBaseService_S {
             }]
         }
         
-        this.EmitMsg(bus_name, com_send, msg);
+        this.EmitMsg(this.ProtocolBusName, com_send, msg);
+    }
+    /**
+     * @method
+     * @public
+     * @description Отправляет на dataBus сообщение со значением канала
+     */
+    EmitEvents_all_data_fine_set({ value }) {
+        const msg = {
+            dest: 'all',
+            com: COM_DATA_FINE_SET,
+            arg: [this.Name],
+            value: [{
+                Name: this.Name,
+                Value: value[0],
+                ChName: this.ChName,
+                ChAlias: this.ChAlias,
+                ChMeas: this.ChMeas,
+                CurrZone: this.Alarms?.CurrZone
+            }]
+        }
+        this.EmitMsg('dataBus', msg.com, msg);
     }
     /**
      * @method
@@ -372,11 +464,14 @@ class ClassChannelActuator extends ClassBaseService_S {
      * @param {Number} _freq
      * @returns {Boolean} 
      */
-    On(_val, _opts) {
+    SetValue(_val, _opts) {
+        if (this.Status != STATUS_ACTIVE) return;
+
         let val = this.#_Suppression.SuppressValue(_val);
         val = this.#_Transform.TransformValue(val);
 
         if (this.#_Alarms) this.#_Alarms.CheckZone(val);
+        this.EmitEvents_all_data_fine_set({ value: [ val ]});
 
         this.EmitEvents_proxy_send({ value: [ val ] })
     }
