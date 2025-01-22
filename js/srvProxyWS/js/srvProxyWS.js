@@ -77,20 +77,25 @@ class ClassProxyWSClient_S extends ClassBaseService_S {
     HandlerEvents_proxywsclient_msg_get(_topic, _msg) {
         // извлечение "ядра" сообщения, составленного службой контроллера
         // LHP.Unpack
-        const msg_from_plc = JSON.parse(_msg.value[0] ?? '');
-        const [ source_name ] = _msg.arg;
-        const hash = this.#GetMsgHash(msg_from_plc.com, source_name);
-        const msg = { 
-            dest: msg_from_plc.com.split('-')[0],
-            hash,
-            com: msg_from_plc.com,
-            arg: _msg.arg,      // arg = [sourceName] | sourceName извлекается из arg
-            value: [msg_from_plc]
-        };      
-        this.EmitMsg(LHP_BUS, msg_from_plc.com, msg);
+        try {
+            const msg_from_plc = JSON.parse(_msg.value[0] ?? '');
+            const [ source_name ] = _msg.arg;
+            const hash = this.#GetMsgHash(msg_from_plc.com, source_name);
+            const msg = { 
+                dest: msg_from_plc.com.split('-')[0],
+                hash,
+                com: msg_from_plc.com,
+                arg: _msg.arg,      // arg = [sourceName] | sourceName извлекается из arg
+                value: [msg_from_plc]
+            };      
+            this.EmitMsg(LHP_BUS, msg_from_plc.com, msg);
+        } catch (e) {
+            this.EmitEvents_logger_log({ msg: `Error while processing msg from wsclient`, lvl: 'E', obj: _msg });
+        }
     }
     /**
-     * 
+     * @method
+     * @description Обрабатывает запрос на получение списка каналов источника.
      * @param {string} _topic 
      * @param {*} _msg 
      */
@@ -109,6 +114,12 @@ class ClassProxyWSClient_S extends ClassBaseService_S {
         this.EmitEvents_wsclient_send(msg);
     }
 
+    /**
+     * @method
+     * @description Отправляет на PLC команду 'dm-sub-sensorall'
+     * @param {string} _topic 
+     * @param {*} _msg 
+     */
     HandlerEvents_proxywsclient_sub_sensorall(_topic, _msg) {
         const msg = { 
             arg: _msg.arg,  
@@ -183,6 +194,7 @@ class ClassProxyWSClient_S extends ClassBaseService_S {
     }
     /**
      * @method
+     * @description Возвращает true если команда поступила от службы-актуатора
      * @param {*} _msg 
      * @returns {Boolean}
      */
@@ -191,6 +203,12 @@ class ClassProxyWSClient_S extends ClassBaseService_S {
         return this.ServicesState[service_name]?.Service?.ChType === 'actuator';
     }
 
+    /**
+     * @method
+     * @description Возвращает сообщение, которое будет отправлено на PLC через wsclient
+     * @param {*} _msg 
+     * @returns 
+     */
     #GetPLCMsg(_msg) {
         /*
          * сообщение от службы-актуатора
