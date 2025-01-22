@@ -1,18 +1,27 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./srvService');
 
-const COM_DM_DEVLIST_GET        = 'dm-deviceslist-get';
-const COM_PMQTTC_DEVLIST_GET    = 'proxymqttclient-deviceslist-get';
-const COM_MQTTC_SEND            = 'mqttclient-send';
-const COM_ALL_DATA_RAW_GET      = 'all-data-raw-get';
+const COM_DM_DEVLIST_SET     = 'dm-deviceslist-set';
+const COM_PMQTTC_DEVLIST_GET = 'proxymqttclient-deviceslist-get';
+const COM_SUB_SENSALL      = 'proxymqttclient-sub-sensorall';
+const COM_PMQTTC_SEND      = 'proxymqttclient-send';
+const COM_PMQTTC_MSG_GET   = 'proxymqttclient-msg-get';
+const COM_MQTTC_SEND       = 'mqttclient-send';
+const COM_ALL_DATA_RAW_GET = 'all-data-raw-get';
 
 const BUS_NAME_LIST = ['sysBus', 'mqttBus', 'logBus'];
-const EVENT_ON_LIST_MQTTBUS = ['proxymqttclient-send', 'proxymqttclient-msg-get'];
+const EVENT_ON_LIST_MQTTBUS = [COM_PMQTTC_DEVLIST_GET, COM_SUB_SENSALL, COM_PMQTTC_SEND, COM_PMQTTC_MSG_GET];
 
-const DEBUG_SRC_NAME = 'brokerhubc445';
-const DUBUG_DEVLIST = { 
-    sensor: ['7d60-42b3-19b7-03db-00-0'],
-    actuator: ['8654-61b3-1ede-51ac-01-0']
-}   
+const channels_dummy = require('./Channels');
+const get_devlist = (_sourceName) => {
+    let list = { sensor: [], actuator: [] }
+    channels_dummy
+        .filter(_ch => _ch.ChStatus == 'active' && _ch.SourceName == _sourceName)
+        .forEach(_ch => {
+            let ch_note = `${_ch.DeviceIdHash}-${_ch.DeviceId}-${_ch.ChNum}`;
+            list[_ch.ChType].push(ch_note);
+        });
+    return list;
+};
 
 class ClassProxyMQTTClient_S extends ClassBaseService_S {
     #_SensSubList = { };
@@ -41,8 +50,9 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
     HandlerEvents_proxymqttclient_send(_topic, _msg) {
         const [ source_name ] = _msg.arg;
         const { source }    = _msg.metadata;
-        const [ payload ]   = _msg.value;
-        const topic_name = this.#_SensSubList[source_name]?.find(_obj => _obj.name === source);
+        const [ value ]   = _msg.value;
+        const [ payload ] = value.value;
+        const topic_name = this.#_SensSubList[source_name]?.find(_obj => _obj.name === source).address;
         
         const msg_is_valid = typeof topic_name === 'string' && payload;
         if (msg_is_valid) {  
@@ -72,15 +82,22 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
      */
     HandlerEvents_proxymqttclient_sub_sensorall(_topic, _msg) {
         const [ source_name ] = _msg.arg;
-        // [ { name, address }, ... ]
-        const [ ch_list ] = _msg.value;
-        ch_list.forEach(_mappingObj => {
+        /* ch_list = { sensor: [{ name, address }, ...], actuator: { ... } ] */
+        const [ { sensor=[], actuator=[] } ] = _msg.value;
+        const aggr_ch_map_list = [...sensor, ...actuator];
+        const topic_list = [];
+        aggr_ch_map_list.forEach(_mappingObj => {
             this.#_SensSubList[source_name] ??= []; 
             this.#_SensSubList[source_name].push(_mappingObj);
+            topic_list.push(_mappingObj.address);
         });
-        const topic_list = ch_list?.map(_obj => _obj.address);
-        if (Array.isArray(topic_list) && topic_list.length)
-            this.EmitEvents_mqttclient_sub({ arg: _msg.arg, value: topic_list })
+        if (topic_list.length) {
+            this.EmitEvents_logger_log({ msg: `Channels mapping with MQTT addresses: ${aggr_ch_map_list}`, level: 'I', obj: aggr_ch_map_list});
+            // подписка на адреса каналов-сенсоров 
+            this.EmitEvents_mqttclient_sub({ arg: _msg.arg, value: sensor.map(_s => _s.address) });
+        } else {
+            this.EmitEvents_logger_log({ msg: `No MQTT address or channel to complete mapping`, level: 'I', obj: aggr_ch_map_list}); 
+        }
     }
     /**
      * @method
@@ -135,12 +152,12 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
         const msg = {
             dest: 'dm',
             hash,
-            com: COM_DM_DEVLIST_GET,
+            com: COM_DM_DEVLIST_SET,
             arg,
             value: [{
                 dest: 'dm',
-                com: COM_DM_DEVLIST_GET,
-                value: [ DUBUG_DEVLIST ]
+                com: COM_DM_DEVLIST_SET,
+                value: [ get_devlist(arg[0]) ]
             }]
         }
         this.EmitMsg('mqttBus', msg.com, msg);
