@@ -188,7 +188,7 @@ class ClassDeviceManager_S extends ClassBaseService_S {
     /**
      * @method
      * @public
-     * @description Отправляет по sysBus сообщение о томЯ, что все службы-каналы  
+     * @description Отправляет по sysBus сообщение о том, что все службы-каналы установили статус 'active' 
      */
     EmitEvents_process_channels_ready() {
         const msg = {
@@ -246,28 +246,7 @@ class ClassDeviceManager_S extends ClassBaseService_S {
     EmitEvents_sub_sensorall({ dest, arg }) {
         const [ source_name ] = arg;
         const ch_service_list = this.#_Channels.filter(_ch => _ch.SourceName === source_name);
-
         const { PrimaryBus: protocol_bus_name, Protocol: protocol } = this.ServicesState[dest];
-        /*
-        if (protocol === 'lhp') {
-            const lhp_msg = {
-                dest: 'dm',
-                com: 'dm-sub-sensorall',
-                arg: [ch_service_list.filter(_ch => _ch.ChType === 'sensor').map(_ch => _ch.NamePLC)]
-            }
-            this.EmitEvents_proxywsclient_send({ arg, value: [lhp_msg] });
-        } else {
-            const msg = {
-                dest,
-                com: `${dest}-sub-sensorall`,
-                arg,
-                value: [ch_service_list
-                    .filter(_ch => _ch.ChType === 'sensor')
-                    .map(_ch => ({ name: _ch.Name, address: _ch.Address }))
-                ]
-            }
-            this.EmitMsg(protocol_bus_name, msg.com, msg);
-        }*/
         // Массивы типа [{ name, address}, ...] для каналов сенсоров и актуторов
         const sensor = ch_service_list
             .filter(_ch => _ch.ChType === 'sensor')
