@@ -221,7 +221,8 @@ class ClassRpiClient_S extends ClassBaseService_S {
             .then(_res => parseFloat(_res));
     }
     /**
-     * 
+     * @method
+     * @description Выполняет скрипт через exec и возвращает результат в промисе.
      * @param {string} _command 
      * @returns {Promise}
      */

@@ -20,6 +20,13 @@
 
 ### События
 - 'proxyrpiclient-msg-get' — отправка сообщения с собранными данными на прокси-сервис для дальнейшей обработки.
+```js
+{
+    com: 'proxyrpiclient-msg-get',
+    arg: [hostname],
+    value: [ { arg: [ch_id], value: [_val] } ]
+}
+```
 
 ### Поля
 <div style="color: #555">
