@@ -13,6 +13,9 @@ const COM_PMDB_DEV_CONF_GET = 'providermdb-device-config-get';
 const COM_CH_ALARM = 'all-ch-alarm';
 const COM_ALL_INIT1 = 'all-init-stage1-set';
 
+const COM_ALL_CH_STATUS_GET = 'all-ch-status-get';
+const COM_ALL_CH_STATUS_SET = 'all-ch-status-set';
+
 // ### ПРОЧЕЕ
 const DEV_CONF_GET_TIMEOUT = 500;
 
@@ -99,7 +102,8 @@ class ClassChannelSensor extends ClassBaseService_S {
         }
     };
     #_Value;
-    #_MappingCompleted;
+    #_MappingCompleted = false;
+    #_Activated = false;
     
     #_ChType;
     #_ChAlias;
@@ -153,14 +157,16 @@ class ClassChannelSensor extends ClassBaseService_S {
         this.#_Address      = _advOpts.Address;
         this.#_ChangeThreshold = 1;
         // флаги
+        this._Bypass = false;
         this._DataUpdated = false;
         this._DataWasRead = false;
         this._TimeStamp;
         // настройка функций мат.обработки
-        this.Setup(_advOpts);
+        this.SetupMathChannel(_advOpts);
         this.EnableAlarms();
         // подписка на init
         this.FillEventOnList('sysBus', [ COM_ALL_INIT1 ]);
+        this.FillEventOnList('dataBus', [ COM_ALL_CH_STATUS_SET ]);
     }
 
     get DeviceInfo() { return this.#_DeviceInfo; }
@@ -224,10 +230,11 @@ class ClassChannelSensor extends ClassBaseService_S {
 
     /**
      * @getter
-     * Возвращает статус измерительного канала: 0 - не опрашивается, 1 - опрашивается, 2 - в переходном процессе
+     * Возвращает статус службы: active/inactive
+     * active - служба сопоставлена с каналом источника, подключение к источнику есть
      */
     get Status() {
-        return (this.SourcesState[this.#_SourceName]?.IsConnected && this.#_MappingCompleted) ? STATUS_ACTIVE : STATUS_INACTIVE;
+        return (this.SourcesState[this.#_SourceName]?.IsConnected && this.#_MappingCompleted && this.#_Activated) ? STATUS_ACTIVE : STATUS_INACTIVE;
     }
 
     /**
@@ -243,10 +250,10 @@ class ClassChannelSensor extends ClassBaseService_S {
      * Возвращает значение канала, хранящееся в основном объекте
      */
     get Value() { // вых значение канала
-        if (!this.Status) return undefined;
+        if (this.Status != STATUS_ACTIVE) return undefined;
 
         this._DataUpdated = false;
-        if (this._DataWasRead) return this.#_Value;
+        if (this._DataWasRead || this._Bypass) return this.#_Value;
 
         this.#_Value = this.#_Filter.FilterArray(this.#_ValueBuffer._arr);
         this._DataWasRead = true;
@@ -260,8 +267,14 @@ class ClassChannelSensor extends ClassBaseService_S {
      * @param {Number} _val 
      */
     set Value(_val) {
-        console.log(`${this.Name}.Value = ${_val}`);
+        // вкл. Bypass если поступило не число
+        if (_val && typeof _val != 'number') this._Bypass = true;
+        if (this._Bypass) {
+            this.#_Value = _val;
+            return;
+        }
         let val = this.#_Suppression.SuppressValue(_val);
+        this._ValueSuppressed = val == _val;
         val = this.#_Transform.TransformValue(val);
         this.#_ValueBuffer.push(val);
 
@@ -279,7 +292,7 @@ class ClassChannelSensor extends ClassBaseService_S {
      * Сеттер который устанавливает вместимость кольцевого буфера
      * @param {Number} _cap 
     */
-    set AvgCapacity(_cap) {
+    set BufferSize(_cap) {
         if (_cap > 1)
             this.#_ValueBuffer._depth = _cap;
     }
@@ -320,7 +333,7 @@ class ClassChannelSensor extends ClassBaseService_S {
      * @property {TransformOpts} transform
      * @property {SuppressionOpts} suppression
      * @property {ZoneOpts} zones
-     * @property {number} avgCapacity
+     * @property {number} bufferSize
      */
     /**
      * @method
@@ -328,7 +341,7 @@ class ClassChannelSensor extends ClassBaseService_S {
      * @description Конфигурирует обработку данных на канале 
      * @param {ChConfigOpts} _advOpts 
      */
-    Setup(_advOpts = {}) {
+    SetupMathChannel(_advOpts = {}) {
         this.#_Transform = new ClassTransform(_advOpts.transform);
         this.#_Suppression = new ClassSuppression(_advOpts.suppression);
         this.#_Filter = new ClassFilter();
@@ -337,7 +350,7 @@ class ClassChannelSensor extends ClassBaseService_S {
             this.EnableAlarms();
             this.#_Alarms.SetZones(_advOpts.zones);
         }
-        this.AvgCapacity = _advOpts.avgCapacity ?? 1;
+        this.BufferSize = _advOpts.bufferSize ?? 1;
     }
 
     /**
@@ -353,14 +366,14 @@ class ClassChannelSensor extends ClassBaseService_S {
             value: [{
                 Name: this.Name,
                 Value: this.Value,
+                ValueSuppressed: this._ValueSuppressed,
                 ChName: this.ChName,
                 ChAlias: this.ChAlias,
                 ChMeas: this.ChMeas,
                 CurrZone: this.Alarms?.CurrZone
             }]
         }
-        if(!this.EmitMsg('dataBus', msg.com, msg))
-            this.EmitEvents_logger_log({ msg: 'couldnt emit', level: 'E' });
+        this.EmitMsg('dataBus', msg.com, msg);
     }
     /**
      * @method
@@ -395,6 +408,7 @@ class ClassChannelSensor extends ClassBaseService_S {
             const [ source_name ] = _msg.arg;
             const [ ch_name ] = _msg.value[0].arg;
             // ВНИМАНИЕ: от lhp-источников ch_name придет в формате <device_id>-<ch_num> а не <source_name>-<device_id>-<ch_num>
+            // console.log(`(${ch_name} === ${this.NamePLC} || ${ch_name} === ${this.Name}) && ${source_name} === ${this.#_SourceName})`);
             if ((ch_name === this.NamePLC || ch_name === this.Name) && source_name === this.#_SourceName)
                 this.Value = _msg.value[0]?.value[0];
         } catch (e) {
@@ -415,8 +429,10 @@ class ClassChannelSensor extends ClassBaseService_S {
         const [ source_name ] = _msg.arg;
         // ChType - всегда ключ 'sensor' | 'actuator'
         const list_includes_ch = sens_act_lists[this.#_ChType]?.find(_note => _note === this.Name || _note === this.NamePLC);
-        if (list_includes_ch && source_name === this.SourceName) 
+        if (list_includes_ch && source_name === this.SourceName) {
             this.#_MappingCompleted = true;
+            this.#_Activated = true;
+        }
     }
 
     /**
@@ -445,6 +461,49 @@ class ClassChannelSensor extends ClassBaseService_S {
     /**
      * @method
      * @public
+     * @description Обрабатывает событие об отключении источника: проверяет не относится ли данный канал к нему
+     * @returns 
+     */
+    HandlerEvents_all_source_disconnected(_topic, _msg) {
+        let [ source_name ] = _msg.arg;
+        if (source_name == this.SourceName)
+            this.EmitEvents_all_ch_status_get();
+    }
+
+    /**
+     * @method
+     * @public
+     * @description Обрабатывает событие об отключении источника: проверяет не относится ли канал к нему
+     * @returns 
+     */
+    HandlerEvents_all_ch_status_set(_topic, _msg) {
+        let [ source_name ] = _msg.arg;
+        let [ status ] = _msg.value;
+        if (source_name == this.SourceName) {
+            this.#_Activated = status.toLowerCase() == STATUS_ACTIVE;
+            this.EmitEvents_all_ch_status_get();
+        }
+    }
+
+    /**
+     * @method
+     * @public
+     * @description Отправляет сообщение о деактивации канала
+     * @returns 
+     */
+    EmitEvents_all_ch_status_get() {
+        const msg = {
+            dest: 'all',
+            com: COM_ALL_CH_STATUS_GET,
+            arg: [this.Name],
+            value: [this.Status]
+        }
+        this.EmitMsg('dataBus', msg.com, msg);
+    }
+
+    /**
+     * @method
+     * @public
      * @description Отправляет запрос на получение данных об устройствах
      * @returns 
      */
@@ -457,6 +516,11 @@ class ClassChannelSensor extends ClassBaseService_S {
         this.EmitMsg('mdbBus', msg.com, msg, { timeout: DEV_CONF_GET_TIMEOUT });
     }
 
+    /**
+     * @method
+     * @public
+     * @description Отправляет на шину сообщение о своей инициализации
+     */
     EmitEvents_dm_new_channel() {
         const msg = {
             dest: 'dm',
