@@ -18,10 +18,16 @@
 ### Поля
 <div style="color: #555">
 
+- #_Value - последнее значение, заданное актуатору;
+- #_ChType - тип, всегда 'actuator'
+- #_ChAlias - второе имя канала; 
+- #_ChMeas - единица измерения;
 - #_SourceBus — шина, связывающая канал с источником данных;
 - #_MappingCompleted — статус канала (не опрашивается, опрашивается и т.д.);
-- #_SourceId — идентификатор источника;
+- #_SourceName — идентификатор источника;
 - #_DeviceId — идентификатор устройства;
+- #_DeviceIdHash - уникальный хэш, идентифицирующий модель актуатора;
+- #_Address - топик, ассоциированный с каналом;
 - #_ChNum — номер канала (начиная с 0);
 - #_ChangeThreshold — порог изменения для значений канала;
 - #_Tasks — объект для хранения задач актуатора;
@@ -53,12 +59,76 @@
 
 </div>
 
+### Подписки
+
+- 'all-device-config-set' - сообщение с информацией о физическом актуаторе;
+- 'dm-deviceslist-set' - сообщение со списком каналов подключенного источника;
+- 'all-init-stage1-set' - этап инициализации системы;
+- 'all-actuator-set' - команда на изменение значения канала;
+```js
+{
+    com: 'all-actuator-set',
+    arg: [ch_name]
+    value: [x]
+}
+```
+- 'all-ch-status-set' - команда на активацию/деактивацию канала;
+```js
+{
+    com: 'all-ch-status-set',
+    arg: [ch_name],
+    value: [status]     //'active'/'inactive'
+}
+```
+
+### События
+- 'all-ch-status-get' - сообщение с актуальным статусом канала;
+```js
+{
+    com: 'all-ch-status-get',
+    arg: [ch_name],
+    value: [ch_status]  // 'active'/'inactive'
+}
+```
+- 'dm-new-channel' - сообщение об инициализации:
+```js
+{
+    com: 'dm-new-channel',
+    arg: [ch_name],
+    value: [this]   // ссылка на объект канала
+}
+```
+```js
+{
+    com: 'proxy${name}-send',
+    arg: [source_name],
+    value: [{
+        arg: [ch_name], 
+        value: x
+    }]
+}
+```
+- all_data_fine_set' - Отправляет на dataBus сообщение со значением канала;
+```js
+{
+    dest: 'all',
+    com: 'all-data-fine-set',
+    arg: [ch_name],
+    value: [{
+        Name
+        Value
+        ChName
+        ChAlias
+        ChMeas
+        CurrZone
+    }]
+}
+```
+
 ### Методы
 <div style="color: #555">
 
-- On(_val, _opts) - Запускает работу актуатора с заданным значением и опциями;
-  
-- Off(_opts) - Прекращает работу канала актуатора.
+- SetValue(_val, _opts) - отправляет на транспортную шину команду с указанным значением канала;
 
 </div>
 
