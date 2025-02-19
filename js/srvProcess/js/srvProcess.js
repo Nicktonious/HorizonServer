@@ -146,7 +146,7 @@ class ClassProcessSrv extends ClassBaseService_S {
                     this.#_ServicesState[servName].Service = this;
                 }
                 else
-                    this.#_ServicesState[servName].Service = new SYSREQ_LIST[servName]({_busList: this.#_GBusList, _node: this.#_Node},{port: 5142, console: true});
+                    this.#_ServicesState[servName].Service = new SYSREQ_LIST[servName]({_busList: this.#_GBusList, _node: this.#_Node},{port: 5142, console: false});
             }
             catch (e) {
                 sysservice.ErrorMsg = e.toString();
@@ -394,6 +394,9 @@ class ClassProcessSrv extends ClassBaseService_S {
                     this.EmitEvents_logger_log({level: 'E', msg: 'Uninitialized primary services!', obj: {names: errList}});
                 }
                 this.EmitEvents_logger_log({level: 'I', msg: 'System startup finished!', obj: {services: srvList}});
+                /* debugstart */
+                console.log("System startup finished!");
+                /* debugend */
             }, PROCESS_CHECK_TIMEOUT);
         }, PROCESS_BUS_TIMEOUT);
     }

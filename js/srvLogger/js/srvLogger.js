@@ -12,7 +12,6 @@ const BUS_NAMES_LIST = ['sysBus', 'logBus', 'mdbBus', 'dataBus'];
  */
 class ClassLogger extends ClassBaseService_S {
     #_WriteToConsole;
-    #_SourcesState;
     /**
      * @constructor
      * @description
@@ -43,11 +42,6 @@ class ClassLogger extends ClassBaseService_S {
 
         this.EmitEvents_logger_log({level: 'INFO', msg: 'Logger initialized.', obj: this._gl.config});
     }
-    /*async HandlerEvents_all_init1(_topic, _msg) {
-        super.HandlerEvents_all_init1(_topic, _msg);
-        const { SourcesState } = _msg.arg[0];
-        this.#_SourcesState = SourcesState;
-    }*/
     set _WriteToConsole (opt) {
         if (typeof opt === 'boolean') {
             this.#_WriteToConsole = opt;
@@ -76,10 +70,6 @@ class ClassLogger extends ClassBaseService_S {
 
         return datetime;
     }
-    Capitalize(_str) {
-        const str = _str.toLowerCase();
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    }
     /**
      * @method
      * @description
@@ -89,8 +79,8 @@ class ClassLogger extends ClassBaseService_S {
     HandlerEvents_logger_log(_topic, _msg) {
         let flevel = -1;
         let fdesc = 'Unknown';
-        const logdesc = ['Critical', 'Error', 'Warning', 'Notice', 'Info', 'Debug'];
-        const level = logdesc.indexOf(logdesc.find((lvl) => lvl.startsWith(this.Capitalize(_msg.arg[0]))));
+        const logdesc = ['CRITICAL', 'ERROR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG'];
+        const level = logdesc.indexOf(logdesc.find((lvl) => lvl.startsWith(_msg.arg[0].toUpperCase())));
         if (level != -1) {
             fdesc = logdesc[level];
             flevel = level+2;
@@ -104,7 +94,7 @@ class ClassLogger extends ClassBaseService_S {
             this._gl._log(`${msg}`, obj, {level_desc: fdesc, service: source, service_bus: 'logBus'}, 0.0, flevel);
         }
         else {
-            this._us._log(`${msg}`, obj, {level_desc: fdesc, service: source, service_bus: 'logBus'}, 0.0, flevel);
+            this._us._log(`${msg}`, obj.obj || {}, {level_desc: fdesc, service: source, service_bus: 'logBus', node: obj.node, flow: obj.flow}, 0.0, flevel);
         }
         if (this.#_WriteToConsole) {
             const meta = `${this.GetSystemTime()} [${source}.${'logBus'}] -> ${fdesc} | ${msg}`;
