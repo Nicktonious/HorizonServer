@@ -145,7 +145,7 @@ class ClassProxyWSClient_S extends ClassBaseService_S {
             value,
             arg
         });
-        this.EmitEvents_logger_log({ msg: `proxywsc send msg to wsclient`, lvl: 'I', obj: msg });
+        this.EmitEvents_logger_log({ msg: `proxywsclient send msg to wsclient`, lvl: 'I', obj: msg });
         return this.EmitMsg(LHP_BUS, COM_WSC_SEND, msg);         
     }
     /**
