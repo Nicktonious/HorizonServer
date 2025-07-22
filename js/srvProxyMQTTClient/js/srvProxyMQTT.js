@@ -23,6 +23,20 @@ const get_devlist = (_sourceName) => {
     return list;
 };
 
+/**
+ * @typedef MappingListDevice
+ * @description Запись об одном канале: его name и address 
+ * @property {string} name
+ * @property {string} address
+ */
+/**
+ * @typedef MappingList
+ * @description Маппинг-таблица для сопоставления топика (address) с именем канала сенсора/актуатора (name) 
+ * @property {[MappingListDevice]} sensor 
+ * @property {[MappingListDevice]} actuator
+ */
+
+
 class ClassProxyMQTTClient_S extends ClassBaseService_S {
     #_SensSubList = { };
     constructor({ _busList, _node }) {
@@ -49,7 +63,7 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
      */
     HandlerEvents_proxymqttclient_send(_topic, _msg) {
         const [ source_name ] = _msg.arg;
-        const { source }    = _msg.metadata;
+        const { source }  = _msg.metadata;
         const [ value ]   = _msg.value;
         const [ payload ] = value.value;
         const topic_name = this.#_SensSubList[source_name]?.find(_obj => _obj.name === source).address;
