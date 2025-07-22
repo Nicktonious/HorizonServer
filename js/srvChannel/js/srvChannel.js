@@ -130,7 +130,8 @@ class ClassBaseChannel_S extends ClassBaseService_S {
         this.#_Address    = _advOpts.Address;
         this.#_DeviceIdHash = _advOpts.DeviceIdHash;
         // свойства для работы
-        this.#_ValueType = _advOpts.ValueType ?? VALUE_TYPE_NUMBER;
+        this.#_ValueType = [VALUE_TYPE_NUMBER, VALUE_TYPE_STRING].includes(_advOpts.ValueType) 
+                         ? _advOpts.ValueType : VALUE_TYPE_NUMBER;
         this.#_ValueKey  = _advOpts.ValueKey;
         // описание
         this.#_ChType = _advOpts.ChType;
