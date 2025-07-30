@@ -148,14 +148,17 @@ class ClassChannelSensor extends ClassChannel_S {
         if (this.Status != STATUS_ACTIVE) return;
         // пропустить если поступило не число
         if (this.ValueType == VALUE_TYPE_NUMBER && typeof _val != 'number') return;
+        
+        let val = this.ValueType == VALUE_TYPE_NUMBER ? +_val : _val;
 
         if (this._Bypass || this.ValueType == VALUE_TYPE_STRING) {
-            this.#_Value = _val;
+            this.#_Value = val;
             this._DataUpdated = true;
             this._DataWasRead = false;
             return;
         }
-        let val = this.Suppression.SuppressValue(_val);
+        
+        val = this.Suppression.SuppressValue(_val);
         this._ValueSuppressed = val == _val;
         val = this.Transform.TransformValue(val);
         this.Buffer.push(val);
