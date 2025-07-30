@@ -146,6 +146,7 @@ class ClassChannelActuator extends ClassChannel_S {
             this.SetValue(val_input);
     }
     
+    
     /**
      * @method
      * @public
