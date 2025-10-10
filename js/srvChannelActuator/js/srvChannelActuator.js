@@ -7,6 +7,7 @@ const COM_ALL_CLOSE = 'all-close';
 const COM_DM_NEW_CH = 'dm-new-channel';
 const COM_ALL_ACT_SET = 'all-actuator-set';
 const COM_DATA_FINE_SET     = 'all-data-fine-set';
+const COM_ALL_DATA_RAW_GET = 'all-data-raw-get';
 
 const STATUS_ACTIVE = 'active';
 const STATUS_INACTIVE = 'inactive';
@@ -30,7 +31,7 @@ const VALUE_TYPE_STRING = 'string';
  */
 // DEBUG
 // const ClassChannel_S = require('../../srvChannel/js/srvChannel');
-const ClassChannel_S = require('srvChannel');
+const ClassChannel_S = require('./srvChannel');
 /**
  * @class 
  * Самый "старший" предок в иерархии классов актуаторов. 
@@ -69,6 +70,7 @@ class ClassActuatorInfo {
  */
 class ClassChannelActuator extends ClassChannel_S {
     #_Value;
+    #_ValueConfirm;
     /**
     * @typedef TypeServiceOpts
     * @property {[ClassBus_S]} _busList
@@ -84,9 +86,14 @@ class ClassChannelActuator extends ClassChannel_S {
         // const service_name = `${_advOpts.SourceName}-${_advOpts.DeviceId}-${_advOpts.ChNum}`;
         // const service_name = _advOpts.Name;
         super({ _busNameList, _busList, _advOpts });
+        this.#_ValueConfirm = _advOpts.ValueConfirm ?? false;
         /****** */
         this.SetupMathChannel(_advOpts);
         this.FillEventOnList('dataBus', [ COM_ALL_ACT_SET]);
+    }
+
+    get Value() { 
+        return this.#_Value;
     }
 
     /**
@@ -99,7 +106,8 @@ class ClassChannelActuator extends ClassChannel_S {
     HandlerEvents_all_init_stage1_set(_topic, _msg) {
         super.HandlerEvents_all_init_stage1_set(_topic, _msg);
 
-        this.FillEventOnList(this.ProtocolBusName, [ COM_DM_DEVLIST_SET ]);
+        this.FillEventOnList(this.ProtocolBusName, 
+            this.#_ValueConfirm ? [ COM_DM_DEVLIST_SET, COM_ALL_DATA_RAW_GET ] : [ COM_DM_DEVLIST_SET ] );
         this.EmitEvents_dm_new_channel();
     }
 
@@ -110,7 +118,8 @@ class ClassChannelActuator extends ClassChannel_S {
      * @returns {Boolean} 
      */
     SetValue(_val, _opts) {
-        if (this.Status != STATUS_ACTIVE) return;
+        this._setValueTime = new Date().getTime();
+        // if (this.Status != STATUS_ACTIVE) return;
         let val = _val;
         if (this.ValueType == VALUE_TYPE_NUMBER) {
             val = this.Suppression.SuppressValue(_val);
@@ -118,9 +127,34 @@ class ClassChannelActuator extends ClassChannel_S {
 
             if (this.Alarms) this.Alarms.CheckZone(val);
         }
-        this.EmitEvents_all_data_fine_set({ value: [ val ]});
+
+        if (!this.#_ValueConfirm) {
+            this.#_Value = val;
+            this.EmitEvents_all_data_fine_set({ value: [ val ]});
+        }
 
         this.EmitEvents_proxy_send({ value: [ val ] })
+    }
+
+        /**
+     * @method
+     * @public
+     * @description 
+     * @param {string} _topic 
+     * @param {ClassBusMsg_S} _msg 
+     */
+    HandlerEvents_all_data_raw_get(_topic, _msg) {
+        this._allDataRawGetTime = new Date().getTime();
+        try {
+            const [source_name] = _msg.arg;
+            const [ch_name] = _msg.value[0].arg;
+            if ((ch_name === this.NamePLC || ch_name === this.Name) && source_name === this.SourceName) {
+                this.#_Value = _msg.value[0]?.value[0];
+                this.EmitEvents_all_data_fine_set({ value: [ this.#_Value ] });
+            }
+        } catch (e) {
+            this.EmitEvents_logger_log({ msg: `Error while processing data-raw msg`, level: 'E', obj: _msg });
+        }
     }
     
     /**
@@ -140,9 +174,10 @@ class ClassChannelActuator extends ClassChannel_S {
      * @param {*} _msg 
      */
     HandlerEvents_all_actuator_set(_topic, _msg) {
+        this._allActuatorSetTime = new Date().getTime();
         const [ch_name] = _msg.arg;
         const [val_input] = _msg.value;
-        if (ch_name === this.Name && typeof val_input === 'number') 
+        if (ch_name === this.Name/* && typeof val_input == 'number'*/) 
             this.SetValue(val_input);
     }
     
@@ -157,6 +192,7 @@ class ClassChannelActuator extends ClassChannel_S {
         // поиск прокси-службы источника, считывание PrimaryBus
         const proxy_name = Object.values(this.ServicesState).find(_service => _service.Name.includes('proxy') && _service.Protocol === this.Protocol).Name;
         // выбор команды proxywscient-send | proxymqttclient-send | ...
+        this.EmitEvents_logger_log({ level: 'E', msg: `Proxy service not found`, obj: this });
         const com_send = `${proxy_name}-send`;
         
         const msg = {
@@ -168,7 +204,7 @@ class ClassChannelActuator extends ClassChannel_S {
                 value
             }]
         }
-        
+
         this.EmitMsg(this.ProtocolBusName, com_send, msg);
     }
     /**
