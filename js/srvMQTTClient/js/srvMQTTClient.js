@@ -96,9 +96,13 @@ class ClassMQTTClient_S extends ClassBaseService_S {
         // { arg: 'brokerName',  value: [topicName, payload] }
         const source_name = _msg.arg[0];
         const [topicName, payload] = _msg.value;
-        const payload_str = JSON.stringify(payload);
+        const payload_str = typeof payload == 'string' ? payload : JSON.stringify(payload);
         const client = this.#_Clients[source_name];
-        client.publishAsync(topicName, payload_str);
+        try {
+            client.publishAsync(topicName, payload_str);
+        } catch (e) {
+            this.EmitEvents_logger_log({ msg: `Error publishing ${payload}: ${e}, `, level: 'E', obj: e });
+        }
     }
     /**
      * @method
@@ -122,7 +126,7 @@ class ClassMQTTClient_S extends ClassBaseService_S {
                 const connection = await mqtt.connectAsync(url, options);
                 res({ source: _source, client: connection });
             } catch (e) {
-                this.EmitEvents_logger_log({ msg: `Error trying connect to ${url}`, level: 'E', obj: e});
+                this.EmitEvents_logger_log({ msg: `Error trying connect to ${url}`, level: 'E', obj: e });
                 res({ source: _source, client: null });
             }
         });
@@ -142,12 +146,12 @@ class ClassMQTTClient_S extends ClassBaseService_S {
         }); 
         _connection.on('connect', () => {
             _source.IsConnected = true;
-            this.EmitEvents_logger_log({ msg: `MQTT connected ${_connection?.options?.clientId}`, lvl: 'E', obj: e });
+            this.EmitEvents_logger_log({ msg: `MQTT connected ${_connection?.options?.clientId}`, lvl: 'E', obj: _connection });
         });
         _connection.on('close', () => {
             _source.IsConnected = false;
             this.EmitEvents_all_source_disconnected({ arg: [_source.Name] });
-            this.EmitEvents_logger_log({ msg: `MQTT connection ${_connection?.options?.clientId} closed`, lvl: 'E', obj: e });
+            this.EmitEvents_logger_log({ msg: `MQTT connection ${_connection?.options?.clientId} closed`, lvl: 'E', obj: _connection });
         });
         _connection.on('error', e => {
             _source.IsConnected = false;
