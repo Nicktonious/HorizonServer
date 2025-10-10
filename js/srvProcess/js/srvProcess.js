@@ -27,7 +27,9 @@ const SERV_REQ_LIST = {
     'proxymqttgw': 'srvProxyMQTTGateway',
     'mqttgw': 'srvMQTTGateway',
     'sensor': 'srvChannelSensor',
-    'actuator': 'srvChannelActuator'
+    'actuator': 'srvChannelActuator',
+    'modbusclient': 'srvModbusClient',
+    'proxymodbus': 'srvProxyModbus'
 };
 
 const SYSSREVICES_LIST = [
@@ -87,7 +89,7 @@ const PROCESS_CHECK_TIMEOUT = 2000;
 const PROCESS_BUS_TIMEOUT = 1000;
 const PROCESS_DB_TIMEOUT = 5000;
 
-const EVENT_SYSBUS_LIST = ['all-init-stage1-set','process-ws-connect-done'];
+const EVENT_SYSBUS_LIST = ['all-init-stage1-set','process-ws-connect-done', 'process-mb-connect-done'];
 const EVENT_MDBBUS_LIST = ['providermdb-init-stage0-get'];
 
 const BUS_NAMES_LIST = ['sysBus', 'logBus', 'mdbBus', 'dataBus'];
@@ -182,14 +184,17 @@ class ClassProcessSrv extends ClassBaseService_S {
                 { Name: "mqttgw", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 90, Protocol: 'mqttgw', PrimaryBus: 'mqttGwBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'all-connect'], AdvancedOptions: {}, Dependency: ['srvService', 'mqtt'], Description: 'MqttGateway desription'},
                 { Name: "proxymqttgw", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 100, Protocol: 'mqttgw', PrimaryBus: 'mqttGwBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'all-connect'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'MqttGateway desription'},
                 { Name: "rpiclient", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 110, Protocol: 'rpi', PrimaryBus: 'rpiBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'all-close'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'RpiClient desription'},
-                { Name: "proxyrpiclient", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 120, Protocol: 'rpi', PrimaryBus: 'rpiBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'all-close', 'proxyrpiclient-msg-get', 'proxyrpiclient-send', 'proxyrpiclient-deviceslist-get'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'ProxyRpiClient desription'}
+                { Name: "proxyrpiclient", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 120, Protocol: 'rpi', PrimaryBus: 'rpiBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'all-close', 'proxyrpiclient-msg-get', 'proxyrpiclient-send', 'proxyrpiclient-deviceslist-get'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'ProxyRpiClient desription'},
+                { Name: "modbusclient", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 130, Protocol: 'modbus', PrimaryBus: 'modbusBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'test-connect', 'all-disconnect', 'modbusclient-send'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'Modbus client desription'},
+                { Name: "proxymodbus", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 140, Protocol: 'modbus', PrimaryBus: 'modbusBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'test-connect', 'proxymodbus-msg-get', 'proxymodbus-msg-get'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'ProxyModbus desription'},
                
                 
             ];
             let arr3 = [
                 { ID: 21, Name: "template-lhp-service-channel", Service: null, Status: "stopped", Importance: "application", InitOrder: 1000, Protocol: "lhp", PrimaryBus: "dataBus", BusList: [ "sysBus", "logBus", "mdbBus", "lhpBus"], EventList: [ "all-init-stage1-set", "all-data-raw-get", "dm-deviceslist-set", "providermdb-device-config-set"], Dependency: ["srvService"], ErrorMsg: "", Description: "Служба предназначена для обеспечения работы с измерительным или испольнительным каналом по протоколу lhp/ws." },
                 { ID: 22, Name: "template-mqtt-service-channel", Service: null, Status: "stopped", Importance: "application", InitOrder: 1000, Protocol: "mqtt", PrimaryBus: "dataBus", BusList: [ "sysBus", "logBus", "mdbBus", "mqttBus"], EventList: [ "all-init-stage1-set", "all-data-raw-get", "dm-deviceslist-set", "providermdb-device-config-set"], Dependency: ["srvService"], ErrorMsg: "", Description: "Служба предназначена для обеспечения работы с измерительным или испольнительным каналом по протоколу mqtt." },
-                { ID: 23, Name: "template-rpi-service-channel", Service: null, Status: "stopped", Importance: "application", InitOrder: 1000, Protocol: "rpi", PrimaryBus: "dataBus", BusList: [ "sysBus", "logBus", "mdbBus", "rpiBus"], EventList: [ "all-init-stage1-set", "all-data-raw-get", "dm-deviceslist-set", "providermdb-device-config-set"], Dependency: ["srvService"], ErrorMsg: "", Description: "Служба предназначена для обеспечения работы с измерительным или испольнительным каналом по протоколу rpi." }
+                { ID: 23, Name: "template-rpi-service-channel", Service: null, Status: "stopped", Importance: "application", InitOrder: 1000, Protocol: "rpi", PrimaryBus: "dataBus", BusList: [ "sysBus", "logBus", "mdbBus", "rpiBus"], EventList: [ "all-init-stage1-set", "all-data-raw-get", "dm-deviceslist-set", "providermdb-device-config-set"], Dependency: ["srvService"], ErrorMsg: "", Description: "Служба предназначена для обеспечения работы с измерительным или испольнительным каналом по протоколу rpi." },
+                { ID: 23, Name: "template-modbus-service-channel", Service: null, Status: "stopped", Importance: "application", InitOrder: 1000, Protocol: "modbus", PrimaryBus: "dataBus", BusList: [ "sysBus", "logBus", "mdbBus", "modbusBus"], EventList: [ "all-init-stage1-set", "all-data-raw-get", "dm-deviceslist-set", "providermdb-device-config-set"], Dependency: ["srvService"], ErrorMsg: "", Description: "Служба предназначена для обеспечения работы с измерительным или испольнительным каналом по протоколу modbus." }
             ];
             /*
             let arr4 = [
@@ -312,6 +317,20 @@ class ClassProcessSrv extends ClassBaseService_S {
     }
     /**
      * @method
+     * @description Запускает событие all_connect
+     * @returns msg
+     */
+    EmitEvents_test_connect() {
+        const msg = {
+            dest: 'all',
+            com: 'test-connect',
+            arg: [],
+            value: []
+        }
+        this.EmitMsg('sysBus', msg.com, msg);
+    }
+    /**
+     * @method
      * @description
      * Заполняет служебные контейнеры по полученным из БД массивам источников и служб
      * @param {Array} _dbServices    - массив служб
@@ -396,6 +415,7 @@ class ClassProcessSrv extends ClassBaseService_S {
                 this.EmitEvents_logger_log({level: 'I', msg: 'System startup finished!', obj: {services: srvList}});
                 /* debugstart */
                 console.log("System startup finished!");
+                this.EmitEvents_test_connect();
                 /* debugend */
             }, PROCESS_CHECK_TIMEOUT);
         }, PROCESS_BUS_TIMEOUT);

@@ -460,7 +460,8 @@ class ClassBaseService_S {
         }
         const msg = this.CreateMsg(_msg);
         if (!msg) {
-            this.EmitEvents_logger_log({ level: 'E', msg: `warn | unexpected msg format` });
+            console.log(_msg);
+            this.EmitEvents_logger_log({ level: 'W', msg: `Unexpected msg format`, obj: _msg });
             return false;
         }
         // если запрос требует ответ, то создается промис, который выполнится либо по таймауту либо при получении ответа

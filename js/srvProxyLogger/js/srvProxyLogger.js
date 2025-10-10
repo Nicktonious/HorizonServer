@@ -34,7 +34,8 @@ class ClassProxyLogger extends ClassBaseService_S {
         if (typeof (this.#_SubNodes[_opts.flowname]) !== 'undefined') {
             if (this.#_SubNodes[_opts.flowname].debug != _opts.debug) {
                 this.#_SubNodes[_opts.flowname].debug = _opts.debug;
-                this.EmitEvents_logger_log({level: 'W', msg: `Node ${_opts.node.name} switched debug!`, obj: _opts});
+                this.EmitEvents_logger_log({level: 'W', msg: `Node ${this.#_SubNodes[_opts.flowname].name} switched debug!`, obj: _opts});
+                return;
             }
             else {
                 const resp = {payload: {

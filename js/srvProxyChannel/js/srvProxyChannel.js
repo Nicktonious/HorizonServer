@@ -96,10 +96,14 @@ class ClassProxyChannel extends ClassBaseService_S {
      * @param {Object} _opts     - Объект с именем канала и значением, которое нужно установить   
      */
     Control(_opts) {
+        if (_opts.chName == undefined && _opts.node) {
+            _opts.chName = this.#_SubChannels.find(channel => channel.node === _opts.node).chName;
+        }
         if (!(_opts.chName in this.ServicesState)) {
             this.EmitEvents_logger_log({level: 'W', msg: `Cannot set value: Channel ${_opts.chName} doesn't exist!`});
             return;
         }
+
         const msg = {
             com: 'all-actuator-set',
             dest: _opts.chName,
@@ -107,7 +111,10 @@ class ClassProxyChannel extends ClassBaseService_S {
             arg: [_opts.chName],
             value: [_opts.Value]
         };
-        this.EmitMsg('sysBus', msg.com, msg);
+        this.EmitMsg('dataBus', msg.com, msg);
+    }
+    GetValue(_chName) {
+        return this.ServicesState[_chName].Service.Value;
     }
     /**
      * @method
@@ -126,7 +133,7 @@ class ClassProxyChannel extends ClassBaseService_S {
                 });
                 const msg = {payload: {
                     dest: channel.node.name,
-                    com: 'output',
+                    com: 'chio-output',
                     arg: channel.ret,
                     value: retVal
                     },
