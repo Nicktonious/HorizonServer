@@ -49,7 +49,7 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
         super.HandlerEvents_all_init_stage1_set(_topic, _msg);
 
         Object.keys(this.SourcesState)
-            .filter(_source => _source.Protocol === 'mqtt')  
+            .filter(_source => _source.Protocol === 'mqtt')
             .forEach(_source => {
                 _source.CheckProxy = true;
             });
@@ -63,14 +63,14 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
      */
     HandlerEvents_proxymqttclient_send(_topic, _msg) {
         const [ source_name ] = _msg.arg;
-        const { source }  = _msg.metadata;
-        const [ value ]   = _msg.value;
+        const { source } = _msg.metadata;
+        const [ value ]  = _msg.value;
         const [ payload ] = value.value;
         const topic_name = this.#_SensSubList[source_name]?.find(_obj => _obj.name === source).address;
-        
+
         const msg_is_valid = typeof topic_name === 'string' && payload;
-        if (msg_is_valid) {  
-            this.EmitEvents_mqttclient_send({ arg: _msg.arg, value: [topic_name, payload ]});       
+        if (msg_is_valid) {
+            this.EmitEvents_mqttclient_send({ arg: _msg.arg, value: [topic_name, payload ]});
         }
     }
     /**
@@ -95,22 +95,22 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
      * @param {*} _msg 
      */
     HandlerEvents_proxymqttclient_sub_sensorall(_topic, _msg) {
-        const [ source_name ] = _msg.arg;
+        const [source_name] = _msg.arg;
         /* ch_list = { sensor: [{ name, address }, ...], actuator: { ... } ] */
-        const [ { sensor=[], actuator=[] } ] = _msg.value;
+        const [{ sensor = [], actuator = [] }] = _msg.value;
         const aggr_ch_map_list = [...sensor, ...actuator];
         const topic_list = [];
         aggr_ch_map_list.forEach(_mappingObj => {
-            this.#_SensSubList[source_name] ??= []; 
+            this.#_SensSubList[source_name] ??= [];
             this.#_SensSubList[source_name].push(_mappingObj);
             topic_list.push(_mappingObj.address);
         });
         if (topic_list.length) {
-            this.EmitEvents_logger_log({ msg: `Channels mapping with MQTT addresses: ${aggr_ch_map_list}`, level: 'I', obj: aggr_ch_map_list});
+            this.EmitEvents_logger_log({ msg: `Channels mapping with MQTT addresses: ${aggr_ch_map_list}`, level: 'I', obj: aggr_ch_map_list });
             // подписка на адреса каналов-сенсоров 
             this.EmitEvents_mqttclient_sub({ arg: _msg.arg, value: sensor.map(_s => _s.address) });
         } else {
-            this.EmitEvents_logger_log({ msg: `No MQTT address or channel to complete mapping`, level: 'I', obj: aggr_ch_map_list}); 
+            this.EmitEvents_logger_log({ msg: `No MQTT address or channel to complete mapping`, level: 'I', obj: aggr_ch_map_list });
         }
     }
     /**
@@ -121,12 +121,19 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
      * @param {*} _msg 
      */
     HandlerEvents_proxymqttclient_msg_get(_topic, _msg) {
-        const [ source_name ] = _msg.arg;
-        const [ topic_name, payload ] = _msg.value;
+        const [source_name] = _msg.arg;
+        const [topic_name, payload] = _msg.value;
+        // вытягивается именно список, так как несколько каналов могут иметь одинаковый address
+        // но извлекать из ответа разные значения по ValueKey или же обрабатывать разными мат. формулами 
+        const ch_name_list = this.#_SensSubList[source_name]
+            ?.filter(_obj => _obj.address === topic_name)
+            ?.map(_obj => _obj.name);
+
+        if (!ch_name_list) {
+            this.EmitEvents_logger_log({ level: 'W', msg: `Received a msg from ${source_name}, ${topic_name}, but no Channel subscribed is found`, obj: _msg });
+        }
         
-        const ch_name = this.#_SensSubList[source_name]
-            ?.find(_obj => _obj.address === topic_name)?.name;
-        if (ch_name) {
+        ch_name_list?.forEach(ch_name => {
             const msg = {
                 dest: ch_name,
                 com: COM_ALL_DATA_RAW_GET,
@@ -134,11 +141,11 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
                 value: [{
                     com: COM_ALL_DATA_RAW_GET,
                     arg: [ch_name],
-                    value: [parseFloat(payload)]
+                    value: [payload]
                 }]
             }
             this.EmitMsg('mqttBus', msg.com, msg);
-        }
+        });
     }
     /**
      * @method
@@ -171,7 +178,7 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
             value: [{
                 dest: 'dm',
                 com: COM_DM_DEVLIST_SET,
-                value: [ get_devlist(arg[0]) ]
+                value: [get_devlist(arg[0])]
             }]
         }
         this.EmitMsg('mqttBus', msg.com, msg);
