@@ -1,5 +1,5 @@
 // const ClassChannel_S = require('../../srvChannel/js/srvChannel'); DEBUG
-const ClassChannel_S = require('srvChannel');
+const ClassChannel_S = require('./srvChannel');
 
 // ### ПОДПИСКИ
 const COM_DATA_RAW_GET = 'all-data-raw-get';
@@ -25,6 +25,7 @@ const STATUS_INACTIVE = 'inactive';
 const CONST_UNKNOWN = 'unknown';
 const VALUE_TYPE_NUMBER = 'number';
 const VALUE_TYPE_STRING = 'string';
+
 /**
  * @typedef SensorOptsType 
  * @property {String} name
@@ -128,7 +129,7 @@ class ClassChannelSensor extends ClassChannel_S {
      * Возвращает значение канала, хранящееся в основном объекте
      */
     get Value() { // вых значение канала
-        if (this.Status != STATUS_ACTIVE) return undefined;
+        // if (this.Status != STATUS_ACTIVE) return undefined;
 
         this._DataUpdated = false;
         this._Value = (this._DataWasRead || this._Bypass || this.ValueType != VALUE_TYPE_NUMBER)
@@ -145,23 +146,31 @@ class ClassChannelSensor extends ClassChannel_S {
      * @param {Number} _val 
      */
     set Value(_val) {
-        if (this.Status != STATUS_ACTIVE) return;
-        // пропустить если поступило не число
-        if (this.ValueType == VALUE_TYPE_NUMBER && typeof _val != 'number') return;
-        
-        let val = this.ValueType == VALUE_TYPE_NUMBER ? +_val : _val;
-
-        if (this._Bypass || this.ValueType == VALUE_TYPE_STRING) {
-            this.#_Value = val;
-            this._DataUpdated = true;
-            this._DataWasRead = false;
-            return;
+        // if (this.Status != STATUS_ACTIVE) return;
+        // if (this.ValueType == VALUE_TYPE_NUMBER && typeof _val != 'number') return;
+        let val = _val;
+        // Нужно изъять поле 
+        if (this.ValueKey) try {
+            val = typeof _val == 'string' ? JSON.parse(_val)[this.ValueKey] : _val[this.ValueKey];
+        } catch {
+            this.EmitEvents_logger_log({ level: 'E', msg: `Failed to extract "${this.ValueKey}" from ${_val}`, obj: _val });
+        }
+        // Нужно обработать как число
+        // учитываем что тут val может уже быть полем, извлеченным из _val 
+        if (this.ValueType == VALUE_TYPE_NUMBER && !this._Bypass) {
+            let val_preproc = val;
+            val = Number.parseFloat(val);
+            this.Suppression.SuppressValue(val);
+            this._ValueSuppressed = val == val_preproc;
+            val = this.Transform.TransformValue(val);
+            if (typeof val != 'number') {
+                val = val_preproc;
+                this.EmitEvents_logger_log({ level: 'E', msg: `Failed to apply math transform to value ${_val}`, obj: this });
+            } else
+                this.Buffer.push(val);
         }
         
-        val = this.Suppression.SuppressValue(_val);
-        this._ValueSuppressed = val == _val;
-        val = this.Transform.TransformValue(val);
-        this.Buffer.push(val);
+        this.#_Value = val;
 
         this.EmitEvents_all_data_fine_set();
         this.EmitEvents_providermdb_data_write();
@@ -223,6 +232,7 @@ class ClassChannelSensor extends ClassChannel_S {
      * @param {ClassBusMsg_S} _msg 
      */
     HandlerEvents_all_data_raw_get(_topic, _msg) {
+        this.allDataRawGetEvent = Date.now();
         try {
             const [source_name] = _msg.arg;
             const [ch_name] = _msg.value[0].arg;
@@ -247,10 +257,10 @@ class ClassChannelSensor extends ClassChannel_S {
         const device = device_info_list.find(_device => _device.id === this.DeviceIdHash);
 
         if (!device) {
-            this.EmitEvents_logger_log({ level: 'W', msg: `DeviceInfo for ${this.DeviceIdHash} is not found` });
+            this.EmitEvents_logger_log({ level: 'W', msg: `DeviceInfo for ${this.DeviceIdHash} is not found`, obj: _msg });
             return;
         }
-
+        
         try {
             this.DeviceInfo = new ClassSensorInfo(device);
         } catch (e) {
