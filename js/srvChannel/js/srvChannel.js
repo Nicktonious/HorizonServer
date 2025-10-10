@@ -1,5 +1,5 @@
-const ClassBaseService_S = require('srvService');
-const generateHash = require('generateHash.js');
+const ClassBaseService_S = require('./srvService');
+const generateHash = require('./generateHash.js');
 
 // ### ПОДПИСКИ
 const COM_DATA_RAW_GET = 'all-data-raw-get';
@@ -35,6 +35,11 @@ const VALUE_TYPE_STRING = 'string';
  * @property {[String]} channelNames
  * @property {[String]} channelMeasures
  */
+
+function importFunc(filterName, ch) {
+    return () => { };
+}
+
 /**
  * @class 
  * Самый "старший" предок в иерархии классов датчиков. 
@@ -130,8 +135,8 @@ class ClassBaseChannel_S extends ClassBaseService_S {
         this.#_Address    = _advOpts.Address;
         this.#_DeviceIdHash = _advOpts.DeviceIdHash;
         // свойства для работы
-        this.#_ValueType = [VALUE_TYPE_NUMBER, VALUE_TYPE_STRING].includes(_advOpts.ValueType) 
-                         ? _advOpts.ValueType : VALUE_TYPE_NUMBER;
+        this.#_ValueType = [VALUE_TYPE_NUMBER, VALUE_TYPE_STRING].includes(_advOpts.ValueType)
+            ? _advOpts.ValueType : VALUE_TYPE_NUMBER;
         this.#_ValueKey  = _advOpts.ValueKey;
         // описание
         this.#_ChType = _advOpts.ChType;
@@ -271,11 +276,11 @@ class ClassChannel_S extends ClassBaseChannel_S {
 
     get Filter() { return this.#_Filter; }
 
-   /**
-   * @getter
-   * @public
-   * @description Возвращает имя канала согласно имеющейся информации об устройстве 
-   */
+    /**
+    * @getter
+    * @public
+    * @description Возвращает имя канала согласно имеющейся информации об устройстве 
+    */
     get ChName() {
         const ch_names = this.#_DeviceInfo?.ChannelNames;
         return Array.isArray(ch_names) ? ch_names[this.ChNum] : CONST_UNKNOWN;
@@ -304,7 +309,13 @@ class ClassChannel_S extends ClassBaseChannel_S {
      * @description Возвращает протокол источника, к которому привязана служба-канал
      * @returns {string}
      */
-    get Protocol() { return this.SourcesState[this.SourceName].Protocol; }
+    get Protocol() {
+        if (!this.SourcesState[this.SourceName]) {
+            this.EmitEvents_logger_log({ level: 'W', msg: `Source named ${this.SourceName} not found!` });
+            return;
+        }
+        return this.SourcesState[this.SourceName].Protocol;
+    }
 
     /**
      * @getter
@@ -313,6 +324,16 @@ class ClassChannel_S extends ClassBaseChannel_S {
      * @returns {string}
      */
     get ProtocolBusName() {
+        let proxyService = Object.values(this.ServicesState)
+            .find(_service => _service.Name.toLowerCase().includes('proxy') && _service.Protocol === this.Protocol);
+        if (!proxyService) {
+            this.EmitEvents_logger_log({ level: 'W', msg: `Service named proxy* with Protocol == '${this.Protocol}' not found!` });
+            return;
+        }
+        if (!proxyService.PrimaryBus) {
+            this.EmitEvents_logger_log({ level: 'W', msg: `Chosen proxy has property PrimaryBus == null!` });
+            return;
+        }
         // определение типа подключения
         return Object.values(this.ServicesState)
             .find(_service => _service.Name.toLowerCase().includes('proxy') && _service.Protocol === this.Protocol)
@@ -325,14 +346,21 @@ class ClassChannel_S extends ClassBaseChannel_S {
      * @returns {Proxy}
      */
     get ProxyObject() {
-        this.#_Proxy ??= Object.freeze(new Proxy(this, {
-            get: (target, prop) => {
-                // ограничение внешнего доступа к методам обработчикам/эмиттерам событий, которые по техническим причинам public
-                if (prop.startsWith('EmitEvent_') || prop.startsWith('HandlerEvents_'))
-                    return undefined
-                return target[prop];
-            }
-        }));
+        try {
+            this.#_Proxy ??= new Proxy(this, {
+                get: (target, prop) => {
+                    // ограничение внешнего доступа к методам обработчикам/эмиттерам событий, которые по техническим причинам public
+                    if (prop.startsWith('EmitEvent_') || prop.startsWith('HandlerEvents_'))
+                        return undefined
+                    return target[prop];
+                },
+                set(obj, prop, value) {
+                    return false;
+                }
+            });
+        } catch (e) {
+            console.log(`err ${e}`);
+        }
         return this.#_Proxy;
     }
     /**
@@ -527,13 +555,13 @@ class ClassChannel_S extends ClassBaseChannel_S {
  * Буфер значений канала
  */
 class ClassValueBuffer {
-    constructor(_ch, _opts) {
+    constructor(_opts, _ch) {
         let opts = _opts || {};
         opts.size = (typeof opts.size == 'number' && opts.size > 0) ? opts.size : 1;
         this._depth = opts.size;
         this._rawVal = undefined;
         this._arr = [];
-        let filterFunc = importFunc(opts.filterName, _ch)
+        let filterFunc = arr => arr.reduce((p, c) => p + c, 0) / arr.length;
         this.SetFilterFunc(filterFunc);
     }
 
@@ -596,7 +624,7 @@ class ClassValueBuffer {
 class ClassTransform {
     #_TransformFunc;
     constructor(_opts) {
-        if (_opts)
+        if (typeof _opts?.k == 'number' && typeof _opts?.b == 'number')
             this.SetLinearFunc(_opts.k, _opts.b);
         else
             this.#_TransformFunc = (x) => x;
