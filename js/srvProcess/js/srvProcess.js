@@ -29,7 +29,8 @@ const SERV_REQ_LIST = {
     'sensor': 'srvChannelSensor',
     'actuator': 'srvChannelActuator',
     'modbusclient': 'srvModbusClient',
-    'proxymodbus': 'srvProxyModbus'
+    'proxymodbus': 'srvProxyModbus',
+    'telegrambot': 'srvTelegramBot',
 };
 
 const SYSSREVICES_LIST = [
@@ -45,7 +46,8 @@ const SYSSREVICES_LIST = [
         Importance: 'primary',
         Status: 'stopped',
         Protocol: 'sys',
-        PrimaryBus: 'logBus'
+        PrimaryBus: 'logBus',
+        options: {port: 5142, console: false}
     },
     {
         Name: 'proxylogger',
@@ -148,7 +150,7 @@ class ClassProcessSrv extends ClassBaseService_S {
                     this.#_ServicesState[servName].Service = this;
                 }
                 else
-                    this.#_ServicesState[servName].Service = new SYSREQ_LIST[servName]({_busList: this.#_GBusList, _node: this.#_Node},{port: 5142, console: false});
+                    this.#_ServicesState[servName].Service = new SYSREQ_LIST[servName]({_busList: this.#_GBusList, _node: this.#_Node}, sysservice.options);
             }
             catch (e) {
                 sysservice.ErrorMsg = e.toString();
@@ -187,6 +189,7 @@ class ClassProcessSrv extends ClassBaseService_S {
                 { Name: "proxyrpiclient", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 120, Protocol: 'rpi', PrimaryBus: 'rpiBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'all-close', 'proxyrpiclient-msg-get', 'proxyrpiclient-send', 'proxyrpiclient-deviceslist-get'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'ProxyRpiClient desription'},
                 { Name: "modbusclient", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 130, Protocol: 'modbus', PrimaryBus: 'modbusBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'test-connect', 'all-disconnect', 'modbusclient-send'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'Modbus client desription'},
                 { Name: "proxymodbus", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 140, Protocol: 'modbus', PrimaryBus: 'modbusBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'test-connect', 'proxymodbus-msg-get', 'proxymodbus-msg-get'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'ProxyModbus desription'},
+                { Name: "telegrambot", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 150, Protocol: 'sys', PrimaryBus: 'dataBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set'], AdvancedOptions: {token: "8321475067:AAEvymCuM3PIwBEswgSWo--SLGeTJ_ePIkc"}, Dependency: ['srvService'], Description: 'TelegramBot desription'}
                
                 
             ];
@@ -363,6 +366,15 @@ class ClassProcessSrv extends ClassBaseService_S {
                     else {
                         this.EmitEvents_logger_log({level: 'E', msg: `Primary service ${service.Name} is not initialized.`, obj:  this.#_ServicesState[service.Name]});
                     }
+                }
+                if (service.Importance === 'auxilary' && service.Protocol === 'sys') {
+                    try {
+                        service.Service = new (require(SERV_REQ_LIST[service.Name]))({_busList: this.#_GBusList, _node: this.#_Node}, service.AdvancedOptions);
+                        this.#_ServicesState[service.Name] = service;
+                    }
+                    catch (e) {
+                        this.EmitEvents_logger_log({level: 'E', msg: `Failed to start auxilary service ${service.Name}. ${e.message}`, obj:  this.#_ServicesState[service.Name]});
+                    }                    
                 }
             })
         }

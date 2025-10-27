@@ -116,6 +116,10 @@ class ClassProxyChannel extends ClassBaseService_S {
     GetValue(_chName) {
         return this.ServicesState[_chName].Service.Value;
     }
+    SetTransformFunk(_chName, _func) {
+        const channel = this.ServicesState['dm'].Service.Channels.find(ch => ch.Name == _chName);
+        channel.Transform.SetFunc(_func);
+    }
     /**
      * @method
      * @description

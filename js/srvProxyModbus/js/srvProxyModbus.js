@@ -3,6 +3,7 @@ const ClassBaseService_S = require('srvService');
 const THIS_NAME = 'proxymodbus';
 const COM_ALL_DATA_RAW_GET = 'all-data-raw-get';
 const PRIMARY_BUS = 'modbusBus';
+const PROTOCOL = 'modbus';
 
 EVENT_SYSBUS_LIST = ['all-init-stage1-set', 'test-connect'];
 EVENT_MODBUS_LIST = ['proxymodbus-send', 'proxymodbus-msg-get'];
@@ -36,7 +37,7 @@ class ProxyModbus extends ClassBaseService_S {
     }
     HandlerEvents_test_connect(_topic, _msg) {
          Object.values(this.SourcesState)
-            .filter(_source => _source.Protocol === PRIMARY_BUS)  
+            .filter(_source => _source.Protocol === PROTOCOL)  
             .forEach(_source =>{
                 Object.values(this.ServicesState)
                     .filter(_channel => _channel.AdvancedOptions && _channel.AdvancedOptions.SourceName === _source.Name)

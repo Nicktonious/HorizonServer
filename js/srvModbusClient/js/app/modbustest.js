@@ -3,7 +3,7 @@ const net = require('net')
 const socket = new net.Socket()
 const client = new Modbus.client.TCP(socket, 1)
 const options = {
-    'host' : '10.110.91.1',
+    'host' : '10.110.91.3',
     'port' : 502
 }
 
@@ -29,7 +29,7 @@ socket.on('connect', () => {
     console.log('connected');
     let input_range = [];
 
-    client.readCoils(20,8)
+    client.readCoils(12,1)
         .then(function (resp) {
             resp.response._body._valuesAsArray.forEach((val) => {
                 console.log(val);                

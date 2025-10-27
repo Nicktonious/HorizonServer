@@ -125,6 +125,10 @@ class ModbusClient extends ClassBaseService_S {
             socket.end();
         });
     }
+    /**
+     * @method
+     * @description Начинает циклический опрос групп каналов по источникам
+     */
     Start() {
         let interval = {};
         Object.entries(this.#_Servers).forEach(([name, server]) => {
@@ -185,7 +189,7 @@ class ModbusClient extends ClassBaseService_S {
     }
     /**
      * @method
-     * @description Инициализирует соединение с источниками по вебсокетам
+     * @description Инициализирует соединение с источниками
      */
     Connect() {
         let sourcesCount = 0;
