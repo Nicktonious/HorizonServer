@@ -12,6 +12,7 @@ class TelegramBot extends ClassBaseService_S {
     #_plcCommand;
     #_plcReboot;
     #_subContexts;
+    #_Keyboard;
     /**
      * @constructor
      * @description
@@ -33,8 +34,15 @@ class TelegramBot extends ClassBaseService_S {
     HandlerEvents_all_init_stage1_set(_topic, _msg) {
         super.HandlerEvents_all_init_stage1_set(_topic, _msg);
 
+        this.#_Keyboard = new (require("grammy").Keyboard)()
+            .text("/start")
+            .text("/temp")
+            .text("/light").row()
+            .text("/sub")
+            .text("/unsub").persistent();
+
         this.bot.command("start", (ctx) => {
-            ctx.reply("Welcome! Please select one of the next commands:\n\nPLC Control\n/on - turn on Horizon PLC (uses submenu)\n/off - turn off Horizon PLC (uses submenu)\n/reboot - reboot Horizon PLC (uses submenu)\n\nChannels\n/list - show all available channels\n/val {channel name} - show current value of selected channel\n/temp - show current temperature\n/light - show current light level\n\nSubscribtion\n/sub - subscribe to channel zone changing events\n/unsub - unsubscribe from these events")
+            ctx.reply("Welcome! Please select one of the next commands:\n\nPLC Control\n/on - turn on Horizon PLC (uses submenu)\n/off - turn off Horizon PLC (uses submenu)\n/reboot - reboot Horizon PLC (uses submenu)\n\nChannels\n/list - show all available channels\n/val {channel name} - show current value of selected channel\n/temp - show current temperature\n/light - show current light level\n\nSubscribtion\n/sub - subscribe to channel zone changing events\n/unsub - unsubscribe from these events", {reply_markup: this.#_Keyboard,});
         });
 
         this.bot.command("temp", async (ctx) => {
@@ -172,8 +180,7 @@ class TelegramBot extends ClassBaseService_S {
                 this.bot.api.sendMessage(ctxId, `Alert!\n${_msg.arg[0]} changed zone to ${getCurrZoneName(_msg.value[0])}!\nCurrent value: ${this.ServicesState[_msg.arg[0]].Service.Value.toFixed(3)} ${this.ServicesState[_msg.arg[0]].Service.ChMeas}`);
             })
         }
-    }
-    
+    }    
 }
 
 module.exports = TelegramBot;

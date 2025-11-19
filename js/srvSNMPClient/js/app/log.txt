@@ -1,0 +1,492 @@
+Fri Nov 14 2025 17:28:41 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Fri Nov 14 2025 18:28:41 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Fri Nov 14 2025 19:28:41 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Fri Nov 14 2025 20:28:42 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Fri Nov 14 2025 21:28:42 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Fri Nov 14 2025 22:28:42 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Fri Nov 14 2025 23:28:42 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.8G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 00:28:42 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 01:28:42 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 02:28:42 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 03:28:42 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 04:28:42 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 05:28:42 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 06:28:42 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 07:28:42 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 08:28:42 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.8G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 09:28:42 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 10:28:43 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 11:28:43 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.9G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 12:28:43 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.8G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 13:28:43 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.8G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 14:28:43 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.8G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 15:28:43 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 16:28:43 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 17:28:43 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 18:28:43 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 19:28:43 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 20:28:43 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 21:28:43 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   20G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 22:28:43 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   20G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sat Nov 15 2025 23:28:44 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   20G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sun Nov 16 2025 00:28:44 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   20G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sun Nov 16 2025 01:28:44 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   20G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sun Nov 16 2025 02:28:44 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   20G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sun Nov 16 2025 03:28:44 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   20G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sun Nov 16 2025 04:28:44 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sun Nov 16 2025 05:28:44 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sun Nov 16 2025 06:28:44 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sun Nov 16 2025 07:28:44 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   19G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sun Nov 16 2025 08:28:44 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   20G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+
+Sun Nov 16 2025 09:28:45 GMT+0400 (Samara Standard Time)
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           405M  4.7M  400M   2% /run
+/dev/mmcblk0p2   27G   20G  5.7G  77% /
+tmpfs           2.0G  480K  2.0G   1% /dev/shm
+tmpfs           5.0M   48K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   63M  448M  13% /boot/firmware
+tmpfs           405M     0  405M   0% /run/user/1010
+tmpfs           405M     0  405M   0% /run/user/1006
+
+

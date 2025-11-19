@@ -1,83 +1,5 @@
 const ClassBaseService_S = require('srvService');
 
-const ClassProviderDB_S = require('srvProviderMDB');
-const ClassLogger_S = require('srvLogger');
-const ClassProxyLogger_S = require('srvProxyLogger');
-const ClassDeviceManager_S = require('srvDeviceManager');
-const ClassProxyChannel_S = require('srvProxyChannel');
-
-let arr4 = require('Channels');
-let arr1 = require('Sources');
-
-const SYSREQ_LIST = {
-    'logger': ClassLogger_S, 
-    'providermdb': ClassProviderDB_S, 
-    'dm': ClassDeviceManager_S,
-    'proxylogger': ClassProxyLogger_S,
-    'proxychannel': ClassProxyChannel_S
-};
-
-const SERV_REQ_LIST = {
-    'proxywsclient': 'srvProxyWS',
-    'wsclient': 'srvWSClient',
-    'proxymqttclient': 'srvProxyMQTT',
-    'mqttclient': 'srvMQTTClient',
-    'proxyrpiclient': 'srvProxyRpi',
-    'rpiclient': 'srvRpiClient',
-    'proxymqttgw': 'srvProxyMQTTGateway',
-    'mqttgw': 'srvMQTTGateway',
-    'sensor': 'srvChannelSensor',
-    'actuator': 'srvChannelActuator',
-    'modbusclient': 'srvModbusClient',
-    'proxymodbus': 'srvProxyModbus',
-    'telegrambot': 'srvTelegramBot',
-};
-
-const SYSSREVICES_LIST = [
-    {
-        Name: 'process',
-        Importance: 'primary',
-        Status: 'stopped',
-        Protocol: 'sys',
-        PrimaryBus: 'sysBus'
-    },
-    {
-        Name: 'logger',
-        Importance: 'primary',
-        Status: 'stopped',
-        Protocol: 'sys',
-        PrimaryBus: 'logBus',
-        options: {port: 5142, console: false}
-    },
-    {
-        Name: 'proxylogger',
-        Importance: 'primary',
-        Status: 'stopped',
-        Protocol: 'sys',
-        PrimaryBus: 'logBus'
-    },
-    {
-        Name: 'proxychannel',
-        Importance: 'primary',
-        Status: 'stopped',
-        Protocol: 'sys',
-        PrimaryBus: 'dataBus'
-    },
-    {
-        Name: 'providermdb',
-        Importance: 'primary',
-        Status: 'stopped',
-        Protocol: 'sys',
-        PrimaryBus: 'mdbBus'
-    },
-    {
-        Name: 'dm',
-        Importance: 'primary',
-        Status: 'stopped',
-        Protocol: 'sys',
-        PrimaryBus: 'dataBus'
-    }
-]
 
 /**
  * @constant
@@ -113,7 +35,6 @@ class ClassProcessSrv extends ClassBaseService_S {
     #_GBusList;
     #_Node;
     #_TimeOut;
-
     #_TestInterval;
 
     /**
@@ -142,7 +63,8 @@ class ClassProcessSrv extends ClassBaseService_S {
         this.UpdateBusList();
         this.FillEventOnList('sysBus', EVENT_SYSBUS_LIST);
         this.FillEventOnList('mdbBus', EVENT_MDBBUS_LIST);
-        SYSSREVICES_LIST.forEach((sysservice) => {
+        const config = require('./config.json');
+        config.Primary.forEach((sysservice) => {
             try {
                 const servName = sysservice.Name;
                 this.#_ServicesState[servName] = sysservice;
@@ -150,7 +72,7 @@ class ClassProcessSrv extends ClassBaseService_S {
                     this.#_ServicesState[servName].Service = this;
                 }
                 else
-                    this.#_ServicesState[servName].Service = new SYSREQ_LIST[servName]({_busList: this.#_GBusList, _node: this.#_Node}, sysservice.options);
+                    this.#_ServicesState[servName].Service = new (require(sysservice.Module))({_busList: this.#_GBusList, _node: this.#_Node}, sysservice.Options);
             }
             catch (e) {
                 sysservice.ErrorMsg = e.toString();
@@ -162,76 +84,12 @@ class ClassProcessSrv extends ClassBaseService_S {
         this.#_TimeOut = setTimeout(() => {
             /* debughome */
             this.EmitEvents_logger_log({level: 'E', msg: `No response from DataBase. Using default template for debug`});
-            /*let arr1 = [
-                { ID: 1, Status: "active", Name: "PLC11", Type: "source", Property: "rw", Protocol: "lhp", DN: "", IP: "192.168.50.151", Port: "8080", SensorChExpected: 64 },
-                { ID: 15, Status: "inactive", Name: "PLC12", Type: "source", Property: "rw", Protocol: "lhp", DN: "", IP: "192.168.50.152", Port: "8080", SensorChExpected: 64 },
-                { ID: 2, Status: "active", Name: "PLC21", Type: "source", Property: "rw", Protocol: "lhp", DN: "", IP: "192.168.50.156", Port: "443", SensorChExpected: 64 },
-                { ID: 3, Status: "active", Name: "PLC22", Type: "source", Property: "rw", Protocol: "lhp", DN: "", IP: "192.168.50.157", Port: "8080", SensorChExpected: 64 },
-                { ID: 4, Status: "active", Name: "PLC31", Type: "source", Property: "rw", Protocol: "lhp", DN: "", IP: "192.168.50.161", Port: "8080", SensorChExpected: 64 },
-                { ID: 5, Status: "active", Name: "PLC32", Type: "source", Property: "rw", Protocol: "lhp", DN: "", IP: "192.168.50.162", Port: "8080", SensorChExpected: 64 },
-                { ID: 6, Status: "active", Name: "hubc445", Type: "source", Property: "r", Protocol: "rpi", DN: "", IP: "192.168.50.233", Port: "7777", SensorChExpected: 64 },
-                { ID: 7, Status: "active", Name: "Broker01", Type: "source", Property: "w", Protocol: "mqttgw", DN: "", IP: "localhost", Port: "9001", Login: 'operator2', Password: '34pass', SensorChExpected: 64 },
-            ];*/
-            let arr2 = [
-                { Name: "process", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "primary", InitOrder: 10, Protocol: 'sys', PrimaryBus: 'sysBus', BusList: ['logBus', 'mdbBus', 'dataBus'], EventList: ['process-config-system-get', 'process-ws-connect-done', 'process-mqtt-connect-done', 'process-rpi-connect-done'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'Process desription'},
-                { Name: "logger", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "primary", InitOrder: 30, Protocol: 'sys', PrimaryBus: 'logBus', BusList: ['sysBus', 'mdbBus', 'dataBus', 'rpiBus', 'lhpBus', 'mqttBus'], EventList: ['logger-log', 'all-init-stage1-set'], AdvancedOptions: {port: 5142, console: true}, Dependency: ['srvService', 'graylog2'], Description: 'Logger desription'},
-                { Name: "proxylogger", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "primary", InitOrder: 35, Protocol: 'sys', PrimaryBus: 'logBus', BusList: ['sysBus', 'mdbBus', 'dataBus', 'rpiBus', 'lhpBus', 'mqttBus'], EventList: ['logger-log', 'all-init-stage1-set'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'Proxy logger desription'},
-                { Name: "proxychannel", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "primary", InitOrder: 38, Protocol: 'sys', PrimaryBus: 'dataBus', BusList: ['sysBus', 'dataBus', 'logBus'], EventList: ['all-init-stage1-set'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'Proxy channel desription'},
-                { Name: "providermdb", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "primary", InitOrder: 20, Protocol: 'sys', PrimaryBus: 'mdbBus', BusList: ['logBus', 'sysBus'], EventList: ['event1', 'event2', 'event3', 'event4'], AdvancedOptions: {}, Dependency: ['srvService', 'mongodb'], Description: 'Provider desription'},
-                { Name: "dm", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "primary", InitOrder: 40, Protocol: 'sys', PrimaryBus: 'sysBus', BusList: ['logBus', 'mdbBus', 'dataBus'], EventList: ['all-init-stage1-set', 'all-close', 'all-connections-done', 'mqttclient-send'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'Device Manager desription'},
-                { Name: "wsclient", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 50, Protocol: 'lhp', PrimaryBus: 'lhpBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'all-close', 'wsclient-connect'], AdvancedOptions: {}, Dependency: ['srvService', 'ws'], Description: 'WSClient desription'},
-                { Name: "proxywsclient", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 60, Protocol: 'lhp', PrimaryBus: 'lhpBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'all-close', 'proxywsclient-msg-get', 'proxywsclient-send'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'ProxyWS desription'},
-                { Name: "mqttclient", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 70, Protocol: 'mqtt', PrimaryBus: 'mqttBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'all-close', 'all-connections-done', 'mqttclient-send'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'MQTT client desription'},
-                { Name: "proxymqttclient", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 80, Protocol: 'mqtt', PrimaryBus: 'mqttBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'all-close', 'proxymqttclient-get-msg', 'proxymqttclient-send', 'proxymqttclient-deviceslist-get'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'Proxymqtt desription'},
-                { Name: "mqttgw", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 90, Protocol: 'mqttgw', PrimaryBus: 'mqttGwBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'all-connect'], AdvancedOptions: {}, Dependency: ['srvService', 'mqtt'], Description: 'MqttGateway desription'},
-                { Name: "proxymqttgw", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 100, Protocol: 'mqttgw', PrimaryBus: 'mqttGwBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'all-connect'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'MqttGateway desription'},
-                { Name: "rpiclient", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 110, Protocol: 'rpi', PrimaryBus: 'rpiBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'all-close'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'RpiClient desription'},
-                { Name: "proxyrpiclient", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 120, Protocol: 'rpi', PrimaryBus: 'rpiBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'all-close', 'proxyrpiclient-msg-get', 'proxyrpiclient-send', 'proxyrpiclient-deviceslist-get'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'ProxyRpiClient desription'},
-                { Name: "modbusclient", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 130, Protocol: 'modbus', PrimaryBus: 'modbusBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'test-connect', 'all-disconnect', 'modbusclient-send'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'Modbus client desription'},
-                { Name: "proxymodbus", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 140, Protocol: 'modbus', PrimaryBus: 'modbusBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set', 'test-connect', 'proxymodbus-msg-get', 'proxymodbus-msg-get'], AdvancedOptions: {}, Dependency: ['srvService'], Description: 'ProxyModbus desription'},
-                { Name: "telegrambot", Status: 'stopped', ErrorMsg: '', Service: null, Importance: "auxilary", InitOrder: 150, Protocol: 'sys', PrimaryBus: 'dataBus', BusList: ['logBus', 'sysBus'], EventList: ['all-init-stage1-set'], AdvancedOptions: {token: "8321475067:AAEvymCuM3PIwBEswgSWo--SLGeTJ_ePIkc"}, Dependency: ['srvService'], Description: 'TelegramBot desription'}
-               
-                
-            ];
-            let arr3 = [
-                { ID: 21, Name: "template-lhp-service-channel", Service: null, Status: "stopped", Importance: "application", InitOrder: 1000, Protocol: "lhp", PrimaryBus: "dataBus", BusList: [ "sysBus", "logBus", "mdbBus", "lhpBus"], EventList: [ "all-init-stage1-set", "all-data-raw-get", "dm-deviceslist-set", "providermdb-device-config-set"], Dependency: ["srvService"], ErrorMsg: "", Description: "Служба предназначена для обеспечения работы с измерительным или испольнительным каналом по протоколу lhp/ws." },
-                { ID: 22, Name: "template-mqtt-service-channel", Service: null, Status: "stopped", Importance: "application", InitOrder: 1000, Protocol: "mqtt", PrimaryBus: "dataBus", BusList: [ "sysBus", "logBus", "mdbBus", "mqttBus"], EventList: [ "all-init-stage1-set", "all-data-raw-get", "dm-deviceslist-set", "providermdb-device-config-set"], Dependency: ["srvService"], ErrorMsg: "", Description: "Служба предназначена для обеспечения работы с измерительным или испольнительным каналом по протоколу mqtt." },
-                { ID: 23, Name: "template-rpi-service-channel", Service: null, Status: "stopped", Importance: "application", InitOrder: 1000, Protocol: "rpi", PrimaryBus: "dataBus", BusList: [ "sysBus", "logBus", "mdbBus", "rpiBus"], EventList: [ "all-init-stage1-set", "all-data-raw-get", "dm-deviceslist-set", "providermdb-device-config-set"], Dependency: ["srvService"], ErrorMsg: "", Description: "Служба предназначена для обеспечения работы с измерительным или испольнительным каналом по протоколу rpi." },
-                { ID: 23, Name: "template-modbus-service-channel", Service: null, Status: "stopped", Importance: "application", InitOrder: 1000, Protocol: "modbus", PrimaryBus: "dataBus", BusList: [ "sysBus", "logBus", "mdbBus", "modbusBus"], EventList: [ "all-init-stage1-set", "all-data-raw-get", "dm-deviceslist-set", "providermdb-device-config-set"], Dependency: ["srvService"], ErrorMsg: "", Description: "Служба предназначена для обеспечения работы с измерительным или испольнительным каналом по протоколу modbus." }
-            ];
-            /*
-            let arr4 = [
-                //{ ChStatus: "active", ChType: "actuator", ChAlias: "sys_buzzer", ChMeas: "herz", SourceName: "PLC31", DeviceId: "01", ChNum: 0, DeviceIdHash: "93ce-a6a4-2e7a-7b42" },
-                //{ ChStatus: "active", ChType: "actuator", ChAlias: "sys_LED", ChMeas: "lumen", SourceName: "PLC31", DeviceId: "03", ChNum: 0, DeviceIdHash: "93ce-a6a4-2e7a-7b42" },
-                { ChStatus: "active", ChType: "sensor", ChAlias: "light", ChMeas: "lux", SourceName: "PLC31", DeviceId: "04", ChNum: 0, DeviceIdHash: "e8fb-b1b0-2899-488d" },
-                { ChStatus: "active", ChType: "sensor", ChAlias: "gl5528_esistance", ChMeas: "ohm", SourceName: "PLC31", DeviceId: "04", ChNum: 1, DeviceIdHash: "e8fb-b1b0-2899-488d" },
-                { ChStatus: "active", ChType: "sensor", ChAlias: "temperature-garden", ChMeas: "°C", SourceName: "PLC31", DeviceId: "05", ChNum: 0, DeviceIdHash: "e8fb-abb0-2899-3e5b" },
-                { ChStatus: "active", ChType: "sensor", ChAlias: "pressure-third-floor", ChMeas: "kPa", SourceName: "PLC31", DeviceId: "05", ChNum: 1, DeviceIdHash: "e8fb-abb0-2899-3e5b" },
-                { ChStatus: "active", ChType: "actuator", ChAlias: "system-buzzer", ChMeas: "", SourceName: "PLC11", DeviceId: "01", ChNum: 0, DeviceHash: "93ce-a6a4-2e7a-7b42" },
-                { ChStatus: "active", ChType: "actuator", ChAlias: "system-led", ChMeas: "", SourceName: "PLC11", DeviceId: "03", ChNum: 0, DeviceHash: "93ce-a6a4-2e7a-7b42" },
-                { ChStatus: "active", ChType: "sensor", ChAlias: "main-door-button",  ChMeas: "", SourceName: "PLC11", DeviceId: "04", ChNum: 0, DeviceHash: "f19f-2bed-16d6-acb1" },
-                //{ ChStatus: "active", ChType: "sensor", ChAlias: "robot-potentiomemter", ChMeas: "", SourceName: "PLC11", DeviceId: "05", ChNum: 0, DeviceIdHash: "f1f4-2aeb-3c24-7cf5" },
-                { ChStatus: "active", ChType: "sensor", ChAlias: "air-quality-eCO2", ChMeas: "ppm", SourceName: "PLC21", DeviceId: "04", ChNum: 0, DeviceHash: "ef9a-4677-86c2-1e79" },
-                { ChStatus: "active", ChType: "sensor", ChAlias: "air-quality-TOVC", ChMeas: "pbm", SourceName: "PLC21", DeviceId: "04", ChNum: 1, DeviceHash: "ef9a-4677-86c2-1e79" },
-                
-                { ChStatus: "active", ChType: "sensor", ChAlias: "rpi-cpu-tmprt", ChMeas: "°C", SourceName: "hubc445", DeviceId: "rpi", ChNum: 0, DeviceHash: "2905-4672-27c2-f8ef" },
-                { ChStatus: "active", ChType: "sensor", ChAlias: "rpi-cpu-load", ChMeas: "%", SourceName: "hubc445", DeviceId: "rpi", ChNum: 1, DeviceHash: "2905-4672-27c2-f8ef" },
-                { ChStatus: "active", ChType: "sensor", ChAlias: "rpi-total-mem", ChMeas: "gb", SourceName: "hubc445", DeviceId: "rpi", ChNum: 2, DeviceHash: "2905-4672-27c2-f8ef" },
-                { ChStatus: "active", ChType: "sensor", ChAlias: "rpi-used-mem", ChMeas: "gb", SourceName: "hubc445", DeviceId: "rpi", ChNum: 3, DeviceHash: "2905-4672-27c2-f8ef" },
-                { ChStatus: "active", ChType: "sensor", ChAlias: "rpi-free-mem", ChMeas: "gb", SourceName: "hubc445", DeviceId: "rpi", ChNum: 4, DeviceHash: "2905-4672-27c2-f8ef" },
-                { ChStatus: "active", ChType: "sensor", ChAlias: "rpi-avail-mem", ChMeas: "gb", SourceName: "hubc445", DeviceId: "rpi", ChNum: 5, DeviceHash: "2905-4672-27c2-f8ef"},
-                /*{ ChStatus: "active", ChType: "sensor", ChAlias: "p11-di", ChMeas: "digital", SourceName: "PLC31", DeviceId: "06", ChNum: 0, DeviceHash: "cb288b276ea738f6" },
-                { ChStatus: "active", ChType: "sensor", ChAlias: "p12-ai", ChMeas: "analog", SourceName: "PLC31", DeviceId: "07", ChNum: 0, DeviceHash: "cb288b276ea738f6" },
-                { ChStatus: "active", ChType: "sensor", ChAlias: "p11-di", ChMeas: "digital", SourceName: "PLC11", DeviceId: "06", ChNum: 0, DeviceHash: "cb288b276ea738f6" },
-                { ChStatus: "active", ChType: "sensor", ChAlias: "p12-ai", ChMeas: "analog", SourceName: "PLC11", DeviceId: "07", ChNum: 0, DeviceHash: "cb288b276ea738f6" },
-                { ChStatus: "active", ChType: "actuator", ChAlias: "a0-ao", ChMeas: "analog", SourceName: "PLC21", DeviceId: "04", ChNum: 0, DeviceHash: "68b8e34a3dbf1f7d" },
-                { ChStatus: "active", ChType: "actuator", ChAlias: "p12-do", ChMeas: "digital", SourceName: "PLC21", DeviceId: "05", ChNum: 0, DeviceHash: "68b8e34a3dbf1f7d" },
-                
-                { ChStatus: "active", ChType: "sensor", ChAlias: "mqtt_sensor", ChMeas: "digital", SourceName: "brokerhubc445", DeviceId: "00", ChNum: 0, DeviceIdHash: "7d60-42b3-19b7-03db", Address: "horizon/temp/00-0" },
-                { ChStatus: "active", ChType: "actuator", ChAlias: "mqtt_actuator", ChMeas: "digital", SourceName: "brokerhubc445", DeviceId: "01", ChNum: 0, DeviceIdHash: "8654-61b3-1ede-51ac", Address: "horizon/temp/01-0" }
-                
-            ];
-            */
+
+            let arr1 = require('Sources');
+            let arr2 = require('Services');
+            let arr3 = require('Templates');
+            let arr4 = require('Channels');
+            
             this.Fill(arr2, arr1, arr3, arr4);
             /* debugend */
         }, PROCESS_DB_TIMEOUT);
@@ -340,23 +198,28 @@ class ClassProcessSrv extends ClassBaseService_S {
      * @param {Array} _dbSources    - массив источников 
      */
     Fill(_dbServices, _dbSources, _dbTemplates, _dbChannels) {
-        if (!_dbServices) {
-            this.EmitEvents_logger_log({level: 'C', msg: 'Missing services!', obj: _dbServices});
+        if (!(_dbServices instanceof Array)) {
+            this.EmitEvents_logger_log({level: 'C', msg: 'Missing service array!', obj: _dbServices});
+            return;
         }
-        if (!_dbSources) {
-            this.EmitEvents_logger_log({level: 'C', msg: 'Missing sources!', obj: _dbSources});
-        }
-
-        if (!_dbChannels) {
-            this.EmitEvents_logger_log({level: 'C', msg: 'Missing channels!', obj: _dbChannels});
-        }
-
-        if (!_dbServices && !_dbSources) {
+        if (!(_dbSources instanceof Array)) {
+            this.EmitEvents_logger_log({level: 'C', msg: 'Missing sources array!', obj: _dbSources});
             return;
         }
 
-        // Обновляем основные службы
-        if (_dbServices) {
+        if (!(_dbChannels instanceof Array)) {
+            this.EmitEvents_logger_log({level: 'C', msg: 'Missing channels array!', obj: _dbChannels});
+            return;
+        }
+
+        if (!(_dbTemplates instanceof Array)) {
+            this.EmitEvents_logger_log({level: 'C', msg: 'Missing templates array!', obj: _dbChannels});
+            return;
+        }
+
+        try {
+            const config = require('./config.json').Auxilary;
+            // Обновляем основные службы
             _dbServices.forEach(service => {
                 if (service.Importance === 'primary') {
                     if (this.#_ServicesState[service.Name] && this.#_ServicesState[service.Name].Service) {
@@ -369,7 +232,7 @@ class ClassProcessSrv extends ClassBaseService_S {
                 }
                 if (service.Importance === 'auxilary' && service.Protocol === 'sys') {
                     try {
-                        service.Service = new (require(SERV_REQ_LIST[service.Name]))({_busList: this.#_GBusList, _node: this.#_Node}, service.AdvancedOptions);
+                        service.Service = new (require(config[service.Name]))({_busList: this.#_GBusList, _node: this.#_Node}, service.AdvancedOptions);
                         this.#_ServicesState[service.Name] = service;
                     }
                     catch (e) {
@@ -377,10 +240,8 @@ class ClassProcessSrv extends ClassBaseService_S {
                     }                    
                 }
             })
-        }
 
-        // Заполняем источники
-        if (_dbSources) {
+            // Заполняем источники
             _dbSources.forEach(source => {
                 const protocol = source.Protocol.toLowerCase();
                 _dbServices
@@ -389,48 +250,49 @@ class ClassProcessSrv extends ClassBaseService_S {
                         if (!this.#_GBusList[service.PrimaryBus]) {
                             this.CreateBus(service.PrimaryBus);
                         }
-                        service.Service = new (require(SERV_REQ_LIST[service.Name]))({_busList: this.#_GBusList, _node: this.#_Node});
+                        service.Service = new (require(config[service.Name]))({_busList: this.#_GBusList, _node: this.#_Node});
                         this.#_ServicesState[service.Name] = service;
                 })
                 source.CheckProcess = true;
                 source.IsConnected = false;
                 this.#_SourcesState[source.Name] = source;
             })
-        }
-    
-        // Создаём каналы
-        if (_dbTemplates && _dbChannels) {
+        
+            // Создаём каналы
             _dbChannels.forEach(channel => {
                 const source = this.#_SourcesState[channel.SourceName];
                 if (source.Property.includes('r')) {
                     let chService = Object.assign({}, _dbTemplates.find(template => template.Protocol == source.Protocol));
                     chService.AdvancedOptions = channel;
-                    chService.Service = new (require(SERV_REQ_LIST[channel.ChType]))({_busList: this.#_GBusList, _busNameList: chService.BusList.concat([chService.PrimaryBus]), _advOpts: channel});
+                    chService.Service = new (require(config[channel.ChType]))({_busList: this.#_GBusList, _busNameList: chService.BusList.concat([chService.PrimaryBus]), _advOpts: channel});
                     chService.Name = chService.Service.Name;
                     this.#_ServicesState[chService.Name] = chService;
                 }
             })
-        }
 
-        // Ждём, тогда создадутся службы
-        setTimeout(() => {
-            this.EmitEvents_logger_log({level: 'I', msg: 'State lists are formed!'});
-            this.EmitEvents_all_init_stage1();
-            setTimeout(() => {// ждём 3 секунды на проверку служб
-                const errList = Object.keys(this.#_ServicesState).filter(key => this.#_ServicesState[key].Status === 'stopped' && this.#_ServicesState[key].Importance === 'primary');
-                const srvList = Object.keys(this.#_ServicesState).filter(key => this.#_ServicesState[key].Status === 'running');
-                
-                if (errList.length > 0) {
-                    this.#_ServicesState[this.Name].ErrorMsg = 'Failed initialization';
-                    this.EmitEvents_logger_log({level: 'E', msg: 'Uninitialized primary services!', obj: {names: errList}});
-                }
-                this.EmitEvents_logger_log({level: 'I', msg: 'System startup finished!', obj: {services: srvList}});
-                /* debugstart */
-                console.log("System startup finished!");
-                this.EmitEvents_test_connect();
-                /* debugend */
-            }, PROCESS_CHECK_TIMEOUT);
-        }, PROCESS_BUS_TIMEOUT);
+            // Ждём, тогда создадутся службы
+            setTimeout(() => {
+                this.EmitEvents_logger_log({level: 'I', msg: 'State lists are formed!'});
+                this.EmitEvents_all_init_stage1();
+                setTimeout(() => {// ждём 3 секунды на проверку служб
+                    const errList = Object.keys(this.#_ServicesState).filter(key => this.#_ServicesState[key].Status === 'stopped' && this.#_ServicesState[key].Importance === 'primary');
+                    const srvList = Object.keys(this.#_ServicesState).filter(key => this.#_ServicesState[key].Status === 'running');
+                    
+                    if (errList.length > 0) {
+                        this.#_ServicesState[this.Name].ErrorMsg = 'Failed initialization';
+                        this.EmitEvents_logger_log({level: 'E', msg: 'Uninitialized primary services!', obj: {names: errList}});
+                    }
+                    this.EmitEvents_logger_log({level: 'I', msg: 'System startup finished!', obj: {services: srvList}});
+                    /* debugstart */
+                    console.log("System startup finished!");
+                    this.EmitEvents_test_connect();
+                    /* debugend */
+                }, PROCESS_CHECK_TIMEOUT);
+            }, PROCESS_BUS_TIMEOUT);
+        }
+        catch (e) {
+            this.EmitEvents_logger_log({level: 'E', msg: 'Unexpected error during services start-up!', obj: {meggase: e.message}});
+        }        
     }
     /**
      * @method
