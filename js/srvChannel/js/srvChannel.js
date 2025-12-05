@@ -25,6 +25,7 @@ const STATUS_INACTIVE = 'inactive';
 const CONST_UNKNOWN = 'unknown';
 const VALUE_TYPE_NUMBER = 'number';
 const VALUE_TYPE_STRING = 'string';
+
 /**
  * @typedef DeviceOptsType 
  * @property {String} name
@@ -128,20 +129,20 @@ class ClassBaseChannel_S extends ClassBaseService_S {
         super({ _name: service_name, _busNameList, _busList });
         // Основные поля
         // идентификация
-        this.#_DeviceId   = _advOpts.DeviceId;
-        this.#_ChNum      = _advOpts.ChNum;
+        this.#_DeviceId = _advOpts.DeviceId;
+        this.#_ChNum = _advOpts.ChNum;
         this.#_SourceName = _advOpts.SourceName;
-        this.#_ChAlias    = _advOpts.ChAlias;
-        this.#_Address    = _advOpts.Address;
+        this.#_ChAlias = _advOpts.ChAlias;
+        this.#_Address = _advOpts.Address;
         this.#_DeviceIdHash = _advOpts.DeviceIdHash;
         // свойства для работы
         this.#_ValueType = [VALUE_TYPE_NUMBER, VALUE_TYPE_STRING].includes(_advOpts.ValueType)
             ? _advOpts.ValueType : VALUE_TYPE_NUMBER;
-        this.#_ValueKey  = _advOpts.ValueKey;
+        this.#_ValueKey = _advOpts.ValueKey;
         // описание
         this.#_ChType = _advOpts.ChType;
         this.#_ChMeas = _advOpts.ChMeas;
-        // 
+        // группы
         this.#_Group_1 = Array.isArray(_advOpts.Group_1) ? _advOpts.Group_1 : this.#_Group_1;
         this.#_Group_2 = Array.isArray(_advOpts.Group_2) ? _advOpts.Group_2 : this.#_Group_2;
         this.#_Group_3 = Array.isArray(_advOpts.Group_3) ? _advOpts.Group_3 : this.#_Group_3;
@@ -251,17 +252,20 @@ class ClassChannel_S extends ClassBaseChannel_S {
     #_Alarms = null;
 
     #_Proxy = null;
+    #_SavingValues = { raw: false, fine: true };
 
     constructor({ _busList, _busNameList, _advOpts }) {
         // имя службы - поле Name канала
         super({ _busList, _busNameList, _advOpts });
+        // работа с БД
+        this.SetSavingValues(_advOpts?.SavingValues);
         // математическая конфигурация
         this.#_ChangeThreshold = _advOpts.ChangeThreshold ?? 0;
         if (this.ValueType == VALUE_TYPE_NUMBER)
             this.SetupMathChannel(_advOpts.Config);
         // подписка на init
-        this.FillEventOnList('sysBus', [ COM_ALL_INIT1 ]);
-        this.FillEventOnList('dataBus', [ COM_ALL_CH_STATUS_SET ]);
+        this.FillEventOnList('sysBus', [COM_ALL_INIT1]);
+        this.FillEventOnList('dataBus', [COM_ALL_CH_STATUS_SET]);
     }
 
     get Buffer() { return this.#_ValueBuffer; }
@@ -362,6 +366,28 @@ class ClassChannel_S extends ClassBaseChannel_S {
             console.log(`err ${e}`);
         }
         return this.#_Proxy;
+    }
+    /**
+     * @typedef TypeSavingValues
+     * @property {boolean} raw
+     * @property {boolean} fine
+     */
+    /**
+     * @getter
+     * @public
+     * @description Возвращает какие значения записываются в БД
+     * @returns {TypeSavingValues}
+     */
+    get SavingValues() { return { ...this.#_SavingValues }; }
+
+    /**
+     * @method 
+     * @description Устанавливает свойства raw и fine поля #_SavingValues.
+     * @param {TypeSavingValues} _savingValues 
+     * @returns {void}
+     */
+    SetSavingValues(_savingValues) {
+        this.#_SavingValues = { raw: _savingValues?.raw ?? this.#_SavingValues.raw, fine: _savingValues?.fine ?? this.#_SavingValues.fine };
     }
     /**
      * @typedef TransformOpts
@@ -494,6 +520,22 @@ class ClassChannel_S extends ClassBaseChannel_S {
         }
         this.EmitMsg('dataBus', msg.com, msg);
     }
+
+    /**
+     * @method
+     * @public
+     * @description Отправляет на providermdb показания канала.
+     */
+    EmitEvents_providermdb_data_write({ arg, value }) {
+        const msg = {
+            dest: 'providermdb',
+            com: 'providermdb-data-write',
+            arg,
+            value
+        }
+        this.EmitMsg(msg.com, msg);
+    }
+
 
     /**
      * @method

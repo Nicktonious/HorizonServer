@@ -8,7 +8,6 @@ const COM_DM_DEVLIST_SET = 'dm-deviceslist-set';
 const COM_DM_NEW_CH = 'dm-new-channel';
 // EMITS
 const COM_DATA_FINE_SET = 'all-data-fine-set';
-const COM_PMDB_DEV_CONF_GET = 'providermdb-device-config-get';
 
 const COM_CH_ALARM = 'all-ch-alarm';
 const COM_ALL_INIT1 = 'all-init-stage1-set';
@@ -147,7 +146,10 @@ class ClassChannelSensor extends ClassChannel_S {
      */
     set Value(_val) {
         // if (this.Status != STATUS_ACTIVE) return;
-        // if (this.ValueType == VALUE_TYPE_NUMBER && typeof _val != 'number') return;
+        if (this.ValueType == VALUE_TYPE_NUMBER && typeof _val != 'number') {
+            this.EmitEvents_logger_log({ level: 'W', msg: `Type of raw value ${_val} doesn't match "number" channel type. Value skipped`, obj: this });
+            return;
+        }
         let val = _val;
         // Нужно изъять поле 
         if (this.ValueKey) try {
@@ -158,22 +160,26 @@ class ClassChannelSensor extends ClassChannel_S {
         // Нужно обработать как число
         // учитываем что тут val может уже быть полем, извлеченным из _val 
         if (this.ValueType == VALUE_TYPE_NUMBER && !this._Bypass) {
-            let val_preproc = val;
             val = Number.parseFloat(val);
-            this.Suppression.SuppressValue(val);
+            let val_preproc = val;
+            val = this.Suppression.SuppressValue(val);
             this._ValueSuppressed = val == val_preproc;
             val = this.Transform.TransformValue(val);
             if (typeof val != 'number') {
                 val = val_preproc;
-                this.EmitEvents_logger_log({ level: 'E', msg: `Failed to apply math transform to value ${_val}`, obj: this });
+                this.EmitEvents_logger_log({ level: 'W', msg: `Failed to apply math transform to value ${_val}`, obj: this });
             } else
                 this.Buffer.push(val);
+
+            if (this.SavingValues.raw) 
+                this.EmitEvents_providermdb_data_write({ arg: 'raw', value: [val_preproc] });
         }
         
         this.#_Value = val;
 
         this.EmitEvents_all_data_fine_set();
-        this.EmitEvents_providermdb_data_write();
+        if (this.SavingValues.fine) 
+            this.EmitEvents_providermdb_data_write({ arg: 'fine', value: [val] });
 
         this._DataUpdated = true;
         this._DataWasRead = false;
@@ -217,12 +223,6 @@ class ClassChannelSensor extends ClassChannel_S {
         }
         this.EmitMsg('dataBus', msg.com, msg);
     }
-    /**
-     * @method
-     * @public
-     * @description Отправляет на providermdb обработанные показания канала.
-     */
-    EmitEvents_providermdb_data_write() { }
 
     /**
      * @method
@@ -232,14 +232,16 @@ class ClassChannelSensor extends ClassChannel_S {
      * @param {ClassBusMsg_S} _msg 
      */
     HandlerEvents_all_data_raw_get(_topic, _msg) {
-        this.allDataRawGetEvent = Date.now();
+        
         try {
             const [source_name] = _msg.arg;
             const [ch_name] = _msg.value[0].arg;
             // ВНИМАНИЕ: от lhp-источников ch_name придет в формате <device_id>-<ch_num> а не <source_name>-<device_id>-<ch_num>
             // console.log(`(${ch_name} === ${this.NamePLC} || ${ch_name} === ${this.Name}) && ${source_name} === ${this.#_SourceName})`);
-            if ((ch_name === this.NamePLC || ch_name === this.Name) && source_name === this.SourceName)
+            if ((ch_name === this.NamePLC || ch_name === this.Name) && source_name === this.SourceName) {
+                this.allDataRawGetEvent = Date.now();
                 this.Value = _msg.value[0]?.value[0];
+            }
         } catch (e) {
             this.EmitEvents_logger_log({ msg: `Error while processing data-daw msg`, level: 'E', obj: _msg });
         }

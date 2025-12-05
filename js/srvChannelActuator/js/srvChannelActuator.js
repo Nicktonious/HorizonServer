@@ -6,7 +6,7 @@ const COM_ALL_INIT1 = 'all-init-stage1-set';
 const COM_ALL_CLOSE = 'all-close';
 const COM_DM_NEW_CH = 'dm-new-channel';
 const COM_ALL_ACT_SET = 'all-actuator-set';
-const COM_DATA_FINE_SET     = 'all-data-fine-set';
+const COM_DATA_FINE_SET = 'all-data-fine-set';
 const COM_ALL_DATA_RAW_GET = 'all-data-raw-get';
 
 const STATUS_ACTIVE = 'active';
@@ -43,14 +43,14 @@ class ClassActuatorInfo {
      * @param {SensorOptsType} _opts - объект с описательными характеристиками датчика и параметрами, необходимых для обеспечения работы датчика
      */
     constructor(_opts) {
-        this._Id      = _opts.id;
-        this._Name    = _opts.name;
-        this._Module  = _opts.module;
-        this._Type    = 'sensor';
+        this._Id = _opts.id;
+        this._Name = _opts.name;
+        this._Module = _opts.module;
+        this._Type = 'sensor';
         this._Article = _opts.article;
         this._Description = _opts.description;
         this._QuantityChannel = _opts.quantityChannel;
-        this._ChannelNames    = _opts.channelNames;
+        this._ChannelNames = _opts.channelNames;
         this._ChannelMeasures = _opts.channelMeasures;
     }
 
@@ -81,7 +81,7 @@ class ClassChannelActuator extends ClassChannel_S {
     * @constructor 
     * @param {TypeServiceOpts} _serviceOpts 
     */
-   constructor({ _busList, _busNameList, _advOpts }) {
+    constructor({ _busList, _busNameList, _advOpts }) {
         // имя службы идентично id канала
         // const service_name = `${_advOpts.SourceName}-${_advOpts.DeviceId}-${_advOpts.ChNum}`;
         // const service_name = _advOpts.Name;
@@ -89,10 +89,10 @@ class ClassChannelActuator extends ClassChannel_S {
         this.#_ValueConfirm = _advOpts.ValueConfirm ?? false;
         /****** */
         this.SetupMathChannel(_advOpts);
-        this.FillEventOnList('dataBus', [ COM_ALL_ACT_SET]);
+        this.FillEventOnList('dataBus', [COM_ALL_ACT_SET]);
     }
 
-    get Value() { 
+    get Value() {
         return this.#_Value;
     }
 
@@ -106,8 +106,8 @@ class ClassChannelActuator extends ClassChannel_S {
     HandlerEvents_all_init_stage1_set(_topic, _msg) {
         super.HandlerEvents_all_init_stage1_set(_topic, _msg);
 
-        this.FillEventOnList(this.ProtocolBusName, 
-            this.#_ValueConfirm ? [ COM_DM_DEVLIST_SET, COM_ALL_DATA_RAW_GET ] : [ COM_DM_DEVLIST_SET ] );
+        this.FillEventOnList(this.ProtocolBusName,
+            this.#_ValueConfirm ? [COM_DM_DEVLIST_SET, COM_ALL_DATA_RAW_GET] : [COM_DM_DEVLIST_SET]);
         this.EmitEvents_dm_new_channel();
     }
 
@@ -118,9 +118,12 @@ class ClassChannelActuator extends ClassChannel_S {
      * @returns {Boolean} 
      */
     SetValue(_val, _opts) {
-        this._setValueTime = new Date().getTime();
+        this._SetValueTime = new Date().getTime();
         // if (this.Status != STATUS_ACTIVE) return;
         let val = _val;
+        if (this.SavingValues.raw)
+            this.EmitEvents_providermdb_data_write({ arg:['raw'], value: [val] });
+
         if (this.ValueType == VALUE_TYPE_NUMBER) {
             val = this.Suppression.SuppressValue(_val);
             val = this.Transform.TransformValue(val);
@@ -130,19 +133,22 @@ class ClassChannelActuator extends ClassChannel_S {
 
         if (!this.#_ValueConfirm) {
             this.#_Value = val;
-            this.EmitEvents_all_data_fine_set({ value: [ val ]});
+
+            this.EmitEvents_all_data_fine_set({ value: [this.#_Value] });
+            if (this.SavingValues.fine)
+                this.EmitEvents_providermdb_data_write({ arg: ['fine'], value: [val] });
         }
 
-        this.EmitEvents_proxy_send({ value: [ val ] })
+        this.EmitEvents_proxy_send({ value: [val] })
     }
 
-        /**
-     * @method
-     * @public
-     * @description 
-     * @param {string} _topic 
-     * @param {ClassBusMsg_S} _msg 
-     */
+    /**
+ * @method
+ * @public
+ * @description 
+ * @param {string} _topic 
+ * @param {ClassBusMsg_S} _msg 
+ */
     HandlerEvents_all_data_raw_get(_topic, _msg) {
         this._allDataRawGetTime = new Date().getTime();
         try {
@@ -150,20 +156,23 @@ class ClassChannelActuator extends ClassChannel_S {
             const [ch_name] = _msg.value[0].arg;
             if ((ch_name === this.NamePLC || ch_name === this.Name) && source_name === this.SourceName) {
                 this.#_Value = _msg.value[0]?.value[0];
-                this.EmitEvents_all_data_fine_set({ value: [ this.#_Value ] });
+
+                this.EmitEvents_all_data_fine_set({ value: [this.#_Value] });
+                if (this.SavingValues.fine)
+                    this.EmitEvents_providermdb_data_write({ arg: ['fine'], value: [val] });
             }
         } catch (e) {
             this.EmitEvents_logger_log({ msg: `Error while processing data-raw msg`, level: 'E', obj: _msg });
         }
     }
-    
+
     /**
      * @method
      * Метод предназначен для предоставления дополнительных сведений об измерительном канале или физическом устройстве.
      * @param {Object} _opts - параметры запроса информации.
      */
-    GetInfo(_opts) { 
-        return this.DeviceInfo.GetInfo?.(this.ChNum, _opts); 
+    GetInfo(_opts) {
+        return this.DeviceInfo.GetInfo?.(this.ChNum, _opts);
     }
 
     /**
@@ -177,11 +186,10 @@ class ClassChannelActuator extends ClassChannel_S {
         this._allActuatorSetTime = new Date().getTime();
         const [ch_name] = _msg.arg;
         const [val_input] = _msg.value;
-        if (ch_name === this.Name/* && typeof val_input == 'number'*/) 
+        if (ch_name === this.Name/* && typeof val_input == 'number'*/)
             this.SetValue(val_input);
     }
-    
-    
+
     /**
      * @method
      * @public
@@ -194,19 +202,20 @@ class ClassChannelActuator extends ClassChannel_S {
         // выбор команды proxywscient-send | proxymqttclient-send | ...
         this.EmitEvents_logger_log({ level: 'E', msg: `Proxy service not found`, obj: this });
         const com_send = `${proxy_name}-send`;
-        
+
         const msg = {
             dest: proxy_name,
             com: com_send,
             arg: [this.SourceName],
             value: [{
-                arg: [this.Protocol === 'lhp' ? this.NamePLC : this.Name], 
+                arg: [this.Protocol === 'lhp' ? this.NamePLC : this.Name],
                 value
             }]
         }
 
         this.EmitMsg(this.ProtocolBusName, com_send, msg);
     }
+
     /**
      * @method
      * @public

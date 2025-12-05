@@ -35,6 +35,21 @@
 - _busNameList - список имен шин;
 - _advOpts - объект, содержащий настройки канала (имя источника, идентификатор устройства и номер канала).
 
+Пример конфигурации:
+```js
+{ 
+    Name: "plc4-switch",   
+    ChStatus: "active", 
+    ChType: "actuator",
+    ChMeas: "on/off", 
+    SourceName: "ADAM-6256",
+    DeviceId: "adam2",  
+    ChNum: 21,
+    DeviceHash: "e8fb-b1b0-2899-488d", 
+    Address: "" 
+},
+```
+
 ### Поля
 <div style="color: #555">
 
@@ -102,7 +117,7 @@
 - SetValue(_val, _opts) - отправляет на транспортную шину команду с указанным значением канала;
 - GetInfo - Метод предназначен для предоставления дополнительных сведений об измерительном канале или физическом устройстве;
 - HandlerEvents_all_init_stage1_set(_topic, _msg) - Обрабатывает команду 'all-init-stage1-set' на инициализацию службы: выполняет подписку на сообщения по транспортной шине и вызывает `super.EmitEvents_dm_new_channel()`;
-- HandlerEvents_all_actuator_set(_topic, _msg) - 
+- HandlerEvents_all_actuator_set(_topic, _msg) - обрабатывает запрос из userspace на изменение значения актуатора; в зависимости от значения поля `SavingValues.raw`, `SavingValues.fine` в методе вызываются запись в БД "сырого" и обработанного значения соответсвенно; 
 - EmitEvents_proxy_send({ value }) - отправляет на прокси-службу команду на изменение значения актуатора;
 - EmitEvents_all_data_fine_set({ value }) - отправляет на dataBus сообщение со значением канала.
 
