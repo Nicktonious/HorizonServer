@@ -146,10 +146,6 @@ class ClassChannelSensor extends ClassChannel_S {
      */
     set Value(_val) {
         // if (this.Status != STATUS_ACTIVE) return;
-        if (this.ValueType == VALUE_TYPE_NUMBER && typeof _val != 'number') {
-            this.EmitEvents_logger_log({ level: 'W', msg: `Type of raw value ${_val} doesn't match "number" channel type. Value skipped`, obj: this });
-            return;
-        }
         let val = _val;
         // Нужно изъять поле 
         if (this.ValueKey) try {
@@ -172,14 +168,14 @@ class ClassChannelSensor extends ClassChannel_S {
                 this.Buffer.push(val);
 
             if (this.SavingValues.raw) 
-                this.EmitEvents_providermdb_data_write({ arg: 'raw', value: [val_preproc] });
+                this.EmitEvents_providermdb_data_write({ arg: ['raw'], value: [val_preproc] });
         }
         
         this.#_Value = val;
 
         this.EmitEvents_all_data_fine_set();
         if (this.SavingValues.fine) 
-            this.EmitEvents_providermdb_data_write({ arg: 'fine', value: [val] });
+            this.EmitEvents_providermdb_data_write({ arg: ['fine'], value: [val] });
 
         this._DataUpdated = true;
         this._DataWasRead = false;

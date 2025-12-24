@@ -352,11 +352,14 @@ class ClassChannel_S extends ClassBaseChannel_S {
     get ProxyObject() {
         try {
             this.#_Proxy ??= new Proxy(this, {
-                get: (target, prop) => {
-                    // ограничение внешнего доступа к методам обработчикам/эмиттерам событий, которые по техническим причинам public
-                    if (prop.startsWith('EmitEvent_') || prop.startsWith('HandlerEvents_'))
-                        return undefined
-                    return target[prop];
+                get: (target, prop, receiver) => {
+                    if (typeof prop === 'string') {
+                        if (prop.startsWith('EmitEvent_') || prop.startsWith('HandlerEvents_'))
+                            return undefined;
+
+                        return target[prop];
+                    }
+                    return undefined;
                 },
                 set(obj, prop, value) {
                     return false;
@@ -533,7 +536,7 @@ class ClassChannel_S extends ClassBaseChannel_S {
             arg,
             value
         }
-        this.EmitMsg(msg.com, msg);
+        this.EmitMsg('mdbBus', msg.com, msg);
     }
 
 
