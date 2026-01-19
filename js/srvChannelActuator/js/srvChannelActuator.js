@@ -71,6 +71,7 @@ class ClassActuatorInfo {
 class ClassChannelActuator extends ClassChannel_S {
     #_Value;
     #_ValueConfirm;
+    #_StateChName;
     /**
     * @typedef TypeServiceOpts
     * @property {[ClassBus_S]} _busList
@@ -87,6 +88,7 @@ class ClassChannelActuator extends ClassChannel_S {
         // const service_name = _advOpts.Name;
         super({ _busNameList, _busList, _advOpts });
         this.#_ValueConfirm = _advOpts.ValueConfirm ?? false;
+        this.#_StateChName = _advOpts.StateChName;
         /****** */
         this.SetupMathChannel(_advOpts);
         this.FillEventOnList('dataBus', [COM_ALL_ACT_SET]);
@@ -108,6 +110,8 @@ class ClassChannelActuator extends ClassChannel_S {
 
         this.FillEventOnList(this.ProtocolBusName,
             this.#_ValueConfirm ? [COM_DM_DEVLIST_SET, COM_ALL_DATA_RAW_GET] : [COM_DM_DEVLIST_SET]);
+        if (this.#_StateChName)
+            this.FillEventOnList('dataBus', ['all-data-fine-set']);
         this.EmitEvents_dm_new_channel();
     }
 
@@ -173,6 +177,20 @@ class ClassChannelActuator extends ClassChannel_S {
      */
     GetInfo(_opts) {
         return this.DeviceInfo.GetInfo?.(this.ChNum, _opts);
+    }
+    /**
+     * @method
+     * @description Вызывает команду изменения состояния актуатора при обновление сенсорного state-канала. 
+     * @param {string} _topic 
+     * @param {*} _msg 
+     */
+    HandlerEvents_all_data_fine_set(_topic, _msg) {
+        const [chName] = _msg.arg;
+        if (chName == this.#_StateChName) {
+            const [{ Value, ValueSuppressed }] = _msg.value;
+            if (!ValueSuppressed)
+                this.SetValue(Value);
+        }
     }
 
     /**
