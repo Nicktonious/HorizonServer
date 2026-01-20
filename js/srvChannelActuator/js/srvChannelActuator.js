@@ -18,7 +18,7 @@ const COM_ALL_CH_STATUS_SET = 'all-ch-status-set';
 
 const VALUE_TYPE_NUMBER = 'number';
 const VALUE_TYPE_STRING = 'string';
-
+const VIRTUAL_SOURCE_NAME = 'virtual';
 /**
  * @typedef SensorOptsType 
  * @property {String} name
@@ -107,11 +107,13 @@ class ClassChannelActuator extends ClassChannel_S {
      */
     HandlerEvents_all_init_stage1_set(_topic, _msg) {
         super.HandlerEvents_all_init_stage1_set(_topic, _msg);
-
-        this.FillEventOnList(this.ProtocolBusName,
+        const busName = SourceName == VIRTUAL_SOURCE_NAME ? 'dataBus': this.ProtocolBusName;
+        this.FillEventOnList(busName,
             this.#_ValueConfirm ? [COM_DM_DEVLIST_SET, COM_ALL_DATA_RAW_GET] : [COM_DM_DEVLIST_SET]);
+        
         if (this.#_StateChName)
             this.FillEventOnList('dataBus', ['all-data-fine-set']);
+        
         this.EmitEvents_dm_new_channel();
     }
 

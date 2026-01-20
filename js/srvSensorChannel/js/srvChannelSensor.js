@@ -1,4 +1,5 @@
 // const ClassChannel_S = require('../../srvChannel/js/srvChannel'); DEBUG
+const { SocketType } = require('zeromq/lib/native');
 const ClassChannel_S = require('./srvChannel');
 
 // ### ПОДПИСКИ
@@ -24,6 +25,8 @@ const STATUS_INACTIVE = 'inactive';
 const CONST_UNKNOWN = 'unknown';
 const VALUE_TYPE_NUMBER = 'number';
 const VALUE_TYPE_STRING = 'string';
+
+const VIRTUAL_SOURCE_NAME = 'virtual';
 
 /**
  * @typedef SensorOptsType 
@@ -159,7 +162,7 @@ class ClassChannelSensor extends ClassChannel_S {
             val = Number.parseFloat(val);
             let val_preproc = val;
             val = this.Suppression.SuppressValue(val);
-            this._ValueSuppressed = val == val_preproc;
+            this._ValueSuppressed = val != val_preproc;
             val = this.Transform.TransformValue(val);
             if (typeof val != 'number') {
                 val = val_preproc;
@@ -192,8 +195,8 @@ class ClassChannelSensor extends ClassChannel_S {
      */
     HandlerEvents_all_init_stage1_set(_topic, _msg) {
         super.HandlerEvents_all_init_stage1_set(_topic, _msg);
-
-        this.FillEventOnList(this.ProtocolBusName, [COM_DM_DEVLIST_SET, COM_DATA_RAW_GET]);
+        const busName = this.SourceName == VIRTUAL_SOURCE_NAME ? 'dataBus' : this.ProtocolBusName;
+        this.FillEventOnList(busName, [COM_DM_DEVLIST_SET, COM_DATA_RAW_GET]);
         this.EmitEvents_dm_new_channel();
     }
 
@@ -228,7 +231,6 @@ class ClassChannelSensor extends ClassChannel_S {
      * @param {ClassBusMsg_S} _msg 
      */
     HandlerEvents_all_data_raw_get(_topic, _msg) {
-        
         try {
             const [source_name] = _msg.arg;
             const [ch_name] = _msg.value[0].arg;
@@ -236,7 +238,8 @@ class ClassChannelSensor extends ClassChannel_S {
             // console.log(`(${ch_name} === ${this.NamePLC} || ${ch_name} === ${this.Name}) && ${source_name} === ${this.#_SourceName})`);
             if ((ch_name === this.NamePLC || ch_name === this.Name) && source_name === this.SourceName) {
                 this.allDataRawGetEvent = Date.now();
-                this.Value = _msg.value[0]?.value[0];
+                const value = _msg.value[0]?.value[0];
+                if (value) this.Value = value;
             }
         } catch (e) {
             this.EmitEvents_logger_log({ msg: `Error while processing data-daw msg`, level: 'E', obj: _msg });
