@@ -11,10 +11,14 @@ const COM_DATA_FINE_SET = 'all-data-fine-set';
 const COM_PMDB_DEV_CONF_GET = 'providermdb-device-config-get';
 
 const COM_CH_ALARM = 'all-ch-alarm';
+const COM_ALL_CH_NEW = 'all-ch-new';
 const COM_ALL_INIT1 = 'all-init-stage1-set';
 
 const COM_ALL_CH_STATUS_GET = 'all-ch-status-get';
 const COM_ALL_CH_STATUS_SET = 'all-ch-status-set';
+
+const COM_ALL_CH_CONFIG_GET = 'all-ch-config-get';
+const COM_ALL_CH_CONFIG_SET = 'all-ch-config-set';
 
 // ### ПРОЧЕЕ
 const DEV_CONF_GET_TIMEOUT = 500;
@@ -328,6 +332,7 @@ class ClassChannel_S extends ClassBaseChannel_S {
      * @returns {string}
      */
     get ProtocolBusName() {
+        if (!this.SourceName) return 'dataBus';
         let proxyService = Object.values(this.ServicesState)
             .find(_service => _service.Name.toLowerCase().includes('proxy') && _service.Protocol === this.Protocol);
         if (!proxyService) {
@@ -438,6 +443,19 @@ class ClassChannel_S extends ClassBaseChannel_S {
             this.#_Alarms.SetZones(_config.zones);
         }
     }
+    /**
+     * @method
+     * @description Возвращает объект с текущей конфигурацией
+     * @returns {ChConfigOpts}
+     */
+    ToConfig() {
+        return ({
+            buffer: this.#_ValueBuffer.ToConfig(),
+            transform: this.#_Transform.ToConfig(),
+            suppression: this.#_Suppression.ToConfig(),
+            zones: this.Alarms?.ToConfig()
+        });
+    }
 
     /**
      * @method
@@ -508,6 +526,16 @@ class ClassChannel_S extends ClassBaseChannel_S {
         }
     }
 
+    HandlerEvents_all_ch_config_set(_topic, _msg) {
+        const { hash } = _msg.metadata;
+        let [ch_name] = _msg.arg;
+        let [config] = _msg.value;
+        if (ch_name == this.Name) {
+            this.SetupMathChannel(config);
+            this.EmitEvents_all_ch_config_get({ hash });
+        }
+    }
+
     /**
      * @method
      * @public
@@ -520,6 +548,37 @@ class ClassChannel_S extends ClassBaseChannel_S {
             com: COM_ALL_CH_STATUS_GET,
             arg: [this.Name],
             value: [this.Status]
+        }
+        this.EmitMsg('dataBus', msg.com, msg);
+    }
+
+    EmitEvents_all_ch_new() {
+        const msg = {
+            dest: 'all',
+            com: COM_ALL_CH_NEW,
+            arg: [this.Name],
+            value: [
+                Object.fromEntries(
+                    ['Name', 'ChName', 'SourceName', 'Address', 'ChType', 'DeviceId', 'ChMeas'].map(prop => [prop, this[prop]])
+                )
+            ]
+        }
+        this.EmitMsg('dataBus', msg.com, msg);
+    }
+
+    /**
+     * @method
+     * @public
+     * @description Отправляет сообщение с конфигурацией канала
+     * @returns 
+     */
+    EmitEvents_all_ch_config_get({ hash }) {
+        const msg = {
+            hash,
+            dest: 'all',
+            com: COM_ALL_CH_CONFIG_GET,
+            arg: [this.Name],
+            value: [this.ToConfig()]
         }
         this.EmitMsg('dataBus', msg.com, msg);
     }
@@ -601,7 +660,7 @@ class ClassChannel_S extends ClassBaseChannel_S {
  */
 class ClassValueBuffer {
     constructor(_opts, _ch) {
-        let opts = _opts || {};
+        let opts = _opts ?? {};
         opts.size = (typeof opts.size == 'number' && opts.size > 0) ? opts.size : 1;
         this._depth = opts.size;
         this._rawVal = undefined;
@@ -653,6 +712,10 @@ class ClassValueBuffer {
         return true;
     }
 
+    ToConfig() {
+        return { size: this._depth }
+    }
+
     push(_val) {
         this._rawVal = _val;
         while (this._arr.length >= this._depth) {
@@ -668,11 +731,18 @@ class ClassValueBuffer {
  */
 class ClassTransform {
     #_TransformFunc;
+    #_K;
+    #_B;
     constructor(_opts) {
-        if (typeof _opts?.k == 'number' && typeof _opts?.b == 'number')
+        if (typeof _opts?.k == 'number' && typeof _opts?.b == 'number') {
+            this.#_K = k;
+            this.#_B = b;
             this.SetLinearFunc(_opts.k, _opts.b);
-        else
+        } else {
+            this.#_K = 1;
+            this.#_B = 0;
             this.#_TransformFunc = (x) => x;
+        }
     }
     /**
      * @method
@@ -681,6 +751,8 @@ class ClassTransform {
      * @returns 
      */
     SetFunc(_func) {
+        this.#_K = undefined;
+        this.#_B = undefined;
         if (!_func) {
             this.#_TransformFunc = (x) => x;
             return true;
@@ -708,6 +780,17 @@ class ClassTransform {
      */
     TransformValue(val) {
         return this.#_TransformFunc(val);
+    }
+    /**
+     * @method
+     * @description Возвращает объект с текущей конфигурацией
+     * @returns {TransformOpts}
+     */
+    ToConfig() {
+        if (typeof _opts?.k == 'number' && typeof _opts?.b == 'number')
+            return ({ k: this.k, b: this.b });
+        else
+            return { func: this.#_TransformFunc.toString() };
     }
 }
 /**
@@ -745,6 +828,14 @@ class ClassSuppression {
         return _val > this._High ? this._High
             : _val < this._Low ? this._Low
                 : _val;
+    }
+    /**
+     * @method
+     * @description Возвращает объект с текущей конфигурацией
+     * @returns {SuppressionOpts}
+     */
+    ToConfig() {
+        return ({ limLow: this._Low, limHigh: this._High });
     }
 }
 
@@ -902,6 +993,24 @@ class ClassAlarms {
             this._Callbacks[indexes[this._CurrZone]](this._Channel, prevZone);
         }
     }
+    /**
+     * @method
+     * @description Возвращает объект с текущей конфигурацией
+     * @returns {ZonesOpts}
+     */
+    ToConfig() {
+        return ({
+            yellow: {
+                low: this._Zones[indexes.yelLow],
+                high: this._Zones[indexes.yelHigh]
+            },
+            red: {
+                low: this._Zones[indexes.redLow],
+                high: this._Zones[indexes.redHigh]
+            }
+        });
+    }
+
 }
 
 module.exports = ClassChannel_S;
