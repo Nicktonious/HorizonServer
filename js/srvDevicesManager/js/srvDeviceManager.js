@@ -62,6 +62,23 @@ class ClassDeviceManager_S extends ClassBaseService_S {
     }
     /**
      * @getter
+     * @public
+     * @description Возвраещает массив прокси-объектов каналов 
+     */
+    get Channels() {
+        return this.#_Channels.map(_ch => _ch.ProxyObject);
+    }
+    /**
+     * @iterator
+     * @description итерирует массив Channels
+     */
+    *[Symbol.iterator]() {
+        yield* this.Channels;
+    }
+
+    /**
+     * @deprecated ОСТАВЛЕН ДЛЯ ДЕБАГА
+     * @getter
      * @description возвращает сводную таблицу инициализированных каналов
      * @returns {[ClassChannelSensor]}
      */
@@ -71,13 +88,16 @@ class ClassDeviceManager_S extends ClassBaseService_S {
                 .filter(_service => _service.Importance === 'application')
                 .filter(_service => _service?.Service?.ChType);
     }
-
+    /**
+     * @typedef TYPE_DM_NEW_CH_MSG
+     * @property {[]} value
+     */
     /**
      * @method
      * @public
      * @description Обрабатывает сообщение о создании службы-канала
      * @param {string} _topic 
-     * @param {*} _msg 
+     * @param {TYPE_DM_NEW_CH_MSG} _msg 
      */
     HandlerEvents_dm_new_channel(_topic, _msg) {
         // _msg.value[0] - ссылка на объект службы
@@ -129,7 +149,6 @@ class ClassDeviceManager_S extends ClassBaseService_S {
             .filter(_source => _source.IsConnected && !_source.CheckDM)
             .forEach(_source => {
                 this.EmitEvents_proxy_deviceslist_get({ arg: [_source.Name ], opts: { timeout: 1000 } });
-                // this.#SendDeviceListGet(_source);
                 // логирование отправки запроса на получение списка каналов
                 this.EmitEvents_logger_log({ level: 'INFO', msg: `Deviceslist request sent to ${_source.Name}` });
             });
@@ -188,7 +207,7 @@ class ClassDeviceManager_S extends ClassBaseService_S {
     /**
      * @method
      * @public
-     * @description Отправляет по sysBus сообщение о томЯ, что все службы-каналы  
+     * @description Отправляет по sysBus сообщение о том, что все службы-каналы установили статус 'active' 
      */
     EmitEvents_process_channels_ready() {
         const msg = {
@@ -246,29 +265,8 @@ class ClassDeviceManager_S extends ClassBaseService_S {
     EmitEvents_sub_sensorall({ dest, arg }) {
         const [ source_name ] = arg;
         const ch_service_list = this.#_Channels.filter(_ch => _ch.SourceName === source_name);
-
         const { PrimaryBus: protocol_bus_name, Protocol: protocol } = this.ServicesState[dest];
-        /*
-        if (protocol === 'lhp') {
-            const lhp_msg = {
-                dest: 'dm',
-                com: 'dm-sub-sensorall',
-                arg: [ch_service_list.filter(_ch => _ch.ChType === 'sensor').map(_ch => _ch.NamePLC)]
-            }
-            this.EmitEvents_proxywsclient_send({ arg, value: [lhp_msg] });
-        } else {
-            const msg = {
-                dest,
-                com: `${dest}-sub-sensorall`,
-                arg,
-                value: [ch_service_list
-                    .filter(_ch => _ch.ChType === 'sensor')
-                    .map(_ch => ({ name: _ch.Name, address: _ch.Address }))
-                ]
-            }
-            this.EmitMsg(protocol_bus_name, msg.com, msg);
-        }*/
-        // Массивы типа [{ name, address}, ...] для каналов сенсоров и актуторов
+        // Массивы типа [{ name, address}, ...] для каналов сенсоров и актуаторов
         const sensor = ch_service_list
             .filter(_ch => _ch.ChType === 'sensor')
             .map(_ch => ({ name: _ch.Name, address: _ch.Address }));
@@ -289,7 +287,7 @@ class ClassDeviceManager_S extends ClassBaseService_S {
     /**
      * @method
      * @public
-     * @description Отправляет запрос на получение списка каналов mqtt-источника
+     * @description Отправляет запрос на получение списка каналов источника
      * @param {EmitEventsOpts} param0 
      */
     async EmitEvents_proxy_deviceslist_get({ arg, opts }) {

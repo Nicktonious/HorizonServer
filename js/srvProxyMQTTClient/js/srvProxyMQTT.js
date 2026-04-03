@@ -1,18 +1,41 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./srvService');
 
-const COM_DM_DEVLIST_GET        = 'dm-deviceslist-get';
-const COM_PMQTTC_DEVLIST_GET    = 'proxymqttclient-deviceslist-get';
-const COM_MQTTC_SEND            = 'mqttclient-send';
-const COM_ALL_DATA_RAW_GET      = 'all-data-raw-get';
+const COM_DM_DEVLIST_SET     = 'dm-deviceslist-set';
+const COM_PMQTTC_DEVLIST_GET = 'proxymqttclient-deviceslist-get';
+const COM_SUB_SENSALL      = 'proxymqttclient-sub-sensorall';
+const COM_PMQTTC_SEND      = 'proxymqttclient-send';
+const COM_PMQTTC_MSG_GET   = 'proxymqttclient-msg-get';
+const COM_MQTTC_SEND       = 'mqttclient-send';
+const COM_ALL_DATA_RAW_GET = 'all-data-raw-get';
 
 const BUS_NAME_LIST = ['sysBus', 'mqttBus', 'logBus'];
-const EVENT_ON_LIST_MQTTBUS = ['proxymqttclient-send', 'proxymqttclient-msg-get'];
+const EVENT_ON_LIST_MQTTBUS = [COM_PMQTTC_DEVLIST_GET, COM_SUB_SENSALL, COM_PMQTTC_SEND, COM_PMQTTC_MSG_GET];
 
-const DEBUG_SRC_NAME = 'brokerhubc445';
-const DUBUG_DEVLIST = { 
-    sensor: ['7d60-42b3-19b7-03db-00-0'],
-    actuator: ['8654-61b3-1ede-51ac-01-0']
-}   
+const channels_dummy = require('./Channels');
+const get_devlist = (_sourceName) => {
+    let list = { sensor: [], actuator: [] }
+    channels_dummy
+        .filter(_ch => _ch.ChStatus == 'active' && _ch.SourceName == _sourceName)
+        .forEach(_ch => {
+            let ch_note = `${_ch.DeviceIdHash}-${_ch.DeviceId}-${_ch.ChNum}`;
+            list[_ch.ChType].push(ch_note);
+        });
+    return list;
+};
+
+/**
+ * @typedef MappingListDevice
+ * @description Запись об одном канале: его name и address 
+ * @property {string} name
+ * @property {string} address
+ */
+/**
+ * @typedef MappingList
+ * @description Маппинг-таблица для сопоставления топика (address) с именем канала сенсора/актуатора (name) 
+ * @property {[MappingListDevice]} sensor 
+ * @property {[MappingListDevice]} actuator
+ */
+
 
 class ClassProxyMQTTClient_S extends ClassBaseService_S {
     #_SensSubList = { };
@@ -26,7 +49,7 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
         super.HandlerEvents_all_init_stage1_set(_topic, _msg);
 
         Object.keys(this.SourcesState)
-            .filter(_source => _source.Protocol === 'mqtt')  
+            .filter(_source => _source.Protocol === 'mqtt')
             .forEach(_source => {
                 _source.CheckProxy = true;
             });
@@ -40,13 +63,14 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
      */
     HandlerEvents_proxymqttclient_send(_topic, _msg) {
         const [ source_name ] = _msg.arg;
-        const { source }    = _msg.metadata;
-        const [ payload ]   = _msg.value;
-        const topic_name = this.#_SensSubList[source_name]?.find(_obj => _obj.name === source);
-        
+        const { source } = _msg.metadata;
+        const [ value ]  = _msg.value;
+        const [ payload ] = value.value;
+        const topic_name = this.#_SensSubList[source_name]?.find(_obj => _obj.name === source).address;
+
         const msg_is_valid = typeof topic_name === 'string' && payload;
-        if (msg_is_valid) {  
-            this.EmitEvents_mqttclient_send({ arg: _msg.arg, value: [topic_name, payload ]});       
+        if (msg_is_valid) {
+            this.EmitEvents_mqttclient_send({ arg: _msg.arg, value: [topic_name, payload ]});
         }
     }
     /**
@@ -71,16 +95,23 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
      * @param {*} _msg 
      */
     HandlerEvents_proxymqttclient_sub_sensorall(_topic, _msg) {
-        const [ source_name ] = _msg.arg;
-        // [ { name, address }, ... ]
-        const [ ch_list ] = _msg.value;
-        ch_list.forEach(_mappingObj => {
-            this.#_SensSubList[source_name] ??= []; 
+        const [source_name] = _msg.arg;
+        /* ch_list = { sensor: [{ name, address }, ...], actuator: { ... } ] */
+        const [{ sensor = [], actuator = [] }] = _msg.value;
+        const aggr_ch_map_list = [...sensor, ...actuator];
+        const topic_list = [];
+        aggr_ch_map_list.forEach(_mappingObj => {
+            this.#_SensSubList[source_name] ??= [];
             this.#_SensSubList[source_name].push(_mappingObj);
+            topic_list.push(_mappingObj.address);
         });
-        const topic_list = ch_list?.map(_obj => _obj.address);
-        if (Array.isArray(topic_list) && topic_list.length)
-            this.EmitEvents_mqttclient_sub({ arg: _msg.arg, value: topic_list })
+        if (topic_list.length) {
+            this.EmitEvents_logger_log({ msg: `Channels mapping with MQTT addresses: ${aggr_ch_map_list}`, level: 'I', obj: aggr_ch_map_list });
+            // подписка на адреса каналов-сенсоров 
+            this.EmitEvents_mqttclient_sub({ arg: _msg.arg, value: sensor.map(_s => _s.address) });
+        } else {
+            this.EmitEvents_logger_log({ msg: `No MQTT address or channel to complete mapping`, level: 'I', obj: aggr_ch_map_list });
+        }
     }
     /**
      * @method
@@ -90,12 +121,19 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
      * @param {*} _msg 
      */
     HandlerEvents_proxymqttclient_msg_get(_topic, _msg) {
-        const [ source_name ] = _msg.arg;
-        const [ topic_name, payload ] = _msg.value;
+        const [source_name] = _msg.arg;
+        const [topic_name, payload] = _msg.value;
+        // вытягивается именно список, так как несколько каналов могут иметь одинаковый address
+        // но извлекать из ответа разные значения по ValueKey или же обрабатывать разными мат. формулами 
+        const ch_name_list = this.#_SensSubList[source_name]
+            ?.filter(_obj => _obj.address === topic_name)
+            ?.map(_obj => _obj.name);
+
+        if (!ch_name_list) {
+            this.EmitEvents_logger_log({ level: 'W', msg: `Received a msg from ${source_name}, ${topic_name}, but no Channel subscribed is found`, obj: _msg });
+        }
         
-        const ch_name = this.#_SensSubList[source_name]
-            ?.find(_obj => _obj.address === topic_name)?.name;
-        if (ch_name) {
+        ch_name_list?.forEach(ch_name => {
             const msg = {
                 dest: ch_name,
                 com: COM_ALL_DATA_RAW_GET,
@@ -103,11 +141,11 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
                 value: [{
                     com: COM_ALL_DATA_RAW_GET,
                     arg: [ch_name],
-                    value: [parseFloat(payload)]
+                    value: [payload]
                 }]
             }
             this.EmitMsg('mqttBus', msg.com, msg);
-        }
+        });
     }
     /**
      * @method
@@ -135,12 +173,12 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
         const msg = {
             dest: 'dm',
             hash,
-            com: COM_DM_DEVLIST_GET,
+            com: COM_DM_DEVLIST_SET,
             arg,
             value: [{
                 dest: 'dm',
-                com: COM_DM_DEVLIST_GET,
-                value: [ DUBUG_DEVLIST ]
+                com: COM_DM_DEVLIST_SET,
+                value: [get_devlist(arg[0])]
             }]
         }
         this.EmitMsg('mqttBus', msg.com, msg);
