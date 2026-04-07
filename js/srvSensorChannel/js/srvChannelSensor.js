@@ -231,6 +231,7 @@ class ClassChannelSensor extends ClassChannel_S {
      * @param {ClassBusMsg_S} _msg 
      */
     HandlerEvents_all_data_raw_get(_topic, _msg) {
+        this.allDataRawGetEvent = Date.now();
         try {
             const [source_name] = _msg.arg;
             const [ch_name] = _msg.value[0].arg;

@@ -1,5 +1,6 @@
 const ClassBaseService_S = require('srvService');
 const ClassGlog2 = require('graylog2');
+const dgram = require('dgram');
 
 const EVENT_SYSBUS_LIST = ['all-init-stage1-set'];
 const EVENT_LOGBUS_LIST = ['logger-log'];
@@ -12,7 +13,6 @@ const BUS_NAMES_LIST = ['sysBus', 'logBus', 'mdbBus', 'dataBus'];
  */
 class ClassLogger extends ClassBaseService_S {
     #_WriteToConsole;
-    #_SourcesState;
     /**
      * @constructor
      * @description
@@ -25,25 +25,38 @@ class ClassLogger extends ClassBaseService_S {
             servers: [
                 { 'host': options.host || '127.0.0.1', 'port': options.port || 5141 }
             ],
-            hostname: options.hostname || 'ap01',       // the name of this host
+            hostname: options.hostname || 'hubc445',       // the name of this host
             facility: options.facility || 'HorizonServer', // the facility for these log messages
+            bufferSize: 1350         // max UDP packet size, should never exceed the
+        }); // объект взаимодействия с грейлогом, должен быть создан при ините, затем используется его метод для записи в грейлог
+        this._us = new ClassGlog2.graylog({
+            servers: [
+                { 'host': options.host || '127.0.0.1', 'port': 5143 }
+            ],
+            hostname: options.hostname || 'Node-RED',       // the name of this host
+            facility: options.facility || 'UserSpace', // the facility for these log messages
             bufferSize: 1350         // max UDP packet size, should never exceed the
         }); // объект взаимодействия с грейлогом, должен быть создан при ините, затем используется его метод для записи в грейлог
         this._WriteToConsole = options.console || false;
         this.FillEventOnList('sysBus', EVENT_SYSBUS_LIST);
         this.FillEventOnList('logBus', EVENT_LOGBUS_LIST);
+        this.ListenPort();
 
         this.EmitEvents_logger_log({level: 'INFO', msg: 'Logger initialized.', obj: this._gl.config});
     }
-    /*async HandlerEvents_all_init1(_topic, _msg) {
-        super.HandlerEvents_all_init1(_topic, _msg);
-        const { SourcesState } = _msg.arg[0];
-        this.#_SourcesState = SourcesState;
-    }*/
     set _WriteToConsole (opt) {
         if (typeof opt === 'boolean') {
             this.#_WriteToConsole = opt;
         }
+    }
+    EmitEvents_logger_proxy(_msg) {
+        const msg = {
+            dest: 'proxylogger',
+            com: 'logger-proxy',
+            arg: [],
+            value: [_msg]
+        }
+        this.EmitMsg('logBus', msg.com, msg);
     }
     /**
      * @method
@@ -59,10 +72,6 @@ class ClassLogger extends ClassBaseService_S {
 
         return datetime;
     }
-    Capitalize(_str) {
-        const str = _str.toLowerCase();
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    }
     /**
      * @method
      * @description
@@ -72,8 +81,8 @@ class ClassLogger extends ClassBaseService_S {
     HandlerEvents_logger_log(_topic, _msg) {
         let flevel = -1;
         let fdesc = 'Unknown';
-        const logdesc = ['Critical', 'Error', 'Warning', 'Notice', 'Info', 'Debug'];
-        const level = logdesc.indexOf(logdesc.find((lvl) => lvl.startsWith(this.Capitalize(_msg.arg[0]))));
+        const logdesc = ['CRITICAL', 'ERROR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG'];
+        const level = logdesc.indexOf(logdesc.find((lvl) => lvl.startsWith(_msg.arg[0].toUpperCase())));
         if (level != -1) {
             fdesc = logdesc[level];
             flevel = level+2;
@@ -82,11 +91,32 @@ class ClassLogger extends ClassBaseService_S {
         const obj = _msg.value[1] || {};
         const source = _msg.metadata.source;
 
-        // Запись в грейлог
-        this._gl._log(`${msg}`, obj, {level_desc: fdesc, service: source, service_bus: 'logBus'}, 0.0, flevel);
-        if (this.#_WriteToConsole) {
-            console.log(`${this.GetSystemTime()} [${source}.${'logBus'}] -> ${fdesc} | ${msg}`);
+        // Запись в грейлог        
+        if (source != 'proxylogger') {
+            this._gl._log(`${msg}`, obj, {level_desc: fdesc, service: source, service_bus: 'logBus'}, 0.0, flevel);
         }
+        else {
+            this._us._log(`${msg}`, obj.obj || {}, {level_desc: fdesc, service: source, service_bus: 'logBus', node: obj.node, flow: obj.flow}, 0.0, flevel);
+        }
+        if (this.#_WriteToConsole) {
+            const meta = `${this.GetSystemTime()} [${source}.${'logBus'}] -> ${fdesc} | ${msg}`;
+            console.log(meta);
+        }
+    }
+
+    ListenPort() {
+        const socket = dgram.createSocket({type: 'udp4'});
+    
+        socket.on('message', (msg) => {
+            console.log(JSON.parse(msg.toString()));
+            //this._gl._log(msg);
+        });
+        
+        socket.on('listening', () => {
+            console.log('Listening');
+        });
+        
+        socket.bind(44999);
     }
 }
 module.exports = ClassLogger;
