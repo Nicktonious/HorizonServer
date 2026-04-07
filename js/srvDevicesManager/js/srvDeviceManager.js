@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./srvService');
 
 // # КОНСТАНТЫ
 
@@ -66,7 +66,7 @@ class ClassDeviceManager_S extends ClassBaseService_S {
      * @description Возвраещает массив прокси-объектов каналов 
      */
     get Channels() {
-        return this.#_Channels.map(_ch => _ch.ProxyObject);
+        return this.#_Channels; //.map(_ch => _ch.ProxyObject);
     }
     /**
      * @iterator
