@@ -1,0 +1,4285 @@
+[
+    {
+        "id": "5ffa18c0a2994ff1",
+        "type": "subflow",
+        "name": "Subflow 5",
+        "info": "",
+        "category": "",
+        "in": [
+            {
+                "x": 60,
+                "y": 120,
+                "wires": [
+                    {
+                        "id": "30053507065f50fb"
+                    }
+                ]
+            }
+        ],
+        "out": [
+            {
+                "x": 940,
+                "y": 120,
+                "wires": [
+                    {
+                        "id": "a89aa8249cf00e55",
+                        "port": 0
+                    }
+                ]
+            },
+            {
+                "x": 1020,
+                "y": 180,
+                "wires": [
+                    {
+                        "id": "9c93c1dd3e947e91",
+                        "port": 0
+                    }
+                ]
+            }
+        ],
+        "env": [],
+        "meta": {},
+        "color": "#DDAA99"
+    },
+    {
+        "id": "dc163ceb0eb5db7b",
+        "type": "function",
+        "z": "5ffa18c0a2994ff1",
+        "name": "LiftDown",
+        "func": "// const chName = 'vm-mb-lift-motor-down';\nconst chName = msg.payload.arg[0];\n\nmsg.payload = {\n    \"dest\": \"interface\",\n    \"com\": \"interface-actuator\",\n    \"arg\": [chName],\n    \"value\": [1]\n}\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 80,
+        "wires": [
+            [
+                "a89aa8249cf00e55"
+            ]
+        ]
+    },
+    {
+        "id": "570f3b4014770c0e",
+        "type": "function",
+        "z": "5ffa18c0a2994ff1",
+        "name": "Stop LiftDown",
+        "func": "const chName = 'vm-mb-lift-motor-down';\n\nmsg.payload = {\n    \"dest\": \"interface\",\n    \"com\": \"interface-actuator\",\n    \"arg\": [chName],\n    \"value\": [0]\n}\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 180,
+        "wires": [
+            [
+                "a89aa8249cf00e55",
+                "9c93c1dd3e947e91"
+            ]
+        ]
+    },
+    {
+        "id": "dd10b73de5e6d567",
+        "type": "function",
+        "z": "5ffa18c0a2994ff1",
+        "name": "OnBottomTamper",
+        "func": "/* example { \n    \"com\": \"chio-output\", \n    \"arg\": [\"Value\", \"ChAlias\", \"ChMeas\"], \n    \"value\": [1, null, \"on/off\"] \n}*/\n\nconst i_name = msg.payload.arg?.indexOf('Name');\nconst i_v = msg.payload.arg?.indexOf('Value');\nif (i_name > -1 && i_v > -1) {\n    // const chName = msg.payload?.value[i_name]\n    const val = msg.payload?.value[i_v];\n    // debugger\n    if (val == 1) {\n        msg.payload = {\n            com: 'lift-level-set',\n            arg: [],\n            value: []\n        }\n        return msg;\n    }\n} \n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 410,
+        "y": 180,
+        "wires": [
+            [
+                "570f3b4014770c0e"
+            ]
+        ]
+    },
+    {
+        "id": "30053507065f50fb",
+        "type": "switch",
+        "z": "5ffa18c0a2994ff1",
+        "name": "",
+        "property": "payload.com",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "lift-level-set",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "chio-output",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 3,
+        "x": 210,
+        "y": 120,
+        "wires": [
+            [
+                "dc163ceb0eb5db7b"
+            ],
+            [
+                "dd10b73de5e6d567"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "a89aa8249cf00e55",
+        "type": "function",
+        "z": "5ffa18c0a2994ff1",
+        "name": "Pass",
+        "func": "\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 810,
+        "y": 120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9c93c1dd3e947e91",
+        "type": "delay",
+        "z": "5ffa18c0a2994ff1",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "500",
+        "timeoutUnits": "milliseconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 850,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "759403473b2d0ff2",
+        "type": "tab",
+        "label": "Vending machine emu",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "001e3faced7cf1bb",
+        "type": "group",
+        "z": "759403473b2d0ff2",
+        "name": "Эмуляция прокрутки моторов",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "5e31644a22aca45f",
+            "6cd8a5d8960dd7f3",
+            "05b35a90a5ec0bba",
+            "01a849d0612c8e0d",
+            "eccb91d40baa214b",
+            "d3a5e37e8841808a",
+            "5ee829c37d71e9e3",
+            "98fa8f56546dbd5b",
+            "afe7b32efeb7bd93"
+        ],
+        "x": 54,
+        "y": 1439,
+        "w": 1812,
+        "h": 182
+    },
+    {
+        "id": "79ed028d83697646",
+        "type": "group",
+        "z": "759403473b2d0ff2",
+        "name": "Эмуляция спуска лифта",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "fc5e3d337da7c1e8",
+            "3ef21a68318dae87",
+            "03a5fcfa89f753b3",
+            "9e51c413f3c54b17",
+            "9e79c3b58a3f6c11",
+            "8d1c18b32eebbacb",
+            "4073dc552a59250b",
+            "9b93c88ac753ee8c",
+            "aeb30cd2a986551f",
+            "86a8ffbf9f60aa38",
+            "746b5dbcd2d60de9",
+            "810a780e454f5329"
+        ],
+        "x": 54,
+        "y": 1639,
+        "w": 1812,
+        "h": 202
+    },
+    {
+        "id": "faee32ab7bfdd0e8",
+        "type": "group",
+        "z": "759403473b2d0ff2",
+        "name": "Эмуляция прокрутки моторов",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "dfd84a6a59be08e3",
+            "cf4f91de9be8971c",
+            "3b616595cf4aced1",
+            "9aabbc69994ea140",
+            "194273207a9a016f",
+            "b400da1cd38b53d7",
+            "af8e4c09cfaa9d1e",
+            "46df56fd810e4eb2",
+            "dde328bd6b52ab97",
+            "866b0d3d6576b9b1",
+            "2e25ef21a60a8f80",
+            "a13f5bef075059b4"
+        ],
+        "x": 174,
+        "y": 3079,
+        "w": 1812,
+        "h": 242
+    },
+    {
+        "id": "59c9fd2839151344",
+        "type": "group",
+        "z": "759403473b2d0ff2",
+        "name": "Контроль выполнения операции моторов",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "c2bf1c9c7f429d2b",
+            "32ee7e9544f17e84",
+            "804b3fe02836d9ff",
+            "9eea4af66360aaba",
+            "26395b9241ee38fd",
+            "8cb11312191ab8f8",
+            "a6454c70676d3b02",
+            "1c01f729d528bb23"
+        ],
+        "x": 2074,
+        "y": 319,
+        "w": 932,
+        "h": 162
+    },
+    {
+        "id": "b0613eb82879a4c1",
+        "type": "group",
+        "z": "759403473b2d0ff2",
+        "name": "Эмуляция подъема лифта",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "d247995f8adf7cc5",
+            "ba1aed1b3bf3f4a5",
+            "0f9468009d32d48a",
+            "04c48be400e6b51d",
+            "c2e00f83f49615a6",
+            "4fbc9dcc086835a5",
+            "0f42a3c8dfa37cf1",
+            "307f17a5bd3aba84",
+            "74b4b3ea04afd41f",
+            "e01e24c4047da58e",
+            "beb9e253fcb0d304",
+            "c457df002bbb5343"
+        ],
+        "x": 54,
+        "y": 1859,
+        "w": 2092,
+        "h": 222
+    },
+    {
+        "id": "07b6bfb02eac8c48",
+        "type": "inject",
+        "z": "759403473b2d0ff2",
+        "name": "0001",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "motor-com",
+        "payload": "0001",
+        "payloadType": "str",
+        "x": 150,
+        "y": 760,
+        "wires": [
+            [
+                "3f3694b0e6577ca8"
+            ]
+        ]
+    },
+    {
+        "id": "69b35055b0736bfe",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "SpiralGet",
+        "func": "const motorChannels = flow.get('motorChannels') ?? [];\ndebugger\nconst chName = (context.get('getRandomChName'))(motorChannels);\nconst itemsCount = Math.abs(Math.floor(Math.random()*10)-6) + 1;\nconst command = {\n    com: 'spiral-get',\n    arg: [chName],\n    value: [itemsCount],\n    done: false,\n    timestamp: new Date().getTime()\n};\nflow.set('REQ_SPIRAL', command);\n\nflow.get('VMLogAlias')('SPIRAL', `Request to get ${itemsCount} items using channel ${chName}`);\n\nmsg.payload = command; \nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "const getRandomChName = (channels) => {\n    let i = Math.floor(channels.length * Math.random()); \n    return channels[i]?.Name;\n}\n\n// context.set('getPairedTamperChName', (motorChName) => {\n//     const motorCh = motorChannels.find(ch => ch.Name == motorChName);\n//     const { Groups_1 } = motorCh;\n//     const pairedCh = tamperChannels.find(sensCh => sensCh.Groups_1 == Groups_1);\n//     return pairedCh?.Name;\n// });\n\ncontext.set('getRandomChName', getRandomChName);",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 760,
+        "wires": [
+            [
+                "3c1be6abaa14f9d3",
+                "d459d7a4e9d4ae25",
+                "86f9bf9aaa309572",
+                "6cb0f14ba90f0c78"
+            ]
+        ],
+        "info": "Инициирует транзацкцию получения тмц со спиральной ячейки"
+    },
+    {
+        "id": "2e4c0bdf8f94f261",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Channel I/O - SpiralMotors",
+        "func": "// Это узел-темплейт интерфейса, обрабатывающий\n// указанный пользователем канал. Функция выполняется при\n// нажатии кнопки \"Subscribe\", расположенном на данном потоке\nlet Prox = global.get('proxyCh');\nlet channel = msg.payload.arg[0];\nlet val = msg.payload.value[0];\nconst [chName] = msg.payload.arg;\nif (msg.payload.dest === 'interface' && msg.payload.com === 'interface-subscribe') {\n    // Опции подписки - имя канала, имя параметра, и объект данного узла\n    let opts = { chName, ret: [\"Value\", \"Name\"], node: node};\n\n    // Вызов метода подписки у службы интерфейса\n    Prox.Subscribe(opts);\n}\n// Функция актуатора\nif (msg.payload.dest === 'interface' && msg.payload.com === 'interface-actuator') {\n    Prox.Control({ chName: channel, Value: val });\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1700,
+        "y": 380,
+        "wires": [
+            [
+                "6cb6c30f5e5b25b8"
+            ]
+        ]
+    },
+    {
+        "id": "06f143d0007f8b0a",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Channel I/O - SpiralTampers",
+        "func": "// Это узел-темплейт интерфейса, обрабатывающий\n// указанный пользователем канал. Функция выполняется при\n// нажатии кнопки \"Subscribe\", расположенном на данном потоке\n\n// const tamperChannels = flow.get('tamperChannels');\n// msg.payload = { \"dest\": \"interface\", \"com\": \"interface-subscribe\", \"arg\": [ch.Name], \"value\": [] }\nconst [chName] = msg.payload.arg;\nif (msg.payload.dest === 'interface' && msg.payload.com === 'interface-subscribe') {\n    // Опции подписки - имя канала, имя параметра, и объект данного узла\n    let opts = {chName, ret: [\"Value\", \"Name\"], node: node};\n    // Вызов метода подписки у службы интерфейса\n    global.get('proxyCh').Subscribe(opts);\n    \n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1740,
+        "y": 180,
+        "wires": [
+            [
+                "a6a1ab9a00fcc035",
+                "6cb6c30f5e5b25b8"
+            ]
+        ]
+    },
+    {
+        "id": "6dabe17266f59993",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "MotorOn",
+        "func": "const chName = msg.payload.arg[0];\nif (typeof chName == 'string') {\n    msg.payload = {\n        \"dest\":\"interface\",\n        \"com\":\"interface-actuator\",\n        \"arg\":[chName],\n        \"value\":[flow.get('MOTOR_ON_VALUE')]\n    }\n\n    flow.get('VMLogAlias')('SPIRAL', `Channel ${chName} is set ON`);\n    return msg;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1440,
+        "y": 500,
+        "wires": [
+            [
+                "2e4c0bdf8f94f261"
+            ]
+        ]
+    },
+    {
+        "id": "6755f249c0ee74a3",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "MotorOff",
+        "func": "const chName = msg.payload;\n\nmsg.payload = {\n    \"dest\": \"interface\",\n    \"com\": \"interface-actuator\",\n    \"arg\": [chName],\n    \"value\": [flow.get('MOTOR_OFF_VALUE')]\n}\nflow.get('VMLogAlias')('SPIRAL', `Channel ${chName} is set OFF`);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1440,
+        "y": 380,
+        "wires": [
+            [
+                "2e4c0bdf8f94f261"
+            ]
+        ]
+    },
+    {
+        "id": "26147e7518467c76",
+        "type": "inject",
+        "z": "759403473b2d0ff2",
+        "name": "Start",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "4",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 350,
+        "y": 140,
+        "wires": [
+            [
+                "ca4493785af3d0d9"
+            ]
+        ],
+        "info": "Старт инициализации потока "
+    },
+    {
+        "id": "5e31644a22aca45f",
+        "type": "mqtt in",
+        "z": "759403473b2d0ff2",
+        "g": "001e3faced7cf1bb",
+        "name": "",
+        "topic": "/VendingMachine/MainBox/spiral-motors/#",
+        "qos": "2",
+        "datatype": "json",
+        "broker": "6fba8cf67943dffc",
+        "nl": false,
+        "rap": true,
+        "rh": "1",
+        "inputs": 0,
+        "x": 240,
+        "y": 1480,
+        "wires": [
+            [
+                "6cd8a5d8960dd7f3",
+                "5ee829c37d71e9e3"
+            ]
+        ]
+    },
+    {
+        "id": "6cd8a5d8960dd7f3",
+        "type": "delay",
+        "z": "759403473b2d0ff2",
+        "g": "001e3faced7cf1bb",
+        "name": "",
+        "pauseType": "delayv",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 650,
+        "y": 1540,
+        "wires": [
+            [
+                "98fa8f56546dbd5b"
+            ]
+        ]
+    },
+    {
+        "id": "05b35a90a5ec0bba",
+        "type": "mqtt out",
+        "z": "759403473b2d0ff2",
+        "g": "001e3faced7cf1bb",
+        "name": "",
+        "topic": "",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "6fba8cf67943dffc",
+        "x": 1790,
+        "y": 1540,
+        "wires": []
+    },
+    {
+        "id": "be4d304c4a30795e",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Subscribe on Motor channels",
+        "func": "// msg.payload = { motorChannels: flow.get('motorChannels'), tamperChannels: flow.get('tamperChannels') }\nconst { motorChannels } = msg.payload;\n\nfor (const ch of motorChannels) {\n    msg.payload = {\"dest\":\"interface\",\"com\":\"interface-subscribe\",\"arg\":[ch.Name],\"value\":[]}\n    node.send(msg);\n\n}\n// return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1380,
+        "y": 260,
+        "wires": [
+            [
+                "2e4c0bdf8f94f261"
+            ]
+        ]
+    },
+    {
+        "id": "9f4b86a6b95e5ee0",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Subscribe on Tamper channels",
+        "func": "const { tamperChannels } = msg.payload;\nfor (const ch of tamperChannels) {\n    msg.payload = { \"dest\": \"interface\", \"com\": \"interface-subscribe\", \"arg\": [ch.Name], \"value\": [] }\n    node.send(msg);\n}\n//return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1390,
+        "y": 180,
+        "wires": [
+            [
+                "06f143d0007f8b0a"
+            ]
+        ]
+    },
+    {
+        "id": "a6a1ab9a00fcc035",
+        "type": "link out",
+        "z": "759403473b2d0ff2",
+        "name": "link out 1",
+        "mode": "link",
+        "links": [
+            "80ad6bc5c3c58927",
+            "f0c1e4669c52e437",
+            "424ca8714c02c1dc"
+        ],
+        "x": 1905,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "80ad6bc5c3c58927",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 22",
+        "links": [
+            "a6a1ab9a00fcc035"
+        ],
+        "x": 755,
+        "y": 380,
+        "wires": [
+            [
+                "4f9b2d6e21142c81"
+            ]
+        ]
+    },
+    {
+        "id": "4f9b2d6e21142c81",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "HandleTamperUpdate",
+        "func": "/* example { \n    \"dest\": \"Channel I/O - VendingMachine-Tampers\", \n    \"com\": \"chio-output\", \n    \"arg\": [\"Value\", \"ChAlias\", \"ChMeas\"], \n    \"value\": [1, null, \"on/off\"] \n}*/\n\nif (msg.payload.com == 'chio-output') {\n    const i_name = msg.payload.arg?.indexOf('Name');\n    const i_v = msg.payload.arg?.indexOf('Value');\n    if (i_name > -1 && i_v > -1) {\n        const chName = msg.payload?.value[i_name];\n        const val = msg.payload?.value[i_v];\n\n        const tamperCh = flow.get('tamperChannels').find(ch => ch.Name == chName);\n        const motorCh = flow.get('motorChannels')\n            .find(ch => ch.ChNum == tamperCh.ChNum && ch.DeviceId == tamperCh.DeviceId);\n\n        flow.get('VMLogAlias')('SPIRAL', `Tamper ${chName} value is ${val}`);\n        `MotorDown ${chName} val=${val}`\n\n        if (val > 0) {\n            msg.payload = motorCh.Name;\n            return msg;\n        }\n    }\n}\n// msg.payload = {};\n// return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 920,
+        "y": 380,
+        "wires": [
+            [
+                "6755f249c0ee74a3"
+            ]
+        ],
+        "info": "Обработка обновления значения тампера. \"1\" на канале тампера инициирует остановку соответсвующего мотора."
+    },
+    {
+        "id": "01a849d0612c8e0d",
+        "type": "delay",
+        "z": "759403473b2d0ff2",
+        "g": "001e3faced7cf1bb",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "0.1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1280,
+        "y": 1580,
+        "wires": [
+            [
+                "eccb91d40baa214b"
+            ]
+        ]
+    },
+    {
+        "id": "eccb91d40baa214b",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "001e3faced7cf1bb",
+        "name": "Set Tamper OFF",
+        "func": "msg.payload = 0;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1520,
+        "y": 1580,
+        "wires": [
+            [
+                "05b35a90a5ec0bba"
+            ]
+        ]
+    },
+    {
+        "id": "f68a909efc845c17",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Channel I/O - LiftCounter",
+        "func": "// Это узел-темплейт интерфейса, обрабатывающий\n// указанный пользователем канал. Функция выполняется при\n// нажатии кнопки \"Subscribe\", расположенном на данном потоке\n\n// const tamperChannels = flow.get('tamperChannels');\n// msg.payload = { \"dest\": \"interface\", \"com\": \"interface-subscribe\", \"arg\": [ch.Name], \"value\": [] }\nconst [chName] = msg.payload.arg;\nif (msg.payload.dest === 'interface' && msg.payload.com === 'interface-subscribe') {\n    // for (const ch of tamperChannels) {\n    // Опции подписки - имя канала, имя параметра, и объект данного узла\n    let opts = {chName, ret: [\"Value\", \"Name\"], node: node};\n    // Вызов метода подписки у службы интерфейса\n    global.get('proxyCh').Subscribe(opts);\n    \n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 1180,
+        "wires": [
+            [
+                "a53424734a031ad5"
+            ]
+        ]
+    },
+    {
+        "id": "b6b5407904c45246",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Channel I/O - LiftMotorDown",
+        "func": "// Это узел-темплейт интерфейса, обрабатывающий\n// указанный пользователем канал. Функция выполняется при\n// нажатии кнопки \"Subscribe\", расположенном на данном потоке\nlet Prox = global.get('proxyCh');\nlet channel = msg.payload.arg[0];\nlet val = msg.payload.value[0];\nconst [chName] = msg.payload.arg;\nif (msg.payload.dest === 'interface' && msg.payload.com === 'interface-subscribe') {\n    // Опции подписки - имя канала, имя параметра, и объект данного узла\n    let opts = { chName, ret: [\"Value\", \"Name\"], node: node};\n\n    // Вызов метода подписки у службы интерфейса\n    Prox.Subscribe(opts);\n}\n// Функция актуатора\nif (msg.payload.dest === 'interface' && msg.payload.com === 'interface-actuator') {\n\n    Prox.Control({ chName: channel, Value: val });\n    flow.get('VMLogAlias')('SPIRAL', `MotorDown ${chName} is set to ${val}`);\n    \n    return msg;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1520,
+        "y": 980,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "545bd9eda5165686",
+        "type": "link out",
+        "z": "759403473b2d0ff2",
+        "name": "link out 3",
+        "mode": "link",
+        "links": [
+            "63747d4524d02adb",
+            "97815048cad95c71",
+            "37dfda58dda99725",
+            "1f11704f958d6710",
+            "1117ba4e2be43234",
+            "a20ac079947efcef",
+            "f4ed063280ae214a",
+            "7275d5c0819b446c"
+        ],
+        "x": 1025,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "63747d4524d02adb",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 24",
+        "links": [
+            "545bd9eda5165686"
+        ],
+        "x": 1165,
+        "y": 180,
+        "wires": [
+            [
+                "9f4b86a6b95e5ee0"
+            ]
+        ]
+    },
+    {
+        "id": "97815048cad95c71",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 25",
+        "links": [
+            "545bd9eda5165686"
+        ],
+        "x": 1165,
+        "y": 260,
+        "wires": [
+            [
+                "be4d304c4a30795e"
+            ]
+        ]
+    },
+    {
+        "id": "2d3bcd7af3e0202e",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Subscribe on LiftCounter",
+        "func": "// msg.payload = { motorChannels: flow.get('motorChannels'), tamperChannels: flow.get('tamperChannels') }\n// const liftChannels = ['vm-mb-lift-counter', 'vm-mb-lift-tamper-bottom']\n//     .map(chName => global.get(ch => chName == ch.Name);\n\nconst chName = 'vm-mb-lift-counter'; \n\nmsg.payload = {\"dest\":\"interface\",\"com\":\"interface-subscribe\",\"arg\":[chName],\"value\":[]}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 1180,
+        "wires": [
+            [
+                "f68a909efc845c17"
+            ]
+        ]
+    },
+    {
+        "id": "37dfda58dda99725",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 26",
+        "links": [
+            "545bd9eda5165686"
+        ],
+        "x": 125,
+        "y": 1120,
+        "wires": [
+            [
+                "f8090150db80fbfd"
+            ]
+        ]
+    },
+    {
+        "id": "450373f1b6ba1fbe",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Channel I/O - LiftBottomTamper",
+        "func": "// Это узел-темплейт интерфейса, обрабатывающий\n// указанный пользователем канал. Функция выполняется при\n// нажатии кнопки \"Subscribe\", расположенном на данном потоке\n\n// msg.payload = { \"dest\": \"interface\", \"com\": \"interface-subscribe\", \"arg\": [ch.Name], \"value\": [] }\nconst [chName] = msg.payload.arg;\nif (msg.payload.dest === 'interface' && msg.payload.com === 'interface-subscribe') {\n    // for (const ch of tamperChannels) {\n    // Опции подписки - имя канала, имя параметра, и объект данного узла\n    let opts = {chName, ret: [\"Value\", \"Name\"], node: node};\n    // Вызов метода подписки у службы интерфейса\n    global.get('proxyCh').Subscribe(opts);\n    \n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 1120,
+        "wires": [
+            [
+                "f8896b2c029a7dd4"
+            ]
+        ]
+    },
+    {
+        "id": "f8090150db80fbfd",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Subscribe on LiftBottomTamper",
+        "func": "// msg.payload = { motorChannels: flow.get('motorChannels'), tamperChannels: flow.get('tamperChannels') }\n// const liftChannels = ['vm-mb-lift-counter', 'vm-mb-lift-tamper-bottom']\n//     .map(chName => global.get(ch => chName == ch.Name);\n\n\nconst chName = 'vm-mb-lift-tamper-bottom';\nmsg.payload = { \"dest\": \"interface\", \"com\": \"interface-subscribe\", \"arg\": [chName], \"value\": [] }\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 330,
+        "y": 1120,
+        "wires": [
+            [
+                "450373f1b6ba1fbe"
+            ]
+        ]
+    },
+    {
+        "id": "05d2c35b94470208",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "LiftUp",
+        "func": "const chName = 'vm-mb-lift-motor-up';\n\nmsg.payload = {\n    \"dest\": \"interface\",\n    \"com\": \"interface-actuator\",\n    \"arg\": [chName],\n    \"value\": [1]\n}\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2470,
+        "y": 760,
+        "wires": [
+            [
+                "43dc80dde49c2dc4"
+            ]
+        ]
+    },
+    {
+        "id": "fa35d82a6c8dc2b3",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Stop LiftUp",
+        "func": "const chName = 'vm-mb-lift-motor-up';\n\nmsg.payload = {\n    \"dest\": \"interface\",\n    \"com\": \"interface-actuator\",\n    \"arg\": [chName],\n    \"value\": [0]\n}\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2470,
+        "y": 720,
+        "wires": [
+            [
+                "43dc80dde49c2dc4",
+                "85ffa940a6442a64"
+            ]
+        ]
+    },
+    {
+        "id": "43dc80dde49c2dc4",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Channel I/O - LiftMotorUp",
+        "func": "// Это узел-темплейт интерфейса, обрабатывающий\n// указанный пользователем канал. Функция выполняется при\n// нажатии кнопки \"Subscribe\", расположенном на данном потоке\nlet Prox = global.get('proxyCh');\nlet channel = msg.payload.arg[0];\nlet val = msg.payload.value[0];\nconst [chName] = msg.payload.arg;\nif (msg.payload.dest === 'interface' && msg.payload.com === 'interface-subscribe') {\n    // Опции подписки - имя канала, имя параметра, и объект данного узла\n    let opts = { chName, ret: [\"Value\", \"Name\"], node: node};\n\n    // Вызов метода подписки у службы интерфейса\n    Prox.Subscribe(opts);\n}\n// Функция актуатора\nif (msg.payload.dest === 'interface' && msg.payload.com === 'interface-actuator') {\n    Prox.Control({ chName: channel, Value: val });\n    flow.get('VMLogAlias')('SPIRAL', `MotorUp ${chName} is set to ${val}`);\n    return msg;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2750,
+        "y": 760,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3c1be6abaa14f9d3",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "MoveLift",
+        "func": "const chName = msg.payload.arg[0];\nconst ch = global.get('dm').Channels.find(ch => ch.Name == chName);\nconst [rows, cols] = flow.get('VM_SPIRAL_MATRIX_SIZE');\n\nconst level = Math.ceil((ch.ChNum + 1) / cols);\nif (level <= rows) {\n    // const row = 4;\n\n    msg.payload = {\n        com: 'all-actuator-set',\n        arg: [chName],\n        value: [level]\n    }\n    flow.get('VMLogAlias')('SPIRAL', `Spiral matrix size is [${rows}, ${cols}]. So, move lift to level ${level}`);\n\n    return msg;\n} else {\n    debugger\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1260,
+        "y": 760,
+        "wires": [
+            [
+                "369c92517d6f3bad"
+            ]
+        ]
+    },
+    {
+        "id": "1f11704f958d6710",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 27",
+        "links": [
+            "545bd9eda5165686"
+        ],
+        "x": 125,
+        "y": 1180,
+        "wires": [
+            [
+                "2d3bcd7af3e0202e"
+            ]
+        ]
+    },
+    {
+        "id": "f8896b2c029a7dd4",
+        "type": "link out",
+        "z": "759403473b2d0ff2",
+        "name": "link out 4",
+        "mode": "link",
+        "links": [
+            "c18e49e5359498b0"
+        ],
+        "x": 875,
+        "y": 1120,
+        "wires": []
+    },
+    {
+        "id": "c18e49e5359498b0",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 28",
+        "links": [
+            "f8896b2c029a7dd4"
+        ],
+        "x": 1125,
+        "y": 1000,
+        "wires": [
+            [
+                "cb4ffac5a043c75f"
+            ]
+        ]
+    },
+    {
+        "id": "d12afed5022d56a9",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Send LiftGroundSet",
+        "func": "const chName = flow.get('liftMotorDownChannel').Name;\nconst command = { com: 'lift-level-set', arg:[chName], value:[0], done: false, timestamp: new Date().getTime() };\nflow.set('REQ_LIFT', command);\nmsg.payload = command;\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1050,
+        "y": 920,
+        "wires": [
+            [
+                "cb4ffac5a043c75f"
+            ]
+        ]
+    },
+    {
+        "id": "cb4ffac5a043c75f",
+        "type": "subflow:5ffa18c0a2994ff1",
+        "z": "759403473b2d0ff2",
+        "name": "LiftGroundSet",
+        "x": 1260,
+        "y": 960,
+        "wires": [
+            [
+                "b6b5407904c45246"
+            ],
+            [
+                "301881c4ed7d73d3"
+            ]
+        ]
+    },
+    {
+        "id": "3454459dfd0eef7d",
+        "type": "switch",
+        "z": "759403473b2d0ff2",
+        "name": "",
+        "property": "REQ_LIFT.value[0]",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "LIFT_COUNTER",
+                "vt": "flow"
+            },
+            {
+                "t": "gt",
+                "v": "LIFT_COUNTER",
+                "vt": "flow"
+            },
+            {
+                "t": "lt",
+                "v": "LIFT_COUNTER",
+                "vt": "flow"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 3,
+        "x": 1990,
+        "y": 760,
+        "wires": [
+            [
+                "281bb0a81a6b73d6"
+            ],
+            [
+                "b63e8632b86fcdf9"
+            ],
+            [
+                "205ead5644aa11fd"
+            ]
+        ]
+    },
+    {
+        "id": "281bb0a81a6b73d6",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "OnDone",
+        "func": "const prevLiftCommand = flow.get('REQ_LIFT');\nconst  [requestedLevel] = prevLiftCommand.value;\nflow.set('REQ_LIFT', {\n    com: 'lift-level-set',\n    arg: [],\n    value: [requestedLevel],\n    done: true,\n    timestamp: new Date().getTime()\n});\n\nflow.get('VMLogAlias')('SPIRAL', `Lift is set to the requested level ${requestedLevel}`);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2220,
+        "y": 720,
+        "wires": [
+            [
+                "fa35d82a6c8dc2b3"
+            ]
+        ]
+    },
+    {
+        "id": "b63e8632b86fcdf9",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "OnContinue",
+        "func": "\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2230,
+        "y": 760,
+        "wires": [
+            [
+                "05d2c35b94470208"
+            ]
+        ]
+    },
+    {
+        "id": "205ead5644aa11fd",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "OnError",
+        "func": "const state = flow.get('REQ_LIFT');\n// arg: [flow.get('liftMotorDownChannel').Name],\nconst errState = { ...state, \n    value: [undefined, flow.get('SPIRAL_ERROR_STATE')], done: false,  timestamp: new Date().getTime() };\nflow.set('REQ_LIFT', errState);\nflow.get('VMLogAlias')('SPIRAL', `Error state: ${JSON.stringify(errState)}`);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2220,
+        "y": 800,
+        "wires": [
+            [
+                "42b92524ce11f181",
+                "866fb942ec7d6867"
+            ]
+        ]
+    },
+    {
+        "id": "fc5e3d337da7c1e8",
+        "type": "mqtt in",
+        "z": "759403473b2d0ff2",
+        "g": "79ed028d83697646",
+        "name": "",
+        "topic": "/VendingMachine/MainBox/lift/motors/1",
+        "qos": "2",
+        "datatype": "json",
+        "broker": "6fba8cf67943dffc",
+        "nl": false,
+        "rap": true,
+        "rh": "1",
+        "inputs": 0,
+        "x": 230,
+        "y": 1680,
+        "wires": [
+            [
+                "9b93c88ac753ee8c",
+                "aeb30cd2a986551f"
+            ]
+        ]
+    },
+    {
+        "id": "3ef21a68318dae87",
+        "type": "mqtt out",
+        "z": "759403473b2d0ff2",
+        "g": "79ed028d83697646",
+        "name": "",
+        "topic": "",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "6fba8cf67943dffc",
+        "x": 1790,
+        "y": 1680,
+        "wires": []
+    },
+    {
+        "id": "03a5fcfa89f753b3",
+        "type": "delay",
+        "z": "759403473b2d0ff2",
+        "g": "79ed028d83697646",
+        "name": "",
+        "pauseType": "random",
+        "timeout": "0.1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "4",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 690,
+        "y": 1740,
+        "wires": [
+            [
+                "746b5dbcd2d60de9"
+            ]
+        ]
+    },
+    {
+        "id": "9e51c413f3c54b17",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "79ed028d83697646",
+        "name": "SetBottomTamperOff",
+        "func": "msg.topic = 'vm-mb-lift-tamper-bottom';\nmsg.payload = 0;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1540,
+        "y": 1800,
+        "wires": [
+            [
+                "3ef21a68318dae87"
+            ]
+        ]
+    },
+    {
+        "id": "9e79c3b58a3f6c11",
+        "type": "delay",
+        "z": "759403473b2d0ff2",
+        "g": "79ed028d83697646",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "0.1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1280,
+        "y": 1800,
+        "wires": [
+            [
+                "9e51c413f3c54b17"
+            ]
+        ]
+    },
+    {
+        "id": "d247995f8adf7cc5",
+        "type": "mqtt in",
+        "z": "759403473b2d0ff2",
+        "g": "b0613eb82879a4c1",
+        "name": "",
+        "topic": "/VendingMachine/MainBox/lift/motors/0",
+        "qos": "2",
+        "datatype": "json",
+        "broker": "6fba8cf67943dffc",
+        "nl": false,
+        "rap": false,
+        "rh": "0",
+        "inputs": 0,
+        "x": 230,
+        "y": 1900,
+        "wires": [
+            [
+                "e01e24c4047da58e",
+                "beb9e253fcb0d304"
+            ]
+        ]
+    },
+    {
+        "id": "ba1aed1b3bf3f4a5",
+        "type": "mqtt out",
+        "z": "759403473b2d0ff2",
+        "g": "b0613eb82879a4c1",
+        "name": "",
+        "topic": "",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "6fba8cf67943dffc",
+        "x": 2070,
+        "y": 1900,
+        "wires": []
+    },
+    {
+        "id": "0f9468009d32d48a",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "b0613eb82879a4c1",
+        "name": "SetTopTamperOff",
+        "func": "msg.payload = 0;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1830,
+        "y": 2040,
+        "wires": [
+            [
+                "ba1aed1b3bf3f4a5"
+            ]
+        ]
+    },
+    {
+        "id": "04c48be400e6b51d",
+        "type": "delay",
+        "z": "759403473b2d0ff2",
+        "g": "b0613eb82879a4c1",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "0.1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1620,
+        "y": 2040,
+        "wires": [
+            [
+                "0f9468009d32d48a"
+            ]
+        ]
+    },
+    {
+        "id": "8d1c18b32eebbacb",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "79ed028d83697646",
+        "name": "ResetLiftCounter",
+        "func": "flow.set('LIFT_COUNTER', 0);",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1530,
+        "y": 1760,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d3a5e37e8841808a",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "001e3faced7cf1bb",
+        "name": "Set Tamper ON",
+        "func": "const motorChannels = flow.get('motorChannels') ?? [];\nconst tamperChannels = flow.get('tamperChannels') ?? [];\n\nconst { topic } = msg;\nconst motorCh  = motorChannels.find(ch => ch.Address == topic);\nconst tamperCh = tamperChannels\n    .find(ch => ch.ChNum == motorCh.ChNum && ch.DeviceId == motorCh.DeviceId);\n\nmsg.topic = tamperCh.Address;\nmsg.delay = flow.get('TAMPER_DELAY_MS')\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1020,
+        "y": 1540,
+        "wires": [
+            [
+                "05b35a90a5ec0bba",
+                "01a849d0612c8e0d"
+            ]
+        ]
+    },
+    {
+        "id": "4073dc552a59250b",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "79ed028d83697646",
+        "name": "SetBottomTamperOn",
+        "func": "// TODO\nmsg.topic = \"/VendingMachine/MainBox/lift/tampers/1\";\nmsg.payload = 1;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1040,
+        "y": 1760,
+        "wires": [
+            [
+                "3ef21a68318dae87",
+                "9e79c3b58a3f6c11",
+                "8d1c18b32eebbacb"
+            ]
+        ]
+    },
+    {
+        "id": "c2e00f83f49615a6",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "b0613eb82879a4c1",
+        "name": "SetTopTamperOn",
+        "func": "// TODO: fix hardcoed\nmsg.topic = \"/VendingMachine/MainBox/lift/tampers/2\";\nmsg.payload = 1;\n\n// console.log(`SetTopTamperOn`)\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1410,
+        "y": 2020,
+        "wires": [
+            [
+                "ba1aed1b3bf3f4a5",
+                "04c48be400e6b51d"
+            ]
+        ]
+    },
+    {
+        "id": "4fbc9dcc086835a5",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "b0613eb82879a4c1",
+        "name": "IncrementLiftCounter",
+        "func": "// TODO fix hardcode\nmsg.topic = \"/VendingMachine/MainBox/lift/tampers/2\";\nconst counter = flow.get('LIFT_COUNTER');\nmsg.payload = counter+1;\n\n// const maxCounter = flow.get('VM_SPIRAL_MATRIX_SIZE')[0];\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 820,
+        "y": 1960,
+        "wires": [
+            [
+                "0f42a3c8dfa37cf1"
+            ]
+        ]
+    },
+    {
+        "id": "0f42a3c8dfa37cf1",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "b0613eb82879a4c1",
+        "name": "SetLiftCounter",
+        "func": "// TODO fix hardcode mqtt addresses\nmsg.topic = \"/VendingMachine/MainBox/lift/tampers/0\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1020,
+        "y": 1960,
+        "wires": [
+            [
+                "307f17a5bd3aba84",
+                "ba1aed1b3bf3f4a5"
+            ]
+        ]
+    },
+    {
+        "id": "307f17a5bd3aba84",
+        "type": "switch",
+        "z": "759403473b2d0ff2",
+        "g": "b0613eb82879a4c1",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "VM_LIFT_MAX_LEVEL",
+                "vt": "flow"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 1210,
+        "y": 2020,
+        "wires": [
+            [
+                "c2e00f83f49615a6"
+            ]
+        ]
+    },
+    {
+        "id": "369c92517d6f3bad",
+        "type": "join",
+        "z": "759403473b2d0ff2",
+        "name": "",
+        "mode": "custom",
+        "build": "merged",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "useparts": false,
+        "accumulate": true,
+        "timeout": "",
+        "count": "",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 1590,
+        "y": 760,
+        "wires": [
+            [
+                "4be72be789742f0f"
+            ]
+        ]
+    },
+    {
+        "id": "772fcbaa4934c69f",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "complete",
+        "func": "msg.complete = true\nmsg.payload = {}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1440,
+        "y": 800,
+        "wires": [
+            [
+                "369c92517d6f3bad"
+            ]
+        ]
+    },
+    {
+        "id": "d459d7a4e9d4ae25",
+        "type": "join",
+        "z": "759403473b2d0ff2",
+        "name": "",
+        "mode": "custom",
+        "build": "merged",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "useparts": false,
+        "accumulate": false,
+        "timeout": "",
+        "count": "",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 870,
+        "y": 540,
+        "wires": [
+            [
+                "d8715caa01587c74"
+            ]
+        ]
+    },
+    {
+        "id": "e33c3dc4b0edfe76",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 29",
+        "links": [
+            "85ffa940a6442a64"
+        ],
+        "x": 575,
+        "y": 540,
+        "wires": [
+            [
+                "8c2c611ef053b0bf"
+            ]
+        ]
+    },
+    {
+        "id": "85ffa940a6442a64",
+        "type": "link out",
+        "z": "759403473b2d0ff2",
+        "name": "link out 5",
+        "mode": "link",
+        "links": [
+            "e33c3dc4b0edfe76"
+        ],
+        "x": 2845,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "a53424734a031ad5",
+        "type": "link out",
+        "z": "759403473b2d0ff2",
+        "name": "link out 6",
+        "mode": "link",
+        "links": [
+            "a61d8ac1c74ffcd6"
+        ],
+        "x": 875,
+        "y": 1180,
+        "wires": []
+    },
+    {
+        "id": "a61d8ac1c74ffcd6",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 30",
+        "links": [
+            "a53424734a031ad5"
+        ],
+        "x": 1535,
+        "y": 680,
+        "wires": [
+            [
+                "58166e32d59aa620"
+            ]
+        ]
+    },
+    {
+        "id": "32ae18550eb50ffb",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Init ch lists",
+        "func": "flow.set('isMotor', (ch) => {\n    if (!ch?.DeviceId?.startsWith) {\n        debugger;\n    }\n    return ch.SourceName == 'VendingMachineSource' && ch.Name.startsWith('vm-mb-motor-') && ch.ChType == 'actuator';\n});\n\nflow.set('isSpiralMotorCurrent', (ch) => {\n    return ch.SourceName == 'VendingMachineSource' && ch.Name.startsWith('vm-mb-motors-current') && ch.ChType == 'sensor';\n});\n\nflow.set('isTamper', (ch) => {\n    if (!ch?.DeviceId?.startsWith) {\n        debugger;\n    }\n    return ch.SourceName == 'VendingMachineSource' && ch.Name.startsWith('vm-mb-tamper-') && ch.ChType == 'sensor';\n});\n\nflow.set('isLock', (ch) => {\n    return ch.SourceName == 'VendingMachineSource' &&\n        ch.Name.startsWith('vm-mb-cell-lock') && ch.ChType == 'actuator';\n});\n\nflow.set('isLockStatus', (ch) => {\n    return ch.SourceName == 'VendingMachineSource' &&\n        ch.Name.startsWith('vm-mb-cell-lock-status') && ch.ChType == 'sensor';\n});\n\nflow.set('motorChannels', \n    global.get('dm').Channels\n        .filter(flow.get('isMotor'))\n        .map(({ Name, ChNum, DeviceId, SourceName, ChType, Address }) => ({ Name, ChNum, DeviceId, SourceName, ChType, Address }))\n         ?? []);\n\nflow.set('tamperChannels', \n    global.get('dm').Channels\n        .filter(flow.get('isTamper'))\n        .map(({ Name, ChNum, DeviceId, SourceName, ChType, Address }) => ({ Name, ChNum, DeviceId, SourceName, ChType, Address }))\n        ?? []);\n\nflow.set('lockChannels',\n    global.get('dm').Channels\n        .filter(flow.get('isLock'))\n        .map(({ Name, ChNum, DeviceId, SourceName, ChType, Address }) => ({ Name, ChNum, DeviceId, SourceName, ChType, Address }))\n    ?? []);\n\nflow.set('lockStatusChannels',\n    global.get('dm').Channels\n        .filter(flow.get('isLockStatus'))\n        .map(({ Name, ChNum, DeviceId, SourceName, ChType, Address }) => ({ Name, ChNum, DeviceId, SourceName, ChType, Address }))\n    ?? []);\n\nflow.set('spiralMotorCurrentChannels',\n    global.get('dm').Channels\n        .filter(flow.get('isSpiralMotorCurrent'))\n        .map(({ Name, ChNum, DeviceId, SourceName, ChType, Address }) => ({ Name, ChNum, DeviceId, SourceName, ChType, Address }))\n    ?? []);\n    \nflow.set('liftMotorCurrentChannel', \n    global.get('dm').Channels\n        .filter(ch => ch.Name == 'vm-mb-lift-motors-current')\n        .map(({ Name, ChNum, DeviceId, SourceName, ChType, Address }) => ({ Name, ChNum, DeviceId, SourceName, ChType, Address }))\n        [0]);\n\nflow.set('liftMotorDownChannel', \n    global.get('dm').Channels\n        .filter(ch => ch.Name == 'vm-mb-lift-motor-down')\n        .map(({ Name, ChNum, DeviceId, SourceName, ChType, Address }) => ({ Name, ChNum, DeviceId, SourceName, ChType, Address }))\n        [0]);\n\nflow.set('liftMotorUpChannel', \n    global.get('dm').Channels\n        .filter(ch => ch.Name == 'vm-mb-lift-motor-up')\n        .map(({ Name, ChNum, DeviceId, SourceName, ChType, Address }) => ({ Name, ChNum, DeviceId, SourceName, ChType, Address }))\n        [0]);\n\nmsg.payload = { \n    motorChannels:      flow.get('motorChannels'), \n    tamperChannels:     flow.get('tamperChannels'),\n    lockChannels:       flow.get('lockChannels'),\n    lockStatusChannels: flow.get('lockStatusChannels'),\n    spiralMotorCurrentChannels: flow.get('spiralMotorCurrentChannels'),\n    liftMotorCurrentChannel: flow.get('liftMotorCurrentChannel'),\n}\n\nreturn msg",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 690,
+        "y": 140,
+        "wires": [
+            [
+                "4d59c8c5a49b32aa"
+            ]
+        ],
+        "info": "Сохранение списков каналов в контексте потока. "
+    },
+    {
+        "id": "ca4493785af3d0d9",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Emu config",
+        "func": "flow.set('STATUS', 'init');\nflow.set('SOURCE_NAME', 'VendingMachineSource');\nflow.set('MOTOR_ON_VALUE', 1);\nflow.set('MOTOR_OFF_VALUE', 0);\nflow.set('MOTOR_UPDATE_FREQ', 1);\nglobal.set('MOTOR_MAX_TIME', 2500);\nflow.set('TAMPER_DELAY_MS', 2000);\nflow.set('LOCK_UPDATE_FREQ', 1);\nflow.set('LOCK_SENS_DELAY_MS', 20);\nflow.set('LOCK_SENS_DELAY_MS', 20);\n\nconst VM_SPIRAL_MATRIX_SIZE = [5, 1];\nflow.set('VM_SPIRAL_MATRIX_SIZE', VM_SPIRAL_MATRIX_SIZE);\nflow.set('VM_LIFT_MAX_LEVEL', VM_SPIRAL_MATRIX_SIZE[0]-1);\nflow.set('LIFT_COUNTER', 0);\n\nflow.set('LIFT_OK_STATE', 'OK');\nflow.set('LIFT_ERROR_STATE', 'ERROR');\n\nflow.set('LIFT_MOTOR_OK_CURRENT', 5);\nflow.set('SPIRAL_MOTOR_OK_CURRENT', 1);\nflow.set('LIFT_MOTOR_BAD_CURRENT', 10);\nflow.set('SPIRAL_MOTOR_BAD_CURRENT', 2);\n\nflow.set('SPIRAL_ERROR_STATE', 'ERROR');\n\nflow.set('CELL_UNLOCK_VALUE', 1);\n\nflow.set('CELL_UNLOCK_STATE', 0);\nflow.set('CELL_LOCK_STATE', 1);\nflow.set('CELL_ERROR_STATE', 'ERROR');\n\nflow.set('CELL_UNLOCK_DELAY_MS', 50);\nflow.set('CELL_LOCK_DELAY_MS', 1000);\n\nflow.set('CELL_UNLOCK_STATE', 1);\nflow.set('CELL_LOCK_STATE', 0);\n\nflow.set('CELL_UNLOCK_MAX_DELAY_MS', 1000);\nflow.set('CELL_LOCK_MAX_DELAY_MS', 2000);\n\nflow.set('REQ_LIFT', { com: 'lift-level-set', arg: [], value: [0], done: true, timestamp: new Date().getTime() });\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 140,
+        "wires": [
+            [
+                "32ae18550eb50ffb",
+                "08e4b2d79049e1dc"
+            ]
+        ],
+        "info": "Сохранение конфигурационных констант в контексте потока. "
+    },
+    {
+        "id": "4d59c8c5a49b32aa",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Set flow status",
+        "func": "flow.set('STATUS', 'work');\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 880,
+        "y": 140,
+        "wires": [
+            [
+                "545bd9eda5165686",
+                "084f8e0679666960"
+            ]
+        ]
+    },
+    {
+        "id": "74b4b3ea04afd41f",
+        "type": "trigger",
+        "z": "759403473b2d0ff2",
+        "g": "b0613eb82879a4c1",
+        "name": "",
+        "op1": "",
+        "op2": "0",
+        "op1type": "pay",
+        "op2type": "str",
+        "duration": "-1",
+        "extend": false,
+        "overrideDelay": false,
+        "units": "s",
+        "reset": "",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 380,
+        "y": 2020,
+        "wires": [
+            [
+                "c457df002bbb5343"
+            ]
+        ]
+    },
+    {
+        "id": "e01e24c4047da58e",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "b0613eb82879a4c1",
+        "name": "Reset",
+        "func": "if (msg.payload == 0)\n    msg.reset = true;\n\nflow.get('VMLogAlias')('SPIRAL', `Up lift motor is ${msg.payload}`);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 190,
+        "y": 2020,
+        "wires": [
+            [
+                "74b4b3ea04afd41f"
+            ]
+        ]
+    },
+    {
+        "id": "a5bfa740d60f3138",
+        "type": "inject",
+        "z": "759403473b2d0ff2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "123",
+        "payload": "LIFT_COUNTER",
+        "payloadType": "flow",
+        "x": 1120,
+        "y": 1060,
+        "wires": [
+            [
+                "48b4ab15340f9e8b"
+            ]
+        ]
+    },
+    {
+        "id": "48b4ab15340f9e8b",
+        "type": "debug",
+        "z": "759403473b2d0ff2",
+        "name": "debug 45",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1300,
+        "y": 1060,
+        "wires": []
+    },
+    {
+        "id": "58166e32d59aa620",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "CheckLiftCounter",
+        "func": "/* example { \n    \"dest\": \"Channel I/O - VendingMachine-Tampers\", \n    \"com\": \"chio-output\", \n    \"arg\": [\"Value\", \"ChAlias\", \"ChMeas\"], \n    \"value\": [1, null, \"on/off\"] \n}*/\n\nif (msg.payload.com == 'chio-output') {\n    const i_name = msg.payload.arg?.indexOf('Name');\n    const i_v = msg.payload.arg?.indexOf('Value');\n    if (i_name > -1 && i_v > -1) {\n        // const chName = msg.payload?.value[i_name]\n        const val = msg.payload?.value[i_v];\n        flow.set('LIFT_COUNTER', val);\n\n        flow.get('VMLogAlias')('SPIRAL', `Lift counter is ${val}`);\n\n        msg.payload = { value: [val]};\n        return msg;\n    }\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1690,
+        "y": 680,
+        "wires": [
+            [
+                "617965ac3271db3e"
+            ]
+        ]
+    },
+    {
+        "id": "4be72be789742f0f",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "SetReqLevel",
+        "func": "const prevLiftCommand = flow.get('REQ_LIFT');\nif (!prevLiftCommand.done) {\n    debugger;\n    flow.get('VMLogAlias')('SPIRAL', `Unexpected error: lift hasn't completed previous operation`);\n}\nconst chName = flow.get('liftMotorUpChannel').Name;\nconst { com } = msg?.payload;\nconst requestedLevel = msg?.payload?.value?.[0];\nif (com == 'all-actuator-set' && requestedLevel >= 0) {\n    flow.set('REQ_LIFT', { \n        com: 'lift-level-set', \n        arg: [chName], \n        value: [requestedLevel], \n        done: false, \n        timestamp: new Date().getTime() \n    });\n    return msg;\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1770,
+        "y": 760,
+        "wires": [
+            [
+                "3454459dfd0eef7d"
+            ]
+        ]
+    },
+    {
+        "id": "617965ac3271db3e",
+        "type": "switch",
+        "z": "759403473b2d0ff2",
+        "name": "",
+        "property": "REQ_LIFT.value[0]",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "LIFT_COUNTER",
+                "vt": "flow"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 1990,
+        "y": 680,
+        "wires": [
+            [
+                "281bb0a81a6b73d6"
+            ]
+        ]
+    },
+    {
+        "id": "9b93c88ac753ee8c",
+        "type": "switch",
+        "z": "759403473b2d0ff2",
+        "g": "79ed028d83697646",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 510,
+        "y": 1740,
+        "wires": [
+            [
+                "03a5fcfa89f753b3"
+            ]
+        ]
+    },
+    {
+        "id": "1c01f729d528bb23",
+        "type": "link out",
+        "z": "759403473b2d0ff2",
+        "g": "59c9fd2839151344",
+        "name": "link out 8",
+        "mode": "link",
+        "links": [
+            "c56a9796982f3e22"
+        ],
+        "x": 2965,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "d8715caa01587c74",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "SpiralGetSingle",
+        "func": "/*const command = {\n    com: 'spiral-get',\n    arg: [chName],\n    value: [itemsCount],\n    done: false,\n    timestamp: new Date().getTime()\n};*/\nconst prevCommand = flow.get('REQ_SPIRAL');\n\nconst REQ_ITEMS_LEFT = prevCommand.value[0];\nflow.set('REQ_ITEMS_LEFT', REQ_ITEMS_LEFT);\ncontext.set('CHNAME_IN_WORK', msg.payload.arg[0]);\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1060,
+        "y": 540,
+        "wires": [
+            [
+                "ee2b30a0267004a6",
+                "a13896561233bbfd"
+            ]
+        ]
+    },
+    {
+        "id": "20aa013314e6b198",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "OnSpiralGetDone",
+        "func": "/*const command = {\n    com: 'spiral-get',\n    arg: [chName],\n    value: [itemsCount],\n    done: false,\n    timestamp: new Date().getTime()\n};*/\n\nconst state = flow.get('REQ_SPIRAL');\n\nflow.set('REQ_SPIRAL', {...state, done: true, timestamp: new Date().getTime() });\nflow.get('VMLogAlias')('SPIRAL', `Operation succeed. State: ${JSON.stringify(flow.get('REQ_SPIRAL'))}`);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1450,
+        "y": 600,
+        "wires": [
+            [
+                "4f2b002748243cf2",
+                "8f095a599514080c"
+            ]
+        ]
+    },
+    {
+        "id": "c56a9796982f3e22",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 31",
+        "links": [
+            "1c01f729d528bb23",
+            "298686d87a5f6e0f"
+        ],
+        "x": 765,
+        "y": 480,
+        "wires": [
+            [
+                "5fc0724979b07d80"
+            ]
+        ]
+    },
+    {
+        "id": "5fc0724979b07d80",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "SpiralGetRepeat",
+        "func": "/*const command = {\n    com: 'spiral-get',\n    arg: [chName],\n    value: [itemsCount],\n    done: false,\n    timestamp: new Date().getTime()\n};*/\nconst prevCommand = flow.get('REQ_SPIRAL');\n\nconst REQ_ITEMS_LEFT = prevCommand.value[0] - 1;\nprevCommand.value = [REQ_ITEMS_LEFT];\nflow.set('REQ_SPIRAL', prevCommand);\n// TODO set command to payload\n\nflow.get('VMLogAlias')('SPIRAL', `${REQ_ITEMS_LEFT} items more to receive during this operation...`);\nmsg.payload = prevCommand;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 910,
+        "y": 480,
+        "wires": [
+            [
+                "d8715caa01587c74"
+            ]
+        ]
+    },
+    {
+        "id": "ee2b30a0267004a6",
+        "type": "switch",
+        "z": "759403473b2d0ff2",
+        "name": "",
+        "property": "REQ_SPIRAL.value[0]",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "gt",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 1250,
+        "y": 540,
+        "wires": [
+            [
+                "6dabe17266f59993"
+            ],
+            [
+                "20aa013314e6b198"
+            ]
+        ]
+    },
+    {
+        "id": "4f2b002748243cf2",
+        "type": "link out",
+        "z": "759403473b2d0ff2",
+        "name": "link out 9",
+        "mode": "link",
+        "links": [
+            "74bc85c46cfd7581"
+        ],
+        "x": 1595,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "204b33677d149304",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 32",
+        "links": [
+            "bd8c9bfcfe805d8e",
+            "eb5ef518195f6ead",
+            "233c934df44eccf5"
+        ],
+        "x": 905,
+        "y": 960,
+        "wires": [
+            [
+                "d12afed5022d56a9"
+            ]
+        ]
+    },
+    {
+        "id": "8c2c611ef053b0bf",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "complete",
+        "func": "msg.complete = true\nmsg.payload = {}\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 540,
+        "wires": [
+            [
+                "d459d7a4e9d4ae25"
+            ]
+        ]
+    },
+    {
+        "id": "a6454c70676d3b02",
+        "type": "link out",
+        "z": "759403473b2d0ff2",
+        "g": "59c9fd2839151344",
+        "name": "link out 10",
+        "mode": "link",
+        "links": [
+            "32b80ad1c4d95257",
+            "37bb6e304e30dd6d"
+        ],
+        "x": 2965,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "58a39b7e7c5808ab",
+        "type": "inject",
+        "z": "759403473b2d0ff2",
+        "name": "Reset",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 790,
+        "y": 920,
+        "wires": [
+            [
+                "d12afed5022d56a9"
+            ]
+        ]
+    },
+    {
+        "id": "86f9bf9aaa309572",
+        "type": "switch",
+        "z": "759403473b2d0ff2",
+        "name": "",
+        "property": "LIFT_COUNTER",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "num"
+            },
+            {
+                "t": "gt",
+                "v": "0",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 870,
+        "y": 840,
+        "wires": [
+            [
+                "772fcbaa4934c69f"
+            ],
+            [
+                "d12afed5022d56a9"
+            ]
+        ]
+    },
+    {
+        "id": "faffbb98dc47117f",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Channel I/O - LockSensors",
+        "func": "// Это узел-темплейт интерфейса, обрабатывающий\n// указанный пользователем канал. Функция выполняется при\n// нажатии кнопки \"Subscribe\", расположенном на данном потоке\n\n// const tamperChannels = flow.get('tamperChannels');\n// msg.payload = { \"dest\": \"interface\", \"com\": \"interface-subscribe\", \"arg\": [ch.Name], \"value\": [] }\nconst [chName] = msg.payload.arg;\nif (msg.payload.dest === 'interface' && msg.payload.com === 'interface-subscribe') {\n    // Опции подписки - имя канала, имя параметра, и объект данного узла\n    let opts = {chName, ret: [\"Value\", \"Name\"], node: node};\n    // Вызов метода подписки у службы интерфейса\n    global.get('proxyCh').Subscribe(opts);\n    \n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 2480,
+        "wires": [
+            [
+                "39699bedb7fa6e10"
+            ]
+        ]
+    },
+    {
+        "id": "13df18ef1b1fb48f",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "d": true,
+        "name": "Subscribe on LockActuator channels",
+        "func": "// msg.payload = { motorChannels: flow.get('motorChannels'), tamperChannels: flow.get('tamperChannels') }\nconst { lockChannels } = msg.payload;\n\nfor (const ch of lockChannels) {\n    msg.payload = {\"dest\":\"interface\",\"com\":\"interface-subscribe\",\"arg\":[ch.Name],\"value\":[]}\n    node.send(msg);\n}\n\n// return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 970,
+        "y": 2940,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c896c5dcb24fe0c1",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Subscribe on LockStatus channels",
+        "func": "const { lockStatusChannels } = msg.payload;\nfor (const ch of lockStatusChannels) {\n    msg.payload = { \"dest\": \"interface\", \"com\": \"interface-subscribe\", \"arg\": [ch.Name], \"value\": [] }\n    node.send(msg);\n}\n//return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 2480,
+        "wires": [
+            [
+                "faffbb98dc47117f"
+            ]
+        ]
+    },
+    {
+        "id": "1117ba4e2be43234",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 33",
+        "links": [
+            "545bd9eda5165686"
+        ],
+        "x": 85,
+        "y": 2480,
+        "wires": [
+            [
+                "c896c5dcb24fe0c1",
+                "06dfef2e0dcc8748"
+            ]
+        ]
+    },
+    {
+        "id": "a20ac079947efcef",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "d": true,
+        "name": "link in 34",
+        "links": [
+            "545bd9eda5165686"
+        ],
+        "x": 725,
+        "y": 2940,
+        "wires": [
+            [
+                "13df18ef1b1fb48f"
+            ]
+        ]
+    },
+    {
+        "id": "1e2024ab591083c2",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Channel I/O - CellLocks",
+        "func": "// Это узел-темплейт интерфейса, обрабатывающий\n// указанный пользователем канал. Функция выполняется при\n// нажатии кнопки \"Subscribe\", расположенном на данном потоке\nlet Prox = global.get('proxyCh');\nlet channel = msg.payload.arg[0];\nlet val = msg.payload.value[0];\nconst [chName] = msg.payload.arg;\nif (msg.payload.dest === 'interface' && msg.payload.com === 'interface-subscribe') {\n    // Опции подписки - имя канала, имя параметра, и объект данного узла\n    let opts = { chName, ret: [\"Value\", \"Name\"], node: node};\n\n    // Вызов метода подписки у службы интерфейса\n    Prox.Subscribe(opts);\n}\n// Функция актуатора\nif (msg.payload.dest === 'interface' && msg.payload.com === 'interface-actuator') {\n    Prox.Control({ chName: channel, Value: val });\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1670,
+        "y": 2720,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5ee829c37d71e9e3",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "001e3faced7cf1bb",
+        "name": "SetSpiralMotorCurrent",
+        "func": "const motorChannels = flow.get('motorChannels') ?? [];\nconst motorCurrentChannels = flow.get('spiralMotorCurrentChannels') ?? [];\n\nconst { topic, payload } = msg;\nconst motorCh = motorChannels.find(ch => ch.Address == topic);\nconst currentCh = motorCurrentChannels.find(ch => ch.ChNum == motorCh.ChNum);\n\nmsg.topic = currentCh.Address;\nconst current = payload >= 1 ? flow.get('SPIRAL_MOTOR_OK_CURRENT') : 0;\n\nmsg.payload = current;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1040,
+        "y": 1480,
+        "wires": [
+            [
+                "05b35a90a5ec0bba"
+            ]
+        ]
+    },
+    {
+        "id": "aeb30cd2a986551f",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "79ed028d83697646",
+        "name": "SetLiftMotorCurrentOk",
+        "func": "const { topic } = msg;\nmsg.topic = flow.get('liftMotorCurrentChannel').Address;\n\nconst currrent = msg.payload >= 1 ? flow.get('LIFT_MOTOR_OK_CURRENT') : 0;\nmsg.payload = currrent;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1040,
+        "y": 1680,
+        "wires": [
+            [
+                "3ef21a68318dae87"
+            ]
+        ]
+    },
+    {
+        "id": "7ea83978312b8296",
+        "type": "inject",
+        "z": "759403473b2d0ff2",
+        "name": "1001",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "cell-get",
+        "payload": "1001",
+        "payloadType": "str",
+        "x": 170,
+        "y": 2720,
+        "wires": [
+            [
+                "dad092446a6148f8"
+            ]
+        ]
+    },
+    {
+        "id": "f4e318834d5f31f4",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "CellGet",
+        "func": "const lockChannels = flow.get('lockChannels') ?? [];\nconst cellDeviceId = (context.get('getRandomChName'))(lockChannels);\n\nif (typeof cellDeviceId == 'string') {\n    const command = {\n        com: 'cell-get',\n        arg: [cellDeviceId],\n        value: [flow.get('CELL_UNLOCK_STATE')],\n    }\n    \n    flow.get('VMLogAlias')('CELL', `Script invoked - unlock cell ${cellDeviceId}`);\n\n    msg.topic = 'cell-get';\n    msg.payload = command;\n    return msg;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "const getRandomCell = (channels) => {\n    let i = Math.floor(channels.length * Math.random()); \n    return channels[i]?.DeviceId;\n}\n\n// context.set('getPairedTamperChName', (motorChName) => {\n//     const motorCh = motorChannels.find(ch => ch.Name == motorChName);\n//     const { Groups_1 } = motorCh;\n//     const pairedCh = tamperChannels.find(sensCh => sensCh.Groups_1 == Groups_1);\n//     return pairedCh?.Name;\n// });\n\ncontext.set('getRandomChName', getRandomCell);",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 2720,
+        "wires": [
+            [
+                "6ba30895f2614b66"
+            ]
+        ]
+    },
+    {
+        "id": "6ba30895f2614b66",
+        "type": "switch",
+        "z": "759403473b2d0ff2",
+        "name": "",
+        "property": "payload.com",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "cell-get",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 850,
+        "y": 2720,
+        "wires": [
+            [
+                "8785bc59ae25df56",
+                "b267fc4a7b8df0d4"
+            ]
+        ]
+    },
+    {
+        "id": "8785bc59ae25df56",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Unlock",
+        "func": "const deviceId = msg.payload.arg[0];\nif (typeof deviceId == 'string') {\n    const chName = flow.get('lockChannels').find(ch => ch.DeviceId == deviceId)?.Name;\n    if (chName) {\n\n        msg.payload = {\n            \"dest\": \"interface\",\n            \"com\": \"interface-actuator\",\n            \"arg\": [chName],\n            \"value\": [flow.get('CELL_UNLOCK_VALUE')]\n        }\n\n        return msg;\n    }\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1410,
+        "y": 2720,
+        "wires": [
+            [
+                "1e2024ab591083c2"
+            ]
+        ]
+    },
+    {
+        "id": "beb9e253fcb0d304",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "b0613eb82879a4c1",
+        "name": "SetLiftMotorCurrent",
+        "func": "const { topic } = msg;\nmsg.topic = flow.get('liftMotorCurrentChannel').Address;\n\nconst current = msg.payload >= 1 ? flow.get('LIFT_MOTOR_OK_CURRENT') : 0;\n\nmsg.payload = current;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1310,
+        "y": 1900,
+        "wires": [
+            [
+                "ba1aed1b3bf3f4a5"
+            ]
+        ]
+    },
+    {
+        "id": "c2bf1c9c7f429d2b",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "59c9fd2839151344",
+        "name": "Set timer",
+        "func": "/** {\n    \"dest\":\"interface\",\n    \"com\":\"interface-actuator\",\n    \"arg\":[chName],\n    \"value\":[flow.get('MOTOR_ON_VALUE')]\n} */\nconst chName = msg.payload.arg[0];\nconst command = {\n    com: 'spiral-motor-rotate',\n    arg: [chName],\n    value: [1],\n    done: false,\n    timestamp: new Date().getTime(),\n}\nflow.set('REQ_SPIRAL_MOTORS', command);\n\nmsg.delay = global.get('MOTOR_MAX_TIME');\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2380,
+        "y": 440,
+        "wires": [
+            [
+                "32ee7e9544f17e84"
+            ]
+        ]
+    },
+    {
+        "id": "32ee7e9544f17e84",
+        "type": "trigger",
+        "z": "759403473b2d0ff2",
+        "g": "59c9fd2839151344",
+        "name": "",
+        "op1": "",
+        "op2": "",
+        "op1type": "nul",
+        "op2type": "pay",
+        "duration": "250",
+        "extend": false,
+        "overrideDelay": true,
+        "units": "s",
+        "reset": "",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 2590,
+        "y": 440,
+        "wires": [
+            [
+                "804b3fe02836d9ff"
+            ]
+        ]
+    },
+    {
+        "id": "804b3fe02836d9ff",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "59c9fd2839151344",
+        "name": "Emit timeout exception",
+        "func": "const deviceId = msg.payload?.arg[0];\n\nmsg.payload = {\n    com: 'spiral-motor-rotate',\n    arg: [deviceId],\n    value: [flow.get('SPIRAL_ERROR_STATE')],\n    done: true,\n    timestamp: new Date().getTime(),\n}\nreturn msg;\n\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2820,
+        "y": 440,
+        "wires": [
+            [
+                "a6454c70676d3b02"
+            ]
+        ]
+    },
+    {
+        "id": "9eea4af66360aaba",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "59c9fd2839151344",
+        "name": "Emit success",
+        "func": "const [chName] = msg.payload.arg;\nconst command = {\n    com: 'spiral-motor-rotate',\n    arg: [chName],\n    value: [0],\n    done: true,\n    timestamp: new Date().getTime(),\n}\nflow.set('REQ_SPIRAL_MOTORS', command);\n\nmsg.com = 'spiral-set';\nmsg.payload = command;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2850,
+        "y": 360,
+        "wires": [
+            [
+                "1c01f729d528bb23"
+            ]
+        ]
+    },
+    {
+        "id": "26395b9241ee38fd",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "59c9fd2839151344",
+        "name": "Reset Timer",
+        "func": "/** {\n    \"dest\":\"interface\",\n    \"com\":\"interface-actuator\",\n    \"arg\":[chName],\n    \"value\":[flow.get('MOTOR_ON_VALUE')]\n} */\nmsg.reset = true;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2390,
+        "y": 360,
+        "wires": [
+            [
+                "9eea4af66360aaba",
+                "32ee7e9544f17e84"
+            ]
+        ]
+    },
+    {
+        "id": "8cb11312191ab8f8",
+        "type": "switch",
+        "z": "759403473b2d0ff2",
+        "g": "59c9fd2839151344",
+        "name": "",
+        "property": "payload.value[0]",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "cont",
+                "v": "0",
+                "vt": "num"
+            },
+            {
+                "t": "cont",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 2170,
+        "y": 400,
+        "wires": [
+            [
+                "26395b9241ee38fd"
+            ],
+            [
+                "c2bf1c9c7f429d2b"
+            ]
+        ]
+    },
+    {
+        "id": "dfd84a6a59be08e3",
+        "type": "mqtt in",
+        "z": "759403473b2d0ff2",
+        "g": "faee32ab7bfdd0e8",
+        "name": "",
+        "topic": "/VendingMachine/MainBox/cell-locks/#",
+        "qos": "2",
+        "datatype": "json",
+        "broker": "6fba8cf67943dffc",
+        "nl": false,
+        "rap": true,
+        "rh": "1",
+        "inputs": 0,
+        "x": 350,
+        "y": 3180,
+        "wires": [
+            [
+                "46df56fd810e4eb2"
+            ]
+        ]
+    },
+    {
+        "id": "cf4f91de9be8971c",
+        "type": "delay",
+        "z": "759403473b2d0ff2",
+        "g": "faee32ab7bfdd0e8",
+        "name": "",
+        "pauseType": "delayv",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 790,
+        "y": 3180,
+        "wires": [
+            [
+                "b400da1cd38b53d7"
+            ]
+        ]
+    },
+    {
+        "id": "3b616595cf4aced1",
+        "type": "mqtt out",
+        "z": "759403473b2d0ff2",
+        "g": "faee32ab7bfdd0e8",
+        "name": "",
+        "topic": "",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "6fba8cf67943dffc",
+        "x": 1910,
+        "y": 3180,
+        "wires": []
+    },
+    {
+        "id": "9aabbc69994ea140",
+        "type": "delay",
+        "z": "759403473b2d0ff2",
+        "g": "faee32ab7bfdd0e8",
+        "name": "",
+        "pauseType": "delayv",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1470,
+        "y": 3220,
+        "wires": [
+            [
+                "194273207a9a016f"
+            ]
+        ]
+    },
+    {
+        "id": "194273207a9a016f",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "faee32ab7bfdd0e8",
+        "name": "SetLocked",
+        "func": "msg.payload = flow.get('CELL_LOCK_STATE');\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1630,
+        "y": 3220,
+        "wires": [
+            [
+                "3b616595cf4aced1",
+                "dde328bd6b52ab97"
+            ]
+        ]
+    },
+    {
+        "id": "b400da1cd38b53d7",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "faee32ab7bfdd0e8",
+        "name": "SetUnlocked",
+        "func": "const lockChannels = flow.get('lockChannels') ?? [];\nconst lockStatusChannels = flow.get('lockStatusChannels') ?? [];\n\nconst { topic } = msg;\nconst lockCh = lockChannels.find(ch => ch.Address == topic);\nconst statusCh = lockStatusChannels\n    .find(ch => ch.ChNum == lockCh.ChNum && ch.DeviceId == lockCh.DeviceId);\n\nmsg.topic = statusCh.Address;\n\nmsg.payload = flow.get('CELL_UNLOCK_STATE');\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 990,
+        "y": 3180,
+        "wires": [
+            [
+                "3b616595cf4aced1",
+                "2e25ef21a60a8f80"
+            ]
+        ]
+    },
+    {
+        "id": "af8e4c09cfaa9d1e",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "faee32ab7bfdd0e8",
+        "name": "SetSpiralMotorCurrent",
+        "func": "const motorChannels = flow.get('motorChannels') ?? [];\nconst motorCurrentChannels = flow.get('spiralMotorCurrentChannels') ?? [];\n\nconst { topic, payload } = msg;\nconst motorCh = motorChannels.find(ch => ch.Address == topic);\nconst currentCh = motorCurrentChannels.find(ch => ch.ChNum == motorCh.ChNum);\n\nmsg.topic = currentCh.Address;\nmsg.payload = payload >= 1 ? flow.get('SPIRAL_MOTOR_WORK_OK') : 0;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 960,
+        "y": 3120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "06dfef2e0dcc8748",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Init Lock commands map",
+        "func": "const { lockStatusChannels } = msg.payload;\n\nlet cellsMap = new Map();\nfor (const ch of lockStatusChannels) {\n    cellsMap.set(ch.Name, {\n        com: 'cell-get',\n        arg: [ch.DeviceId],\n        value: [flow.get('CELL_LOCK_STATE')],\n        done: true,\n        timestamp: new Date().getTime()\n    });\n}\n\nflow.set('REQ_CELLS', cellsMap); \n\nmsg.payload = cellsMap;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 290,
+        "y": 2440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b267fc4a7b8df0d4",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "SetState",
+        "func": "const cellDeviceId = msg.payload.arg[0];\n\nif (msg.topic == 'cell-get') {\n    const timestamp = new Date().getTime();\n    const command = { ...msg.payload, done: false, timestamp };\n\n    const timeoutMs = command.value[0] == flow.get('CELL_UNLOCK_STATE') ? flow.get('CELL_UNLOCK_MAX_DELAY_MS')\n        : command.value[0] == flow.get('CELL_LOCK_STATE') ? flow.get('CELL_LOCK_MAX_DELAY_MS') : undefined;\n\n    flow.get('REQ_CELLS').set(cellDeviceId, command);\n\n    if (typeof timeoutMs == 'number') {\n        msg.delay = timeoutMs;\n        let state = flow.get('REQ_CELLS').get(cellDeviceId);\n        msg.payload = state;\n        return msg;\n    }\n}\n\nif (msg.topic == 'cell-set') {\n    let state = flow.get('REQ_CELLS').get(cellDeviceId);\n    let newState = { ...state, value: msg.payload.value, done: true, timestamp: new Date().getTime() };\n\n    if (state.value[0] == msg.payload.value[0] && !state.done) {\n        flow.get('VMLogAlias')('CELL', `Command completed: ${JSON.stringify(newState)}`);\n    } else {\n        flow.get('VMLogAlias')('CELL', `Unexpected state change: ${JSON.stringify(newState)}`);\n    }\n    flow.get('REQ_CELLS').set(cellDeviceId, newState);\n}\n\nmsg.payload = flow.get('REQ_CELLS').get(cellDeviceId);\nmsg.topic = msg.payload.com;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1040,
+        "y": 2580,
+        "wires": [
+            [
+                "31995d32755b5f31",
+                "dab182e2ad88f555"
+            ]
+        ]
+    },
+    {
+        "id": "39699bedb7fa6e10",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "OnCellStatusUpdate",
+        "func": "if (msg.payload.com == 'chio-output') {\n    const i_name = msg.payload.arg?.indexOf('Name');\n    const i_v = msg.payload.arg?.indexOf('Value');\n    if (i_name > -1 && i_v > -1) {\n        const chName = msg.payload?.value[i_name];\n        const val = msg.payload?.value[i_v];\n        const cellDeviceId = flow.get('lockStatusChannels').find(ch => ch.Name == chName).DeviceId;\n\n        flow.get('VMLogAlias')('CELL', `Cell status ${chName} is ${val}`);\n\n        msg.payload = {\n            com: 'cell-set',\n            arg: [cellDeviceId],\n            value: [val]\n        }\n        msg.topic = 'cell-set';\n        return msg;\n    }\n}\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 920,
+        "y": 2480,
+        "wires": [
+            [
+                "b267fc4a7b8df0d4",
+                "674344a8b1621291"
+            ]
+        ]
+    },
+    {
+        "id": "65936a431ad62543",
+        "type": "inject",
+        "z": "759403473b2d0ff2",
+        "name": "",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "lockStatusChannels",
+        "payloadType": "flow",
+        "x": 270,
+        "y": 3000,
+        "wires": [
+            [
+                "3c3fd28b9da414e0"
+            ]
+        ]
+    },
+    {
+        "id": "3c3fd28b9da414e0",
+        "type": "debug",
+        "z": "759403473b2d0ff2",
+        "name": "debug 78",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 580,
+        "y": 3000,
+        "wires": []
+    },
+    {
+        "id": "a8251bd1bf3db489",
+        "type": "inject",
+        "z": "759403473b2d0ff2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "REQ_CELLS",
+        "payloadType": "flow",
+        "x": 910,
+        "y": 3000,
+        "wires": [
+            [
+                "fa0c3e31b2b84e6c"
+            ]
+        ]
+    },
+    {
+        "id": "fa0c3e31b2b84e6c",
+        "type": "debug",
+        "z": "759403473b2d0ff2",
+        "name": "debug 81",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1080,
+        "y": 3000,
+        "wires": []
+    },
+    {
+        "id": "8f095a599514080c",
+        "type": "debug",
+        "z": "759403473b2d0ff2",
+        "name": "debug 85",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1640,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "a13896561233bbfd",
+        "type": "debug",
+        "z": "759403473b2d0ff2",
+        "name": "debug 86",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1240,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "6cb0f14ba90f0c78",
+        "type": "debug",
+        "z": "759403473b2d0ff2",
+        "name": "debug 87",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 880,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "46df56fd810e4eb2",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "faee32ab7bfdd0e8",
+        "name": "Pass",
+        "func": "if (msg.payload == flow.get('CELL_UNLOCK_VALUE')) {\n    msg.delay = flow.get('CELL_UNLOCK_DELAY_MS');\n    return msg;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 610,
+        "y": 3180,
+        "wires": [
+            [
+                "cf4f91de9be8971c"
+            ]
+        ]
+    },
+    {
+        "id": "dde328bd6b52ab97",
+        "type": "debug",
+        "z": "759403473b2d0ff2",
+        "g": "faee32ab7bfdd0e8",
+        "name": "debug 90",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1820,
+        "y": 3260,
+        "wires": []
+    },
+    {
+        "id": "674344a8b1621291",
+        "type": "debug",
+        "z": "759403473b2d0ff2",
+        "name": "debug 91",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1130,
+        "y": 2460,
+        "wires": []
+    },
+    {
+        "id": "31995d32755b5f31",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "OnUnlocked",
+        "func": "if (msg.payload.value[0] == flow.get('CELL_UNLOCK_STATE') && msg.payload.done) {\n    return msg;\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1230,
+        "y": 2620,
+        "wires": [
+            [
+                "8c6d33731e13ca4f"
+            ]
+        ]
+    },
+    {
+        "id": "8c6d33731e13ca4f",
+        "type": "link out",
+        "z": "759403473b2d0ff2",
+        "name": "link out 11",
+        "mode": "link",
+        "links": [
+            "180dfee22884d290"
+        ],
+        "x": 1485,
+        "y": 2620,
+        "wires": []
+    },
+    {
+        "id": "180dfee22884d290",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 35",
+        "links": [
+            "8c6d33731e13ca4f"
+        ],
+        "x": 635,
+        "y": 2580,
+        "wires": [
+            [
+                "4181912ad0943dd0"
+            ]
+        ]
+    },
+    {
+        "id": "866b0d3d6576b9b1",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "faee32ab7bfdd0e8",
+        "name": "delay",
+        "func": "msg.delay = flow.get('CELL_LOCK_DELAY_MS');\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1310,
+        "y": 3220,
+        "wires": [
+            [
+                "9aabbc69994ea140"
+            ]
+        ]
+    },
+    {
+        "id": "4181912ad0943dd0",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "SetLockedState",
+        "func": "const cellDeviceId = msg.payload.arg[0];\n\nif (typeof cellDeviceId == 'string') {\n    const command = {\n        com: 'cell-get',\n        arg: [cellDeviceId],\n        value: [flow.get('CELL_LOCK_STATE')],\n    }\n\n    console.log(`Start transactions: ${cellDeviceId} - close cell`);\n\n    msg.topic = 'cell-get';\n    msg.payload = command;\n    return msg;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 2580,
+        "wires": [
+            [
+                "b267fc4a7b8df0d4"
+            ]
+        ]
+    },
+    {
+        "id": "43c8ae35124a41c8",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Log script",
+        "func": "const generateRandomFourDigitNumber = () => Math.floor(Math.random() * 9000) + 1000;\nconst spiralScriptCategory = msg.payload;\nflow.set('SPIRAL', spiralScriptCategory);\nconst newScriptId = generateRandomFourDigitNumber();\nflow.set(spiralScriptCategory, newScriptId);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 760,
+        "wires": [
+            [
+                "69b35055b0736bfe"
+            ]
+        ]
+    },
+    {
+        "id": "7d98699d287d0ae8",
+        "type": "comment",
+        "z": "759403473b2d0ff2",
+        "name": "Случайные элементы из случайной ячейки, без ошибок",
+        "info": "",
+        "x": 270,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "08e4b2d79049e1dc",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Util funcs",
+        "func": "flow.set('wrapScriptLog', (scriptCategory, text) => {\n    const spiralScriptCategory = flow.get(scriptCategory);\n    const scriptId = flow.get(spiralScriptCategory);\n    return `[VendingMachineEmu: ${spiralScriptCategory}-${scriptId}] ${text}`;\n});\n\nflow.set('VMLogAlias', (scriptCategory, text) => {\n    const msg = flow.get('wrapScriptLog')(scriptCategory, text);\n    // global.get('proxyLogger').Log({ level: 'D', msg , env });\n    console.log(msg);\n});",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3f3694b0e6577ca8",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "ScriptConfig",
+        "func": "flow.set('LIFT_UP_WORK_OK', true);\nflow.set('LIFT_DOWN_WORK_OK', true);\nflow.set('SPIRAL_TAMPER_WORK_OK', true);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 760,
+        "wires": [
+            [
+                "43c8ae35124a41c8"
+            ]
+        ]
+    },
+    {
+        "id": "4efa2c8afdaf4f99",
+        "type": "inject",
+        "z": "759403473b2d0ff2",
+        "name": "0002",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "motor-com",
+        "payload": "0002",
+        "payloadType": "str",
+        "x": 150,
+        "y": 840,
+        "wires": [
+            [
+                "71b7cdf5c7bdb5aa"
+            ]
+        ]
+    },
+    {
+        "id": "616cfe2770a6e6ce",
+        "type": "comment",
+        "z": "759403473b2d0ff2",
+        "name": "Случайные элементы из случайной ячейки, ошибка при подъеме лифта",
+        "info": "",
+        "x": 330,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "71b7cdf5c7bdb5aa",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "ScriptConfig",
+        "func": "flow.set('LIFT_UP_WORK_OK', false);\nflow.set('LIFT_DOWN_WORK_OK', true);\nflow.set('SPIRAL_TAMPER_WORK_OK', true);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 840,
+        "wires": [
+            [
+                "43c8ae35124a41c8"
+            ]
+        ]
+    },
+    {
+        "id": "1b8219190715158b",
+        "type": "inject",
+        "z": "759403473b2d0ff2",
+        "name": "0003",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "motor-com",
+        "payload": "0003",
+        "payloadType": "str",
+        "x": 150,
+        "y": 920,
+        "wires": [
+            [
+                "2997daedd92d2197"
+            ]
+        ]
+    },
+    {
+        "id": "d2544ba152e247fe",
+        "type": "comment",
+        "z": "759403473b2d0ff2",
+        "name": "Случайные элементы из случайной ячейки, ошибка при спуске лифта",
+        "info": "",
+        "x": 320,
+        "y": 880,
+        "wires": []
+    },
+    {
+        "id": "2997daedd92d2197",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "ScriptConfig",
+        "func": "flow.set('LIFT_UP_WORK_OK', true);\nflow.set('LIFT_DOWN_WORK_OK', false);\nflow.set('SPIRAL_TAMPER_WORK_OK', true);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 920,
+        "wires": [
+            [
+                "43c8ae35124a41c8"
+            ]
+        ]
+    },
+    {
+        "id": "b1e1dbf395e9d87b",
+        "type": "inject",
+        "z": "759403473b2d0ff2",
+        "name": "0004",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "motor-com",
+        "payload": "0004",
+        "payloadType": "str",
+        "x": 150,
+        "y": 1000,
+        "wires": [
+            [
+                "a4f218e8ab0a2463"
+            ]
+        ]
+    },
+    {
+        "id": "6e7ed197ba9afb4a",
+        "type": "comment",
+        "z": "759403473b2d0ff2",
+        "name": "Случайные элементы из случайной ячейки, ошибка при выдаче",
+        "info": "",
+        "x": 300,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "a4f218e8ab0a2463",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "ScriptConfig",
+        "func": "flow.set('LIFT_UP_WORK_OK', true);\nflow.set('LIFT_DOWN_WORK_OK', true);\nflow.set('SPIRAL_TAMPER_WORK_OK', false);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 1000,
+        "wires": [
+            [
+                "43c8ae35124a41c8"
+            ]
+        ]
+    },
+    {
+        "id": "86a8ffbf9f60aa38",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "79ed028d83697646",
+        "name": "Pass",
+        "func": "console.log(`Down lift is ${msg.payload}`)\nif (flow.get('LIFT_DOWN_WORK_OK'))\n    return msg;\nelse\n    console.log(`Simulating error`)\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 270,
+        "y": 1760,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "746b5dbcd2d60de9",
+        "type": "switch",
+        "z": "759403473b2d0ff2",
+        "g": "79ed028d83697646",
+        "name": "",
+        "property": "LIFT_DOWN_WORK_OK",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "false"
+            },
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 850,
+        "y": 1740,
+        "wires": [
+            [
+                "810a780e454f5329"
+            ],
+            [
+                "4073dc552a59250b"
+            ]
+        ]
+    },
+    {
+        "id": "810a780e454f5329",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "79ed028d83697646",
+        "name": "SetLiftMotorCurrentBad",
+        "func": "const { topic, payload } = msg;\nmsg.topic = flow.get('liftMotorCurrentChannel').Address;\n\nmsg.payload = flow.get('LIFT_MOTOR_BAD_CURRENT');\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1050,
+        "y": 1720,
+        "wires": [
+            [
+                "3ef21a68318dae87"
+            ]
+        ]
+    },
+    {
+        "id": "c457df002bbb5343",
+        "type": "switch",
+        "z": "759403473b2d0ff2",
+        "g": "b0613eb82879a4c1",
+        "name": "",
+        "property": "LIFT_UP_WORK_OK",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "true"
+            },
+            {
+                "t": "false"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 590,
+        "y": 2020,
+        "wires": [
+            [
+                "4fbc9dcc086835a5"
+            ],
+            [
+                "47924c3240a8ff6c"
+            ]
+        ]
+    },
+    {
+        "id": "47924c3240a8ff6c",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "IncrementLocalLiftCounter",
+        "func": "// TODO fix hardcode\n// msg.topic = \"/VendingMachine/MainBox/lift/tampers/2\";\nif (msg.reset) {\n    context.set('LIFT_COUNTER', 0);\n} else {\n    const counter = context.get('LIFT_COUNTER') + 1;\n    context.set('LIFT_COUNTER', counter);\n}\nmsg.payload = context.get('LIFT_COUNTER');\n\n// const maxCounter = flow.get('VM_SPIRAL_MATRIX_SIZE')[0];\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "// Добавленный здесь код будет исполняться\n// однократно при развертывании узла.\ncontext.set('LIFT_COUNTER', 0);",
+        "finalize": "",
+        "libs": [],
+        "x": 840,
+        "y": 2080,
+        "wires": [
+            [
+                "4a4b1564a25609ed"
+            ]
+        ]
+    },
+    {
+        "id": "4a4b1564a25609ed",
+        "type": "switch",
+        "z": "759403473b2d0ff2",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "VM_LIFT_MAX_LEVEL",
+                "vt": "flow"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 1210,
+        "y": 2080,
+        "wires": [
+            [
+                "8257308ad3025f4a"
+            ]
+        ]
+    },
+    {
+        "id": "8257308ad3025f4a",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "SetLiftMotorCurrentBad",
+        "func": "debugger;\nconst { topic, payload } = msg;\nmsg.topic = flow.get('liftMotorCurrentChannel').Address;\n\nmsg.payload = flow.get('LIFT_MOTOR_BAD_CURRENT');\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1430,
+        "y": 2080,
+        "wires": [
+            [
+                "ba1aed1b3bf3f4a5"
+            ]
+        ]
+    },
+    {
+        "id": "98fa8f56546dbd5b",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "g": "001e3faced7cf1bb",
+        "name": "Pass",
+        "func": "if (msg.payload == 1) {\n    if (flow.get('SPIRAL_TAMPER_WORK_OK'))\n        return msg;\n    /*else\n        console.log(`Simulating error`)\n    return null;*/\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 830,
+        "y": 1540,
+        "wires": [
+            [
+                "d3a5e37e8841808a"
+            ]
+        ]
+    },
+    {
+        "id": "dad092446a6148f8",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "ScriptConfig",
+        "func": "flow.set('CELL_AUTO_CLOSE_OK', true);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 2720,
+        "wires": [
+            [
+                "818ca2ddd888bb16"
+            ]
+        ]
+    },
+    {
+        "id": "2e25ef21a60a8f80",
+        "type": "switch",
+        "z": "759403473b2d0ff2",
+        "g": "faee32ab7bfdd0e8",
+        "name": "Pass",
+        "property": "CELL_AUTO_CLOSE_OK",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 1150,
+        "y": 3220,
+        "wires": [
+            [
+                "866b0d3d6576b9b1"
+            ]
+        ]
+    },
+    {
+        "id": "91bfb888ce847aad",
+        "type": "comment",
+        "z": "759403473b2d0ff2",
+        "name": "Случайные элементы из случайной ячейки, без ошибок",
+        "info": "",
+        "x": 310,
+        "y": 2680,
+        "wires": []
+    },
+    {
+        "id": "0ccc6991f5627beb",
+        "type": "inject",
+        "z": "759403473b2d0ff2",
+        "name": "Source",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "cell-get",
+        "x": 170,
+        "y": 2600,
+        "wires": [
+            [
+                "0e694e5fda352263"
+            ]
+        ]
+    },
+    {
+        "id": "966f489539410d59",
+        "type": "comment",
+        "z": "759403473b2d0ff2",
+        "name": "Закрыть ячейку",
+        "info": "",
+        "x": 180,
+        "y": 2560,
+        "wires": []
+    },
+    {
+        "id": "0e694e5fda352263",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "d": true,
+        "name": "CellGet",
+        "func": "const lockStatusChannels = flow.get('lockStatusChannels') ?? [];\nconst lockChannels = flow.get('lockChannels') ?? [];\n\nconst statesMap = flow.get('REQ_CELLS');\nconst unlockedDeviceName = statesMap ? [...statesMap.values()]\n    ?.find(state => (state.value[0] == flow.get('CELL_LOCK_STATE') && !state.done) || state.value[0] == flow.get('CELL_ERROR_STATE'))\n    ?.arg[0] : undefined;\n\nif (!unlockedDeviceName) {\n    flow.get('VMLogAlias')('CELL', `Opened cells are not found`);\n} else {\n    const { Address} = lockStatusChannels.find(ch => ch.DeviceId == unlockedDeviceName);\n    msg.topic = Address;\n\n    flow.get('VMLogAlias')('CELL', `Script invoked - lock cell ${unlockedDeviceName}`);\n    return msg;\n}\n\n// const cellDeviceId = lockStatusChannels.find(ch => ch.Va);\n\n/*if (typeof unlockedDeviceName == 'string') {\n    const command = {\n        com: 'cell-get',\n        arg: [unlockedDeviceName],\n        value: [flow.get('CELL_UNLOCK_STATE')],\n    }\n    \n    \n\n    msg.topic = 'cell-get';\n    msg.payload = command;\n    return msg;\n}*/",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "const getRandomCell = (channels) => {\n    let i = Math.floor(channels.length * Math.random()); \n    return channels[i]?.DeviceId;\n}\n\n// context.set('getPairedTamperChName', (motorChName) => {\n//     const motorCh = motorChannels.find(ch => ch.Name == motorChName);\n//     const { Groups_1 } = motorCh;\n//     const pairedCh = tamperChannels.find(sensCh => sensCh.Groups_1 == Groups_1);\n//     return pairedCh?.Name;\n// });\n\ncontext.set('getRandomChName', getRandomCell);",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 2600,
+        "wires": [
+            [
+                "6db0c6c081d5f47a"
+            ]
+        ]
+    },
+    {
+        "id": "301881c4ed7d73d3",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "OnLifGrounded",
+        "func": "const prevLiftCommand = flow.get('REQ_LIFT');\nif (prevLiftCommand.com != 'lift-level-set' || prevLiftCommand.done) {\n    debugger;\n    flow.get('VMLogAlias')('SPIRAL', `Unexpected error: lift is set to level 0 but STATE var doesn't contain valid command to complete`);\n}\n\nflow.set('REQ_LIFT', { com: 'lift-level-set', arg: [], value: [0], done: true, timestamp: new Date().getTime() });\n\nflow.get('VMLogAlias')('SPIRAL', `Lift is set to level 0`);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1360,
+        "y": 880,
+        "wires": [
+            [
+                "772fcbaa4934c69f"
+            ]
+        ]
+    },
+    {
+        "id": "afe7b32efeb7bd93",
+        "type": "switch",
+        "z": "759403473b2d0ff2",
+        "g": "001e3faced7cf1bb",
+        "name": "",
+        "property": "SPIRAL_TAMPER_WORK_OK",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 830,
+        "y": 1580,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "743254681fdd0963",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Channel I/O - LiftCurrent",
+        "func": "// Это узел-темплейт интерфейса, обрабатывающий\n// указанный пользователем канал. Функция выполняется при\n// нажатии кнопки \"Subscribe\", расположенном на данном потоке\n\n// const tamperChannels = flow.get('tamperChannels');\n// msg.payload = { \"dest\": \"interface\", \"com\": \"interface-subscribe\", \"arg\": [ch.Name], \"value\": [] }\nconst [chName] = msg.payload.arg;\nif (msg.payload.dest === 'interface' && msg.payload.com === 'interface-subscribe') {\n    // for (const ch of tamperChannels) {\n    // Опции подписки - имя канала, имя параметра, и объект данного узла\n    let opts = {chName, ret: [\"Value\", \"Name\"], node: node};\n    // Вызов метода подписки у службы интерфейса\n    global.get('proxyCh').Subscribe(opts);\n    \n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 1260,
+        "wires": [
+            [
+                "78ab206f1fe3b6e9"
+            ]
+        ]
+    },
+    {
+        "id": "408cf07b6232dc4e",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Subscribe on LiftCurrent",
+        "func": "// const chName = flow.get('liftMotorCurrentChannel').Name;\nconst chName = msg.payload.liftMotorCurrentChannel.Name\n\nmsg.payload = {\"dest\":\"interface\",\"com\":\"interface-subscribe\",\"arg\":[chName],\"value\":[]}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 1260,
+        "wires": [
+            [
+                "743254681fdd0963"
+            ]
+        ]
+    },
+    {
+        "id": "7275d5c0819b446c",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 36",
+        "links": [
+            "545bd9eda5165686"
+        ],
+        "x": 125,
+        "y": 1260,
+        "wires": [
+            [
+                "408cf07b6232dc4e"
+            ]
+        ]
+    },
+    {
+        "id": "78ab206f1fe3b6e9",
+        "type": "link out",
+        "z": "759403473b2d0ff2",
+        "name": "link out 12",
+        "mode": "link",
+        "links": [
+            "794923b3fb04dea0"
+        ],
+        "x": 875,
+        "y": 1260,
+        "wires": []
+    },
+    {
+        "id": "794923b3fb04dea0",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 37",
+        "links": [
+            "78ab206f1fe3b6e9"
+        ],
+        "x": 1545,
+        "y": 880,
+        "wires": [
+            [
+                "d02e847d4c3cf949"
+            ]
+        ]
+    },
+    {
+        "id": "d02e847d4c3cf949",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "OnLiftCurrentBad",
+        "func": "/* example { \n    \"dest\": \"Channel I/O - VendingMachine-Tampers\", \n    \"com\": \"chio-output\", \n    \"arg\": [\"Value\", \"ChAlias\", \"ChMeas\"], \n    \"value\": [1, null, \"on/off\"] \n}*/\n\nif (msg.payload.com == 'chio-output') {\n    const i_name = msg.payload.arg?.indexOf('Name');\n    const i_v = msg.payload.arg?.indexOf('Value');\n    if (i_name > -1 && i_v > -1) {\n        const chName = msg.payload?.value[i_name];\n        const val = msg.payload?.value[i_v];\n        msg.payload = val;\n        return msg;\n    }\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1690,
+        "y": 880,
+        "wires": [
+            [
+                "6636fa3e7e2cade9"
+            ]
+        ]
+    },
+    {
+        "id": "42b92524ce11f181",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Stop LiftUp",
+        "func": "const chName = 'vm-mb-lift-motor-up';\n\nmsg.payload = {\n    \"dest\": \"interface\",\n    \"com\": \"interface-actuator\",\n    \"arg\": [chName],\n    \"value\": [0]\n}\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2470,
+        "y": 800,
+        "wires": [
+            [
+                "43dc80dde49c2dc4"
+            ]
+        ]
+    },
+    {
+        "id": "6636fa3e7e2cade9",
+        "type": "switch",
+        "z": "759403473b2d0ff2",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "gte",
+                "v": "LIFT_MOTOR_BAD_CURRENT",
+                "vt": "flow"
+            },
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 1930,
+        "y": 880,
+        "wires": [
+            [
+                "5897b40d1a72afa8"
+            ],
+            [
+                "6a348f07ceac7f3b"
+            ]
+        ]
+    },
+    {
+        "id": "6a348f07ceac7f3b",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "OnUpLiftStopped",
+        "func": "const state = flow.get('REQ_LIFT');\nconst isErr = state.value[1] == flow.get('SPIRAL_ERROR_STATE');\n\nif (isErr) {\n    flow.set('REQ_LIFT', { ...state, done: true, timestamp: new Date().getTime() });\n    flow.get('VMLogAlias')('SPIRAL', `Lift is stopped after an error occured`);\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2250,
+        "y": 840,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "37bb6e304e30dd6d",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 38",
+        "links": [
+            "a6454c70676d3b02"
+        ],
+        "x": 2995,
+        "y": 660,
+        "wires": [
+            [
+                "d24b1fd76fe8a315"
+            ]
+        ]
+    },
+    {
+        "id": "d24b1fd76fe8a315",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "HandleSpiralError",
+        "func": "flow.get('VMLogAlias')('SPIRAL', `Transaction is finished with spiral motor/tamper error`);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 3150,
+        "y": 660,
+        "wires": [
+            [
+                "f9b2bdc99bda094a",
+                "233c934df44eccf5",
+                "65f79369722d6ed6"
+            ]
+        ]
+    },
+    {
+        "id": "2f4f7620e7360de7",
+        "type": "link out",
+        "z": "759403473b2d0ff2",
+        "name": "link out 13",
+        "mode": "link",
+        "links": [
+            "e5b58fe6dd8eed20"
+        ],
+        "x": 3495,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "f9b2bdc99bda094a",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "InvokeMotorOff",
+        "func": "msg.payload = msg.payload.arg[0];\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 3360,
+        "y": 660,
+        "wires": [
+            [
+                "2f4f7620e7360de7",
+                "7e3a5eb8c9732b10"
+            ]
+        ]
+    },
+    {
+        "id": "e5b58fe6dd8eed20",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 39",
+        "links": [
+            "2f4f7620e7360de7"
+        ],
+        "x": 1335,
+        "y": 340,
+        "wires": [
+            [
+                "6755f249c0ee74a3"
+            ]
+        ]
+    },
+    {
+        "id": "5897b40d1a72afa8",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "LogCurrentError",
+        "func": "flow.get('VMLogAlias')('SPIRAL', `Error: too high lift current`);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2040,
+        "y": 820,
+        "wires": [
+            [
+                "205ead5644aa11fd"
+            ]
+        ]
+    },
+    {
+        "id": "285b048e9aff3e60",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "HandleLiftError",
+        "func": "// const spiralState = flow.get('SPIRAL_REQ');\n// flow.set('SPIRAL_REQ', {...spiralState, done: false, timesta});\n// flow.set('REQ_LIFT', { ...state, done: true, timestamp: new Date().getTime() });\nflow.get('VMLogAlias')('SPIRAL', `Transaction is finished with lift error`);\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 3140,
+        "y": 620,
+        "wires": [
+            [
+                "233c934df44eccf5"
+            ]
+        ]
+    },
+    {
+        "id": "866fb942ec7d6867",
+        "type": "link out",
+        "z": "759403473b2d0ff2",
+        "name": "link out 14",
+        "mode": "link",
+        "links": [
+            "a72071f90d150225"
+        ],
+        "x": 2415,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "a72071f90d150225",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 40",
+        "links": [
+            "866fb942ec7d6867"
+        ],
+        "x": 2995,
+        "y": 620,
+        "wires": [
+            [
+                "285b048e9aff3e60"
+            ]
+        ]
+    },
+    {
+        "id": "74bc85c46cfd7581",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "name": "link in 41",
+        "links": [
+            "4f2b002748243cf2"
+        ],
+        "x": 2995,
+        "y": 580,
+        "wires": [
+            [
+                "a18e1531246f55d5"
+            ]
+        ]
+    },
+    {
+        "id": "a18e1531246f55d5",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "HandleSuccess",
+        "func": "const state = flow.get('REQ_SPIRAL');\nflow.get('VMLogAlias')('SPIRAL', `Transaction is finished successfully: ${JSON.stringify(state)}`);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 3140,
+        "y": 580,
+        "wires": [
+            [
+                "233c934df44eccf5"
+            ]
+        ]
+    },
+    {
+        "id": "233c934df44eccf5",
+        "type": "link out",
+        "z": "759403473b2d0ff2",
+        "name": "link out 15",
+        "mode": "link",
+        "links": [
+            "204b33677d149304"
+        ],
+        "x": 3495,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "084f8e0679666960",
+        "type": "debug",
+        "z": "759403473b2d0ff2",
+        "name": "debug 92",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1050,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "65f79369722d6ed6",
+        "type": "debug",
+        "z": "759403473b2d0ff2",
+        "name": "debug 94",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 3270,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "7e3a5eb8c9732b10",
+        "type": "debug",
+        "z": "759403473b2d0ff2",
+        "name": "debug 95",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 3510,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "bf2275d311df2a69",
+        "type": "switch",
+        "z": "759403473b2d0ff2",
+        "name": "",
+        "property": "payload.com",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "chio-output",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 1790,
+        "y": 580,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6cb6c30f5e5b25b8",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Filter",
+        "func": "if (msg.payload.com == 'chio-output') {\n    const i_name = msg.payload.arg?.indexOf('Name');\n    const i_v = msg.payload.arg?.indexOf('Value');\n    if (i_name > -1 && i_v > -1) {\n        const chName = msg.payload?.value[i_name];\n        const val = msg.payload?.value[i_v];\n\n        let ch = null;\n        if (ch = flow.get('motorChannels').find(ch => ch.Name == chName)) {\n            if (val == 1) {\n                msg.payload = {\n                    com: 'spiral-motor-rotate',\n                    arg: [ch.DeviceId],\n                    value: [1],\n                    done: false,\n                    timestamp: new Date().getTime(),\n                }\n                return msg;\n            }\n        }\n\n        if (ch = flow.get('tamperChannels').find(ch => ch.Name == chName)) {\n            if (val == 1) {\n                msg.payload = {\n                    com: 'spiral-motor-rotate',\n                    arg: [ch.DeviceId],\n                    value: [0],\n                    done: false,\n                    timestamp: new Date().getTime(),\n                }\n                return msg;\n            }\n        }\n    }\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1970,
+        "y": 300,
+        "wires": [
+            [
+                "8cb11312191ab8f8"
+            ]
+        ]
+    },
+    {
+        "id": "818ca2ddd888bb16",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "Log script",
+        "func": "const generateRandomFourDigitNumber = () => Math.floor(Math.random() * 9000) + 1000;\nconst spiralScriptCategory = msg.payload;\nflow.set('CELL', spiralScriptCategory);\nconst newScriptId = generateRandomFourDigitNumber();\nflow.set(spiralScriptCategory, newScriptId);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 540,
+        "y": 2720,
+        "wires": [
+            [
+                "f4e318834d5f31f4"
+            ]
+        ]
+    },
+    {
+        "id": "e178b1e41c804057",
+        "type": "inject",
+        "z": "759403473b2d0ff2",
+        "name": "1002",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "cell-get",
+        "payload": "1002",
+        "payloadType": "str",
+        "x": 170,
+        "y": 2800,
+        "wires": [
+            [
+                "05c6ea302bdd83ed"
+            ]
+        ]
+    },
+    {
+        "id": "05c6ea302bdd83ed",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "ScriptConfig",
+        "func": "flow.set('CELL_AUTO_CLOSE_OK', false);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 2800,
+        "wires": [
+            [
+                "818ca2ddd888bb16"
+            ]
+        ]
+    },
+    {
+        "id": "40ba6c7d289508b7",
+        "type": "comment",
+        "z": "759403473b2d0ff2",
+        "name": "Случайные элементы из случайной ячейки, ошибка своевременного закрытия",
+        "info": "",
+        "x": 390,
+        "y": 2760,
+        "wires": []
+    },
+    {
+        "id": "2b425a9961896cb9",
+        "type": "function",
+        "z": "759403473b2d0ff2",
+        "name": "OnTimeout",
+        "func": "const cellDeviceId = msg.payload.arg[0];\nlet state = flow.get('REQ_CELLS').get(cellDeviceId); \nconst command = msg.payload;\ndebugger;\nconst timeout = state.com == 'cell-get' && state.value[0] == command.value[0] && command.timestamp == state.timestamp && command.done === false;\nif (timeout) {\n    msg.topic = 'cell-error';\n    const errState = { ...command, value: [flow.get('CELL_ERROR_STATE')], done: true, timestamp: new Date().getTime() };\n    flow.get('REQ_CELLS').set(cellDeviceId, errState);\n\n    flow.get('VMLogAlias')('CELL', `Timeout waiting state change ${cellDeviceId} value to ${command.value}. Current state is ${JSON.stringify(errState)}`);\n\n    msg.payload = errState;\n    return msg;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1430,
+        "y": 2520,
+        "wires": [
+            [
+                "74e7aa2556bc5dc4"
+            ]
+        ]
+    },
+    {
+        "id": "74e7aa2556bc5dc4",
+        "type": "debug",
+        "z": "759403473b2d0ff2",
+        "name": "debug 100",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1610,
+        "y": 2520,
+        "wires": []
+    },
+    {
+        "id": "dab182e2ad88f555",
+        "type": "delay",
+        "z": "759403473b2d0ff2",
+        "name": "",
+        "pauseType": "delayv",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1230,
+        "y": 2520,
+        "wires": [
+            [
+                "2b425a9961896cb9"
+            ]
+        ]
+    },
+    {
+        "id": "6db0c6c081d5f47a",
+        "type": "link out",
+        "z": "759403473b2d0ff2",
+        "name": "link out 16",
+        "mode": "link",
+        "links": [
+            "a13f5bef075059b4"
+        ],
+        "x": 505,
+        "y": 2600,
+        "wires": []
+    },
+    {
+        "id": "a13f5bef075059b4",
+        "type": "link in",
+        "z": "759403473b2d0ff2",
+        "g": "faee32ab7bfdd0e8",
+        "name": "link in 42",
+        "links": [
+            "6db0c6c081d5f47a"
+        ],
+        "x": 1525,
+        "y": 3280,
+        "wires": [
+            [
+                "194273207a9a016f"
+            ]
+        ]
+    },
+    {
+        "id": "6fba8cf67943dffc",
+        "type": "mqtt-broker",
+        "name": "VendingMachineSource",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "5",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    }
+]

@@ -1,11 +1,11 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./srvService');
 
-const COM_DM_DEVLIST_SET = 'dm-deviceslist-set';
+const COM_DM_DEVLIST_SET     = 'dm-deviceslist-set';
 const COM_PMQTTC_DEVLIST_GET = 'proxymqttclient-deviceslist-get';
-const COM_SUB_SENSALL = 'proxymqttclient-sub-sensorall';
-const COM_PMQTTC_SEND = 'proxymqttclient-send';
-const COM_PMQTTC_MSG_GET = 'proxymqttclient-msg-get';
-const COM_MQTTC_SEND = 'mqttclient-send';
+const COM_SUB_SENSALL      = 'proxymqttclient-sub-sensorall';
+const COM_PMQTTC_SEND      = 'proxymqttclient-send';
+const COM_PMQTTC_MSG_GET   = 'proxymqttclient-msg-get';
+const COM_MQTTC_SEND       = 'mqttclient-send';
 const COM_ALL_DATA_RAW_GET = 'all-data-raw-get';
 
 const BUS_NAME_LIST = ['sysBus', 'mqttBus', 'logBus'];
@@ -62,15 +62,15 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
      * @param {*} _msg 
      */
     HandlerEvents_proxymqttclient_send(_topic, _msg) {
-        const [source_name] = _msg.arg;
+        const [ source_name ] = _msg.arg;
         const { source } = _msg.metadata;
-        const [value] = _msg.value;
-        const [payload] = value.value;
+        const [ value ]  = _msg.value;
+        const [ payload ] = value.value;
         const topic_name = this.#_SensSubList[source_name]?.find(_obj => _obj.name === source).address;
 
         const msg_is_valid = typeof topic_name === 'string' && payload;
         if (msg_is_valid) {
-            this.EmitEvents_mqttclient_send({ arg: _msg.arg, value: [topic_name, payload] });
+            this.EmitEvents_mqttclient_send({ arg: _msg.arg, value: [topic_name, payload ]});
         }
     }
     /**
