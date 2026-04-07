@@ -1,15 +1,15 @@
 const ClassBaseService_S = require('srvService');
 
-const THIS_NAME = 'proxymodbus';
+const THIS_NAME = 'proxymodbusdrs';
 const COM_ALL_DATA_RAW_GET = 'all-data-raw-get';
-const PRIMARY_BUS = 'modbusBus';
-const PROTOCOL = 'modbus';
+const PRIMARY_BUS = 'modbusdrsBus';
+const PROTOCOL = 'mbdrs';
 
 EVENT_SYSBUS_LIST = ['all-init-stage1-set', 'test-connect'];
-EVENT_MODBUS_LIST = ['proxymodbus-send', 'proxymodbus-msg-get'];
+EVENT_MODBUS_LIST = ['proxymodbusdrs-send', 'proxymodbusdrs-msg-get'];
 BUS_NAMES_LIST = ['sysBus', PRIMARY_BUS, 'logBus'];
 
-class ProxyModbus extends ClassBaseService_S {
+class ProxyMWDRS240 extends ClassBaseService_S {
     #_SourceMapNames;
     /**
      * @constructor
@@ -22,10 +22,10 @@ class ProxyModbus extends ClassBaseService_S {
         this.#_SourceMapNames = [];
         this.FillEventOnList('sysBus', EVENT_SYSBUS_LIST);
         this.FillEventOnList(PRIMARY_BUS, EVENT_MODBUS_LIST);
-        this.EmitEvents_logger_log({level: 'I', msg: 'ProxyModbus initialized.'});
+        this.EmitEvents_logger_log({level: 'I', msg: 'ProxyModbusDRS initialized.'});
     }
 
-     HandlerEvents_all_init_stage1_set(_topic, _msg) {
+    HandlerEvents_all_init_stage1_set(_topic, _msg) {
         super.HandlerEvents_all_init_stage1_set(_topic, _msg);
 
         Object.values(this.SourcesState)
@@ -49,16 +49,16 @@ class ProxyModbus extends ClassBaseService_S {
     /**
      * @method
      * @public
-     * @description Отправляет службе modbusclient топик и значение, которое требуется записать
+     * @description Отправляет службе modbusclientled топик и значение, которое требуется записать
      * @param {string} _topic 
      * @param {*} _msg 
      */
-    HandlerEvents_proxymodbus_send(_topic, _msg) {
+    HandlerEvents_proxymodbusdrs_send(_topic, _msg) {
         const source_name = _msg.metadata.source;
         const source = this.#_SourceMapNames.find(_obj => _obj.Name === source_name);
 
         if (source != undefined) {
-            this.EmitEvents_modbusclient_send({ arg: [_msg.arg, source.chNum], value: [_msg.value[0]]});
+            this.EmitEvents_modbusclientdrs_send({ arg: [source.source, source.chNum], value: [_msg.value[0]]});
         }
     }
     /**
@@ -67,27 +67,27 @@ class ProxyModbus extends ClassBaseService_S {
      * @param {string} _topic - команда
      * @param {ClassBusMsg_S} _msg - сообщение
      */
-    HandlerEvents_proxymodbus_msg_get(_topic, _msg) {
+    HandlerEvents_proxymodbusdrs_msg_get(_topic, _msg) {
         // извлечение "ядра" сообщения, составленного службой контроллера
         // LHP.Unpack
         //const msg_from_plc = JSON.parse(_msg.value[0] ?? '');
         //const [ source_name ] = _msg.arg;
         //const hash = this.#GetMsgHash(msg_from_plc.com, source_name);
         const source_name = _msg.arg[0];
-        const ch_name = this.#_SourceMapNames.find(obj => obj.chNum == _msg.arg[1] && obj.source == source_name).Name;
+        //const ch_name = this.#_SourceMapNames.find(obj => obj.chNum == _msg.arg[1] && obj.source == source_name).Name;
 
-        const msg = {
-                dest: ch_name,
+        /*const msg = {
+            dest: ch_name,
+            com: COM_ALL_DATA_RAW_GET,
+            arg: [source_name],
+            value: [{
                 com: COM_ALL_DATA_RAW_GET,
-                arg: [source_name],
-                value: [{
-                    com: COM_ALL_DATA_RAW_GET,
-                    arg: [ch_name],
-                    value: [_msg.value[0]]
-                }]
-            }
-        this.EmitMsg(PRIMARY_BUS, msg.com, msg);
-        //console.log(ch_name + ': ' + _msg.value[0]);
+                arg: [ch_name],
+                value: [_msg.value[0]]
+            }]
+        }
+        this.EmitMsg(PRIMARY_BUS, msg.com, msg);*/
+        console.log(source_name + ': ' + _msg.value[0]);
     }
     /**
      * @method
@@ -95,10 +95,10 @@ class ProxyModbus extends ClassBaseService_S {
      * @description Отправляет на MQTT Client запрос на отправку сообщения на брокер
      * @param {*} param0 
      */
-    EmitEvents_modbusclient_send({ arg, value }) {
+    EmitEvents_modbusclientdrs_send({ arg, value }) {
         const msg = {
-            dest: 'modbusclient',
-            com: 'modbusclient-send',
+            dest: 'modbusDRS',
+            com: 'modbusclientdrs-send',
             arg,
             value
         }
@@ -106,4 +106,4 @@ class ProxyModbus extends ClassBaseService_S {
     }
 }
 
-module.exports = ProxyModbus;
+module.exports = ProxyMWDRS240;

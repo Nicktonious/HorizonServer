@@ -37,9 +37,7 @@ class TelegramBot extends ClassBaseService_S {
         this.#_Keyboard = new (require("grammy").Keyboard)()
             .text("/start")
             .text("/temp")
-            .text("/light").row()
-            .text("/sub")
-            .text("/unsub").persistent();
+            .text("/light").persistent();
 
         this.bot.command("start", (ctx) => {
             ctx.reply("Welcome! Please select one of the next commands:\n\nPLC Control\n/on - turn on Horizon PLC (uses submenu)\n/off - turn off Horizon PLC (uses submenu)\n/reboot - reboot Horizon PLC (uses submenu)\n\nChannels\n/list - show all available channels\n/val {channel name} - show current value of selected channel\n/temp - show current temperature\n/light - show current light level\n\nSubscribtion\n/sub - subscribe to channel zone changing events\n/unsub - unsubscribe from these events", {reply_markup: this.#_Keyboard,});
@@ -139,6 +137,8 @@ class TelegramBot extends ClassBaseService_S {
             ctx.reply(response);
         });
 
+        
+
         this.bot.command("val", async(ctx) => {
             let channel = this.ServicesState['dm'].Service.Channels.find(ch => ch.Name == ctx.match);
 
@@ -159,6 +159,10 @@ class TelegramBot extends ClassBaseService_S {
                 ctx.reply('Already subscribed.');
             }
             
+        });
+
+        this.bot.command("get_chat_id", async(ctx) => {
+            ctx.reply(ctx.chatId);            
         });
 
         this.bot.command("unsub", async(ctx) => {

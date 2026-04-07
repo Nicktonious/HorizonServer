@@ -252,6 +252,14 @@ class ClassProcessSrv extends ClassBaseService_S {
                         }
                         service.Service = new (require(config[service.Name]))({_busList: this.#_GBusList, _node: this.#_Node});
                         this.#_ServicesState[service.Name] = service;
+                        if (service.Importance === 'exploitary' && !this.#_ServicesState[service.AdvancedOptions.host]) {
+                            let hostService = _dbServices.filter(host => host.Name === service.AdvancedOptions.host)[0];
+                            if (!this.#_GBusList[hostService.PrimaryBus]) {
+                                this.CreateBus(hostService.PrimaryBus);
+                            }
+                            hostService.Service = new (require(config[hostService.Name]))({_busList: this.#_GBusList, _node: this.#_Node});
+                            this.#_ServicesState[hostService.Name] = hostService;
+                        }
                 })
                 source.CheckProcess = true;
                 source.IsConnected = false;
@@ -261,7 +269,10 @@ class ClassProcessSrv extends ClassBaseService_S {
             // Создаём каналы
             _dbChannels.forEach(channel => {
                 const source = this.#_SourcesState[channel.SourceName];
-                if (source.Property.includes('r')) {
+                if (typeof source === 'undefined') {
+                    this.EmitEvents_logger_log({level: 'W', msg: `Cannot find source '${channel.SourceName}' for channel '${channel.Name}'.`});
+                }
+                else if (source.Property.includes('r')) {
                     let chService = Object.assign({}, _dbTemplates.find(template => template.Protocol == source.Protocol));
                     chService.AdvancedOptions = channel;
                     chService.Service = new (require(config[channel.ChType]))({_busList: this.#_GBusList, _busNameList: chService.BusList.concat([chService.PrimaryBus]), _advOpts: channel});
