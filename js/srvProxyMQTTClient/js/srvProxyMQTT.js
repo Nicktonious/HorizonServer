@@ -68,7 +68,7 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
         const [ payload ] = value.value;
         const topic_name = this.#_SensSubList[source_name]?.find(_obj => _obj.name === source).address;
 
-        const msg_is_valid = typeof topic_name === 'string' && payload;
+        const msg_is_valid = typeof topic_name === 'string' && payload != undefined;
         if (msg_is_valid) {
             this.EmitEvents_mqttclient_send({ arg: _msg.arg, value: [topic_name, payload ]});
         }

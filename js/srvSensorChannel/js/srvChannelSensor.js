@@ -1,5 +1,4 @@
 // const ClassChannel_S = require('../../srvChannel/js/srvChannel'); DEBUG
-const { SocketType } = require('zeromq/lib/native');
 const ClassChannel_S = require('./srvChannel');
 
 // ### ПОДПИСКИ
@@ -198,6 +197,7 @@ class ClassChannelSensor extends ClassChannel_S {
         const busName = this.SourceName == VIRTUAL_SOURCE_NAME ? 'dataBus' : this.ProtocolBusName;
         this.FillEventOnList(busName, [COM_DM_DEVLIST_SET, COM_DATA_RAW_GET]);
         this.EmitEvents_dm_new_channel();
+        this.EmitEvents_all_ch_new();
     }
 
     /**

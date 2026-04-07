@@ -107,7 +107,7 @@ class ClassChannelActuator extends ClassChannel_S {
      */
     HandlerEvents_all_init_stage1_set(_topic, _msg) {
         super.HandlerEvents_all_init_stage1_set(_topic, _msg);
-        const busName = SourceName == VIRTUAL_SOURCE_NAME ? 'dataBus': this.ProtocolBusName;
+        const busName = this.SourceName == VIRTUAL_SOURCE_NAME ? 'dataBus': this.ProtocolBusName;
         this.FillEventOnList(busName,
             this.#_ValueConfirm ? [COM_DM_DEVLIST_SET, COM_ALL_DATA_RAW_GET] : [COM_DM_DEVLIST_SET]);
         
@@ -115,6 +115,7 @@ class ClassChannelActuator extends ClassChannel_S {
             this.FillEventOnList('dataBus', ['all-data-fine-set']);
         
         this.EmitEvents_dm_new_channel();
+        this.EmitEvents_all_ch_new();
     }
 
     /**
@@ -127,7 +128,7 @@ class ClassChannelActuator extends ClassChannel_S {
         this._SetValueTime = new Date().getTime();
         // if (this.Status != STATUS_ACTIVE) return;
         let val = _val;
-        if (this.SavingValues.raw)
+        if (!this.#_ValueConfirm && this.SavingValues.raw)
             this.EmitEvents_providermdb_data_write({ arg:['raw'], value: [val] });
 
         if (this.ValueType == VALUE_TYPE_NUMBER) {
@@ -141,7 +142,7 @@ class ClassChannelActuator extends ClassChannel_S {
             this.#_Value = val;
 
             this.EmitEvents_all_data_fine_set({ value: [this.#_Value] });
-            if (this.SavingValues.fine)
+            if (!this.#_ValueConfirm && this.SavingValues.fine)
                 this.EmitEvents_providermdb_data_write({ arg: ['fine'], value: [val] });
         }
 
@@ -165,7 +166,7 @@ class ClassChannelActuator extends ClassChannel_S {
 
                 this.EmitEvents_all_data_fine_set({ value: [this.#_Value] });
                 if (this.SavingValues.fine)
-                    this.EmitEvents_providermdb_data_write({ arg: ['fine'], value: [val] });
+                    this.EmitEvents_providermdb_data_write({ arg: ['fine'], value: [this.#_Value] });
             }
         } catch (e) {
             this.EmitEvents_logger_log({ msg: `Error while processing data-raw msg`, level: 'E', obj: _msg });
@@ -220,7 +221,10 @@ class ClassChannelActuator extends ClassChannel_S {
         // поиск прокси-службы источника, считывание PrimaryBus
         const proxy_name = Object.values(this.ServicesState).find(_service => _service.Name.includes('proxy') && _service.Protocol === this.Protocol).Name;
         // выбор команды proxywscient-send | proxymqttclient-send | ...
-        this.EmitEvents_logger_log({ level: 'E', msg: `Proxy service not found`, obj: this });
+        if (!proxy_name) {
+            this.EmitEvents_logger_log({ level: 'E', msg: `Proxy service not found`, obj: this });
+            return;
+        }
         const com_send = `${proxy_name}-send`;
 
         const msg = {
