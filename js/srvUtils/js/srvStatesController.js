@@ -579,12 +579,97 @@ class ClassStatesController {
     }
 
 
-    SetBusVoltageStateOK ( _BusNum ) {
+    SetBusVoltageState ( _BusNum, _state ) {
         switch (_BusNum) {
             case 1:
-                
+                if (Object.values(ClassStatesController.STATES.BUS_VOLTAGE_STATE).includes(_state)) {
+                    this.#_Buses.Bus_1.Voltage = _state;
+                }
                 break;
-        
+            case 2:
+                if (Object.values(ClassStatesController.STATES.BUS_VOLTAGE_STATE).includes(_state)) {
+                    this.#_Buses.Bus_2.Voltage = _state;
+                }
+                break;
+            case 3:
+                if (Object.values(ClassStatesController.STATES.BUS_VOLTAGE_STATE).includes(_state)) {
+                    this.#_Buses.Bus_3.Voltage = _state;
+                }
+                break;
+            case 4:
+                if (Object.values(ClassStatesController.STATES.BUS_VOLTAGE_STATE).includes(_state)) {
+                    this.#_Buses.Bus_4.Voltage = _state;
+                }
+                break;
+            case 5:
+                if (Object.values(ClassStatesController.STATES.BUS_VOLTAGE_STATE).includes(_state)) {
+                    this.#_Buses.Bus_5.Voltage = _state;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    SetBusCurrentState ( _BusNum, _state ) {
+        switch (_BusNum) {
+            case 1:
+                if (Object.values(ClassStatesController.STATES.BUS_CURRENT_STATE).includes(_state)) {
+                    this.#_Buses.Bus_1.Current = _state;
+                }
+                break;
+            case 2:
+                if (Object.values(ClassStatesController.STATES.BUS_CURRENT_STATE).includes(_state)) {
+                    this.#_Buses.Bus_2.Current = _state;
+                }
+                break;
+            case 3:
+                if (Object.values(ClassStatesController.STATES.BUS_CURRENT_STATE).includes(_state)) {
+                    this.#_Buses.Bus_3.Current = _state;
+                }
+                break;
+            case 4:
+                if (Object.values(ClassStatesController.STATES.BUS_CURRENT_STATE).includes(_state)) {
+                    this.#_Buses.Bus_4.Current = _state;
+                }
+                break;
+            case 5:
+                if (Object.values(ClassStatesController.STATES.BUS_CURRENT_STATE).includes(_state)) {
+                    this.#_Buses.Bus_5.Current = _state;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    
+    SetBusTempState ( _BusNum, _state ) {
+        switch (_BusNum) {
+            case 1:
+                if (Object.values(ClassStatesController.STATES.BUS_TEMP_STATE).includes(_state)) {
+                    this.#_Buses.Bus_1.Temp = _state;
+                }
+                break;
+            case 2:
+                if (Object.values(ClassStatesController.STATES.BUS_TEMP_STATE).includes(_state)) {
+                    this.#_Buses.Bus_2.Temp = _state;
+                }
+                break;
+            case 3:
+                if (Object.values(ClassStatesController.STATES.BUS_TEMP_STATE).includes(_state)) {
+                    this.#_Buses.Bus_3.Temp = _state;
+                }
+                break;
+            case 4:
+                if (Object.values(ClassStatesController.STATES.BUS_TEMP_STATE).includes(_state)) {
+                    this.#_Buses.Bus_4.Temp = _state;
+                }
+                break;
+            case 5:
+                if (Object.values(ClassStatesController.STATES.BUS_TEMP_STATE).includes(_state)) {
+                    this.#_Buses.Bus_5.Temp = _state;
+                }
+                break;
             default:
                 break;
         }
