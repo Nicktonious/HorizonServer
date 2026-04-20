@@ -40,7 +40,7 @@ const get_devlist = (_sourceName) => {
 
 
 class ClassProxyMQTTClient_S extends ClassBaseService_S {
-    #_SensSubList = { };
+    #_SensSubList = {};
     constructor({ _busList, _node }) {
         // передача в супер-конструктор имени службы и списка требуемых шин
         super({ _name: 'proxymqttclient', _busNameList: BUS_NAME_LIST, _busList, _node });
