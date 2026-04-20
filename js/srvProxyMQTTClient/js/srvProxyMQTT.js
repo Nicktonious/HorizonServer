@@ -8,6 +8,8 @@ const COM_PMQTTC_MSG_GET   = 'proxymqttclient-msg-get';
 const COM_MQTTC_SEND       = 'mqttclient-send';
 const COM_ALL_DATA_RAW_GET = 'all-data-raw-get';
 
+const EVENT_ON_LIST_SYSBUS = ['all-init-stage1-set'];
+
 const BUS_NAME_LIST = ['sysBus', 'mqttBus', 'logBus'];
 const EVENT_ON_LIST_MQTTBUS = [COM_PMQTTC_DEVLIST_GET, COM_SUB_SENSALL, COM_PMQTTC_SEND, COM_PMQTTC_MSG_GET];
 
@@ -42,6 +44,7 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
     constructor({ _busList, _node }) {
         // передача в супер-конструктор имени службы и списка требуемых шин
         super({ _name: 'proxymqttclient', _busNameList: BUS_NAME_LIST, _busList, _node });
+        this.FillEventOnList('sysBus', EVENT_ON_LIST_SYSBUS);
         this.FillEventOnList('mqttBus', EVENT_ON_LIST_MQTTBUS);
     }
 
