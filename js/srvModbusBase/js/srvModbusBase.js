@@ -50,7 +50,12 @@ class ModbusBase extends ClassBaseService_S {
                     break;
                 case "TCP":
                     if (_opts != null && _opts.ip != null && _opts.port != null) {
-                        client.connectTCP(_opts.ip, { port: _opts.port });
+                        client.connectTCP(_opts.ip, { port: _opts.port }, (err) => {
+                            if (err) {
+                                error = true;
+                                console.log(err);
+                            }
+                        });
                     }
                     else {
                         error = true;
@@ -59,7 +64,12 @@ class ModbusBase extends ClassBaseService_S {
                     break;
                 case "RTUOTCP":
                     if (_opts != null && _opts.ip != null && _opts.port != null) {
-                        client.connectTelnet(_opts.ip, { port: _opts.port });
+                        client.connectTelnet(_opts.ip, { port: _opts.port }, (err) => {
+                            if (err) {
+                                error = true;
+                                console.log(err);
+                            }
+                        });
                     }
                     else {
                         error = true;
@@ -77,20 +87,19 @@ class ModbusBase extends ClassBaseService_S {
             this.EmitEvents_logger_log({level: 'W', msg: `Error creating Modbus ${this.#_Type} cleint. Message: ${e.message}`});
         }
         client._port._client.setKeepAlive(true, 0);
-        client.on('close', (err) => {
-            this.Reopen();
+        /*client.on('close', (err) => {
+            client = this.Initialize_modbus_client(_opts);
         });
         client.on('error', (err) => {
-            this.Reopen();
+            client = this.Initialize_modbus_client(_opts);
             //console.log("I error");
             //console.log(err);
         });
         client.on('timeout', () => {
-            this.Reopen();
+            client = this.Initialize_modbus_client(_opts);
             //console.log("I idle");
-        });
-        
-        
+        });*/
+
 
         if (error) return undefined;
         else return client;
@@ -118,7 +127,7 @@ class ModbusBase extends ClassBaseService_S {
                 case 0x01: // Чтение DO (Coils)
                     _mbclient.readCoils(_reg, _len)
                     .then((data) => {
-                        res(data);
+                        res({data: data.data.slice(0, _len).map(v => v ? 1 : 0), buffer: new Int16Array(_dat).buffer});
                     })
                     .catch((err) => {
                         rej(err);
@@ -203,34 +212,50 @@ class ModbusBase extends ClassBaseService_S {
      * @returns 
      */
     Queue_client_command( _client, _comm, _cb ) {
+        if (_client.failCounter >= 10) {
+            _client.commQueue.length = 0;
+            _client.mbclient.destroy(() => {
+                _cb(null, {message: `Closing ${_client.ip}:${_client.port}@${_comm.mbID}`, obj: _comm})
+            });
+            return;
+        }
         if (_client.isOccupied) {// заняты - кладём в очередь
-            _client.commQueue.push([_client, _comm, _cb]);
+            _client.commQueue.push([_comm, _cb]);
             return;
         }
 
         _client.isOccupied = true;
         let cbTOut = setTimeout(() => {
             _client.isOccupied = false;
-            _cb();
-            if (_client.commQueue.length > 0) 
-                this.Queue_client_command.apply(this, _client.commQueue.shift());
+            _client.failCounter++
+            _cb(null, {message: `Timeout. No response from ${_client.ip}:${_client.port}@${_comm.mbID}`, obj: _comm});
+            if (_client.commQueue.length > 0) {
+                let [comm, cb] = _client.commQueue.shift();
+                this.Queue_client_command(_client, comm, cb);
+            }
         }, 3000);// ждём 3 секунды, иначе считаем, что произошла ошибка или обрыв связи
 
         _client.mbclient.setID(_comm.mbID);
         this.Execute_modbus_command (_comm.id, _comm.reg, _comm.dat, _comm.len, _client.mbclient)
         .then((data) => {
             clearTimeout(cbTOut);
-            _cb(data);
+             _client.failCounter = 0;
+            _cb(data, null);
             _client.isOccupied = false;
-            if (_client.commQueue.length > 0) 
-                this.Queue_client_command.apply(this, _client.commQueue.shift());
+            if (_client.commQueue.length > 0) {
+                let [comm, cb] = _client.commQueue.shift();
+                this.Queue_client_command(_client, comm, cb);
+            }
         })
         .catch((err) => {
-            this.EmitEvents_logger_log({level: 'E', msg: `Error sending modbus command: ${err}`, obj: _comm});
-            _cb();
+            clearTimeout(cbTOut);
+             _client.failCounter++;
+            _cb(null, {message: `Error sending modbus command to ${_client.ip}:${_client.port}@${_comm.mbID}. Reason: ${err.message}`, obj: _comm});
             _client.isOccupied = false;
-            if (_client.commQueue.length > 0) 
-                this.Queue_client_command.apply(this, _client.commQueue.shift());
+            if (_client.commQueue.length > 0) {
+                let [comm, cb] = _client.commQueue.shift();
+                this.Queue_client_command(_client, comm, cb);
+            }
         })
     }
 }

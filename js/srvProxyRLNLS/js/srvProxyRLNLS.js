@@ -1,15 +1,15 @@
 const ClassBaseService_S = require('srvService');
 
-const THIS_NAME = 'proxymodbustcp';
+const THIS_NAME = 'proxymodbusnls';
 const COM_ALL_DATA_RAW_GET = 'all-data-raw-get';
-const PRIMARY_BUS = 'modbustcpBus';
-const PROTOCOL = 'modbustcp';
+const PRIMARY_BUS = 'modbusnlsBus';
+const PROTOCOL = 'mbnls';
 
 EVENT_SYSBUS_LIST = ['all-init-stage1-set', 'test-connect'];
-EVENT_MODBUS_LIST = ['proxymodbustcp-send', 'proxymodbustcp-msg-get'];
+EVENT_MODBUS_LIST = ['proxymodbusnls-send', 'proxymodbusnls-msg-get'];
 BUS_NAMES_LIST = ['sysBus', PRIMARY_BUS, 'logBus'];
 
-class ProxyModbusTCP extends ClassBaseService_S {
+class ProxyRLNLS extends ClassBaseService_S {
     #_SourceMapNames;
     /**
      * @constructor
@@ -22,7 +22,7 @@ class ProxyModbusTCP extends ClassBaseService_S {
         this.#_SourceMapNames = [];
         this.FillEventOnList('sysBus', EVENT_SYSBUS_LIST);
         this.FillEventOnList(PRIMARY_BUS, EVENT_MODBUS_LIST);
-        this.EmitEvents_logger_log({level: 'I', msg: 'ProxyModbusTCP initialized.'});
+        this.EmitEvents_logger_log({level: 'I', msg: 'ProxyModbusNLS initialized.'});
     }
 
     HandlerEvents_all_init_stage1_set(_topic, _msg) {
@@ -49,16 +49,16 @@ class ProxyModbusTCP extends ClassBaseService_S {
     /**
      * @method
      * @public
-     * @description Отправляет службе modbusclienttcp топик и значение, которое требуется записать
+     * @description Отправляет службе modbusclientled топик и значение, которое требуется записать
      * @param {string} _topic 
      * @param {*} _msg 
      */
-    HandlerEvents_proxymodbustcp_send(_topic, _msg) {
+    HandlerEvents_proxymodbusnls_send(_topic, _msg) {
         const source_name = _msg.metadata.source;
         const source = this.#_SourceMapNames.find(_obj => _obj.Name === source_name);
 
         if (source != undefined) {
-            this.EmitEvents_modbusclienttcp_send({ arg: [_msg.arg, source.chNum], value: [_msg.value[0]]});
+            this.EmitEvents_modbusclientnls_send({ arg: [source.source, source.chNum], value: [_msg.value[0]]});
         }
     }
     /**
@@ -67,28 +67,27 @@ class ProxyModbusTCP extends ClassBaseService_S {
      * @param {string} _topic - команда
      * @param {ClassBusMsg_S} _msg - сообщение
      */
-    HandlerEvents_proxymodbustcp_msg_get(_topic, _msg) {
+    HandlerEvents_proxymodbusnls_msg_get(_topic, _msg) {
         // извлечение "ядра" сообщения, составленного службой контроллера
         // LHP.Unpack
         //const msg_from_plc = JSON.parse(_msg.value[0] ?? '');
         //const [ source_name ] = _msg.arg;
         //const hash = this.#GetMsgHash(msg_from_plc.com, source_name);
         const source_name = _msg.arg[0];
-        //console.log (this.#_SourceMapNames);
         const ch_name = this.#_SourceMapNames.find(obj => obj.chNum == _msg.arg[1] && obj.source == source_name).Name;
 
         const msg = {
-                dest: ch_name,
+            dest: ch_name,
+            com: COM_ALL_DATA_RAW_GET,
+            arg: [source_name],
+            value: [{
                 com: COM_ALL_DATA_RAW_GET,
-                arg: [source_name],
-                value: [{
-                    com: COM_ALL_DATA_RAW_GET,
-                    arg: [ch_name],
-                    value: [_msg.value[0]]
-                }]
-            }
+                arg: [ch_name],
+                value: [_msg.value[0]]
+            }]
+        }
         this.EmitMsg(PRIMARY_BUS, msg.com, msg);
-        //console.log(_msg.arg[1] + ': ' + _msg.value[0]);
+        //console.log(ch_name + ': ' + _msg.value[0]);
     }
     /**
      * @method
@@ -96,10 +95,10 @@ class ProxyModbusTCP extends ClassBaseService_S {
      * @description Отправляет на MQTT Client запрос на отправку сообщения на брокер
      * @param {*} param0 
      */
-    EmitEvents_modbusclienttcp_send({ arg, value }) {
+    EmitEvents_modbusclientnls_send({ arg, value }) {
         const msg = {
-            dest: 'modbusclienttcp',
-            com: 'modbusclienttcp-send',
+            dest: 'modbusNLS',
+            com: 'modbusclientnls-send',
             arg,
             value
         }
@@ -107,4 +106,4 @@ class ProxyModbusTCP extends ClassBaseService_S {
     }
 }
 
-module.exports = ProxyModbusTCP;
+module.exports = ProxyRLNLS;

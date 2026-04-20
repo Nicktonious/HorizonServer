@@ -46,7 +46,14 @@ RUNNING_COLOR_LIST = {
 };
 
 class ModbusLED extends ClassBaseService_S {
+    static LIGHT_STATUS = {
+        OFF: 'OFF',
+        ON: 'ON',
+        WARN: 'WARN',
+        ERROR: 'ERROR'
+    };
     #_Sources;
+    #_Blink;
     /**
      * @constructor
      * @description
@@ -56,6 +63,7 @@ class ModbusLED extends ClassBaseService_S {
     constructor({ _busList, _node }) {
         super({ _name: THIS_NAME, _busNameList: BUS_NAMES_LIST, _busList, _node });
         this.#_Sources = {};
+        this.#_Blink = 0;
         this.FillEventOnList('sysBus', EVENT_SYSBUS_LIST);
         this.FillEventOnList(PRIMARY_BUS, EVENT_MODBUS_LIST);
         this.EmitEvents_logger_log({level: 'I', msg: 'MModbusLED initialized.'});
@@ -69,7 +77,7 @@ class ModbusLED extends ClassBaseService_S {
     EmitEvents_modbusled_source_toss({arg, value}) {
         const msg = {
             dest: 'modbusclientrot',
-            com: 'modbusled-source-toss',
+            com: 'modbus-source-toss',
             arg,
             value
         };
@@ -198,6 +206,49 @@ class ModbusLED extends ClassBaseService_S {
         this.Connect();
     }
 
+    State_to_Val ( _stateArray, _blink ) {
+        let regs = [];
+        _stateArray.forEach(state => {
+            switch (state) {
+                case ModbusLED.LIGHT_STATUS.OFF:
+                    regs.push(0, 0);
+                    break;
+                case ModbusLED.LIGHT_STATUS.ON:
+                    regs.push(65535, 255);
+                    break;
+                case ModbusLED.LIGHT_STATUS.WARN:
+                    regs.push(255 * _blink, 0);
+                    break;
+                case ModbusLED.LIGHT_STATUS.ERROR:
+                default:
+                    regs.push(255, 0);
+                    break;
+            }
+        })
+        return regs;
+    }
+
+    Start( _name, _source ) {
+         if (_source.Groups != undefined && _source.Groups.length > 0) {                
+            _source.Groups.forEach((group) => {
+                if (group.beh == 'Update') {
+                    group.Lights = Array(group.strLen).fill(ModbusLED.LIGHT_STATUS.OFF);
+                    group.blink = 0;
+                    setInterval(() => {
+                        group.blink ^= 1;
+                        let comm = {
+                            id: 0x10,
+                            reg: 0x64,
+                            len: group.strLen,
+                            dat: this.State_to_Val(group.Lights, group.blink),
+                            mbID: group.mbID
+                        }
+                        this.EmitEvents_enqueue_command({ arg: [_name], value: [comm]});
+                    },group.interval);
+                }
+            })
+        }
+    }
     
 
     /**
@@ -208,6 +259,15 @@ class ModbusLED extends ClassBaseService_S {
         let sourcesCount = 0;
         let tOut = setTimeout(() => {
             this.EmitEvents_logger_log({level: 'I', msg: `Connections done!`, obj: this.SourcesState});
+            Object.entries(this.#_Sources).forEach(([name, source]) => {
+                if (source.IsConnected) {
+                    this.EmitEvents_logger_log({level: 'I', msg: `${name} connected`, obj: source});
+                    this.Start(name, source);
+                }
+                else {
+                    console.log(`${name} unconnected`);
+                }
+            });
             console.log(`Connections done by MLED!`);
         }, CONNECTION_TIMEOUT);
         Object.values(this.SourcesState)
