@@ -239,7 +239,7 @@ class ClassChannelSensor extends ClassChannel_S {
             if ((ch_name === this.NamePLC || ch_name === this.Name) && source_name === this.SourceName) {
                 this.allDataRawGetEvent = Date.now();
                 const value = _msg.value[0]?.value[0];
-                if (value) this.Value = value;
+                this.Value = value;
             }
         } catch (e) {
             this.EmitEvents_logger_log({ msg: `Error while processing data-daw msg`, level: 'E', obj: _msg });
