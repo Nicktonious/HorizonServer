@@ -17,7 +17,9 @@
             "PrimaryBus": "logBus",
             "Module": "srvLogger",
             "Options": {
-                "port": 5142, 
+                "host": "10.110.71.231",
+                "port": 5142,
+                "hostname": "HUB-Low",
                 "console": false
             }
         },
