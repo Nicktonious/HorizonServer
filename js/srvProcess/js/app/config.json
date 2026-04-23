@@ -59,20 +59,21 @@
         }
     ],
     "Auxilary": {
-        "proxywsclient": "srvProxyWS",
-        "wsclient": "srvWSClient",
-        "proxymqttclient": "srvProxyMQTT",
-        "mqttclient": "srvMQTTClient",
-        "proxyrpiclient": "srvProxyRpi",
-        "rpiclient": "srvRpiClient",
-        "proxymqttgw": "srvProxyMQTTGateway",
-        "mqttgw": "srvMQTTGateway",
         "sensor": "srvChannelSensor",
         "actuator": "srvChannelActuator",
-        "modbusclient": "srvModbusClient",
-        "proxymodbus": "srvProxyModbus",
+        "modbusclienttcp": "srvModbusClientTCP",
+        "proxymodbustcp": "srvProxyModbusTCP",
+        "modbusclientrot": "srvModbusClientROT",
+        "proxymodbusrot": "srvProxyModbusROT",
+        "modbusled": "srvMLED",
+        "proxymodbusled": "srvProxyMLED",
         "snmpclient": "srvSNMPClient",
         "proxysnmp": "srvProxySNMP",
-        "telegrambot": "srvTelegramBot"
+        "modbusDRS": "srvMWDRS240",
+        "proxymodbusdrs": "srvProxyMWDRS240",
+        "modbusNLS": "srvRLNLS",
+        "proxymodbusnls": "srvProxyRLNLS",
+        "proxymodbuskcs": "srvProxyKinCony",
+        "modbusKCS": "srvKinCony"
     }
 }

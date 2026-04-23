@@ -68,7 +68,7 @@ class ClassProcessSrv extends ClassBaseService_S {
         this.UpdateBusList();
         this.FillEventOnList('sysBus', EVENT_SYSBUS_LIST);
         this.FillEventOnList('mdbBus', EVENT_MDBBUS_LIST);
-        const config = require('config.json');
+        const config = require('./app/config.json');
         config.Primary.forEach((sysservice) => {
             try {
                 const servName = sysservice.Name;
@@ -90,10 +90,10 @@ class ClassProcessSrv extends ClassBaseService_S {
             /* debughome */
             this.EmitEvents_logger_log({level: 'E', msg: `No response from DataBase. Using default template for debug`});
 
-            let arr1 = require('Sources');
-            let arr2 = require('Services');
-            let arr3 = require('Templates');
-            let arr4 = require('Channels');
+            let arr1 = require('./app/Sources');
+            let arr2 = require('./app/Services');
+            let arr3 = require('./app/Templates');
+            let arr4 = require('./app/Channels');
             
             this.Fill(arr2, arr1, arr3, arr4);
             /* debugend */
@@ -223,7 +223,7 @@ class ClassProcessSrv extends ClassBaseService_S {
         }
 
         try {
-            const config = require('config.json').Auxilary;
+            const config = require('./app/config.json').Auxilary;
             // Обновляем основные службы
             _dbServices.forEach(service => {
                 try {
