@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 const { exec } = require('node:child_process');
 
 // ИМЕНА ШИН

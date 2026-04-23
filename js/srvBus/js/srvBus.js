@@ -1,4 +1,4 @@
-const { ClassBusMsg_S } = require('./srvBusMsg');
+const { ClassBusMsg_S } = require('./../../srvBusMsg/js/srvBusMsg');
 const EventEmitter = require('eventemitter2');
 // const zmq = require("zeromq");
 const { execSync } = require('child_process');

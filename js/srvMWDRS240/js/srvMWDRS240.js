@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 
 const PRIMARY_BUS = 'modbusdrsBus';
 const EXPLOIT_BUS = 'modbusrotBus';
@@ -96,10 +96,10 @@ class MW_DRS240 extends ClassBaseService_S {
 
     HandlerEvents_modbusdrs_msg_get( _topic, _msg ){
         const srcName = _msg.arg[0];
-        const srcReg = _msg.arg[1];
+        const srcComm = _msg.arg[1];
         const val = _msg.value[0];
 
-        switch (srcReg) {
+        switch (srcComm.reg) {
             case 0xC0:
                 this.#_Sources[srcName].Scales = {
                     I_OUT: MW_DRS240.SCALE_FACTORS[(val.data[0] & 0xF000) >> 12],

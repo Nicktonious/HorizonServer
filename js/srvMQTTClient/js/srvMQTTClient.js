@@ -3,7 +3,7 @@
  * @property {object} source
  * @property {mqtt.MqttClient} client
  */
-const ClassBaseService_S = require('./srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 const mqtt = require('mqtt');
 
 const COM_ALL_INIT1 = 'all-init-stage1-set';

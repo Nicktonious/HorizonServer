@@ -1,6 +1,6 @@
 /** зависимости */
-const { ClassBusMsg_S, constants: MSG_CONST } = require('srvBusMsg');
-const ClassBus_S = require('srvBus');
+const { ClassBusMsg_S, constants: MSG_CONST } = require('./../../srvBusMsg/js/srvBusMsg');
+const ClassBus_S = require('./../../srvBus/js/srvBus');
 // const { EventEmitter } = require('events');
 /********************************* */
 

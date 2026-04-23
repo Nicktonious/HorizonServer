@@ -3,7 +3,7 @@ const MSG_TYPE_REQUEST  = 'req';        // запрос
 const MSG_TYPE_RESPONSE = 'res';        // ответ
 const MSG_TYPE_LIST = [MSG_TYPE_REQUEST, MSG_TYPE_RESPONSE]; 
 /************ */
-const generateHash = require('generateHash.js');
+const generateHash = require('./../../srvUtils/js/generateHash');
 // const generateHash = () => Math.trunc(new Date().getTime()*Math.random());
 
 /**

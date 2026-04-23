@@ -1,15 +1,15 @@
 const ClassBaseService_S = require('./../../srvService/js/srvService');
 
-const THIS_NAME = 'proxymodbusrot';
+const THIS_NAME = 'proxymodbuskcs';
 const COM_ALL_DATA_RAW_GET = 'all-data-raw-get';
-const PRIMARY_BUS = 'modbusrotBus';
-const PROTOCOL = 'modbusrot';
+const PRIMARY_BUS = 'modbuskcsBus';
+const PROTOCOL = 'mbkcs';
 
 EVENT_SYSBUS_LIST = ['all-init-stage1-set', 'test-connect'];
-EVENT_MODBUS_LIST = ['proxymodbusrot-send', 'proxymodbusrot-msg-get'];
+EVENT_MODBUS_LIST = ['proxymodbuskcs-send', 'proxymodbuskcs-msg-get'];
 BUS_NAMES_LIST = ['sysBus', PRIMARY_BUS, 'logBus'];
 
-class ProxyModbusRTUOTCP extends ClassBaseService_S {
+class ProxyKinCony extends ClassBaseService_S {
     #_SourceMapNames;
     /**
      * @constructor
@@ -22,7 +22,7 @@ class ProxyModbusRTUOTCP extends ClassBaseService_S {
         this.#_SourceMapNames = [];
         this.FillEventOnList('sysBus', EVENT_SYSBUS_LIST);
         this.FillEventOnList(PRIMARY_BUS, EVENT_MODBUS_LIST);
-        this.EmitEvents_logger_log({level: 'I', msg: 'ProxyModbusROT initialized.'});
+        this.EmitEvents_logger_log({level: 'I', msg: 'ProxyModbusKCS initialized.'});
     }
 
     HandlerEvents_all_init_stage1_set(_topic, _msg) {
@@ -49,16 +49,16 @@ class ProxyModbusRTUOTCP extends ClassBaseService_S {
     /**
      * @method
      * @public
-     * @description Отправляет службе modbusclientrot топик и значение, которое требуется записать
+     * @description Отправляет службе modbusclientled топик и значение, которое требуется записать
      * @param {string} _topic 
      * @param {*} _msg 
      */
-    HandlerEvents_proxymodbusrot_send(_topic, _msg) {
+    HandlerEvents_proxymodbuskcs_send(_topic, _msg) {
         const source_name = _msg.metadata.source;
         const source = this.#_SourceMapNames.find(_obj => _obj.Name === source_name);
 
         if (source != undefined) {
-            this.EmitEvents_modbusclientrot_send({ arg: [_msg.arg, source.chNum], value: [_msg.value[0]]});
+            this.EmitEvents_modbusclientkcs_send({ arg: [source.source, source.chNum], value: [_msg.value[0]]});
         }
     }
     /**
@@ -67,16 +67,19 @@ class ProxyModbusRTUOTCP extends ClassBaseService_S {
      * @param {string} _topic - команда
      * @param {ClassBusMsg_S} _msg - сообщение
      */
-    HandlerEvents_proxymodbusrot_msg_get(_topic, _msg) {
+    HandlerEvents_proxymodbuskcs_msg_get(_topic, _msg) {
         // извлечение "ядра" сообщения, составленного службой контроллера
         // LHP.Unpack
         //const msg_from_plc = JSON.parse(_msg.value[0] ?? '');
         //const [ source_name ] = _msg.arg;
         //const hash = this.#GetMsgHash(msg_from_plc.com, source_name);
         const source_name = _msg.arg[0];
-        const ch_name = this.#_SourceMapNames.find(obj => obj.chNum == _msg.arg[1] && obj.source == source_name).Name;
+        const source = this.#_SourceMapNames.find(obj => obj.chNum == _msg.arg[1] && obj.source == source_name);
 
-        const msg = {
+        if (source != undefined) {
+            const ch_name = source.Name;
+
+            const msg = {
                 dest: ch_name,
                 com: COM_ALL_DATA_RAW_GET,
                 arg: [source_name],
@@ -86,7 +89,9 @@ class ProxyModbusRTUOTCP extends ClassBaseService_S {
                     value: [_msg.value[0]]
                 }]
             }
-        this.EmitMsg(PRIMARY_BUS, msg.com, msg);
+            this.EmitMsg(PRIMARY_BUS, msg.com, msg);
+        }
+        
         //console.log(ch_name + ': ' + _msg.value[0]);
     }
     /**
@@ -95,10 +100,10 @@ class ProxyModbusRTUOTCP extends ClassBaseService_S {
      * @description Отправляет на MQTT Client запрос на отправку сообщения на брокер
      * @param {*} param0 
      */
-    EmitEvents_modbusclientrot_send({ arg, value }) {
+    EmitEvents_modbusclientkcs_send({ arg, value }) {
         const msg = {
-            dest: 'modbusclientrot',
-            com: 'modbusclientrot-send',
+            dest: 'modbusKCS',
+            com: 'modbusclientkcs-send',
             arg,
             value
         }
@@ -106,4 +111,4 @@ class ProxyModbusRTUOTCP extends ClassBaseService_S {
     }
 }
 
-module.exports = ProxyModbusRTUOTCP;
+module.exports = ProxyKinCony;
