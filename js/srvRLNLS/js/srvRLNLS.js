@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 
 const PRIMARY_BUS = 'modbusnlsBus';
 const EXPLOIT_BUS = 'modbusrotBus';
@@ -95,11 +95,11 @@ class RL_NLS extends ClassBaseService_S {
 
     HandlerEvents_modbusnls_msg_get( _topic, _msg ){
         const srcName = _msg.arg[0];
-        const srcReg = _msg.arg[1];
+        const srcComm = _msg.arg[1];
         const val = _msg.value[0];
 
         try {
-            switch (srcReg) {
+            switch (srcComm.reg) {
             case 0x00:
                 this.EmitEvents_proxymodbusnls_msg_get({arg: [srcName, 0], value: [(val.data[0] == 1 ? 'Питание от сети' : 'Питание от аккомулятора')]});
                 this.EmitEvents_proxymodbusnls_msg_get({arg: [srcName, 3], value: [val.data[3] / 10]});

@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 const ClassGlog2 = require('graylog2');
 const dgram = require('dgram');
 

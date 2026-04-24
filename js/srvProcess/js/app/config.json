@@ -15,9 +15,11 @@
             "Status": "stopped",
             "Protocol": "sys",
             "PrimaryBus": "logBus",
-            "Module": "srvLogger",
+            "Module": "./../../srvLogger/js/srvLogger",
             "Options": {
-                "port": 5142, 
+                "host": "10.110.71.231",
+                "port": 5142,
+                "hostname": "HUB-Low",
                 "console": false
             }
         },
@@ -27,7 +29,7 @@
             "Status": "stopped",
             "Protocol": "sys",
             "PrimaryBus": "logBus",
-            "Module": "srvProxyLogger",
+            "Module": "./../../srvProxyLogger/js/srvProxyLogger",
             "Options": {}
         },
         {
@@ -36,7 +38,7 @@
             "Status": "stopped",
             "Protocol": "sys",
             "PrimaryBus": "dataBus",
-            "Module": "srvProxyChannel",
+            "Module": "./../../srvProxyChanne/js/srvProxyChanne",
             "Options": {}
         },
         {
@@ -45,7 +47,7 @@
             "Status": "stopped",
             "Protocol": "sys",
             "PrimaryBus": "mdbBus",
-            "Module": "srvProviderMDB",
+            "Module": "./../../srvProviderMDB/js/srvProviderMDB",
             "Options": {}
         },
         {
@@ -54,25 +56,26 @@
             "Status": "stopped",
             "Protocol": "sys",
             "PrimaryBus": "dataBus",
-            "Module": "srvDeviceManager",
+            "Module": "./../../srvDeviceManager/js/srvDeviceManager",
             "Options": {}
         }
     ],
     "Auxilary": {
-        "proxywsclient": "srvProxyWS",
-        "wsclient": "srvWSClient",
-        "proxymqttclient": "srvProxyMQTT",
-        "mqttclient": "srvMQTTClient",
-        "proxyrpiclient": "srvProxyRpi",
-        "rpiclient": "srvRpiClient",
-        "proxymqttgw": "srvProxyMQTTGateway",
-        "mqttgw": "srvMQTTGateway",
-        "sensor": "srvChannelSensor",
-        "actuator": "srvChannelActuator",
-        "modbusclient": "srvModbusClient",
-        "proxymodbus": "srvProxyModbus",
-        "snmpclient": "srvSNMPClient",
-        "proxysnmp": "srvProxySNMP",
-        "telegrambot": "srvTelegramBot"
+        "sensor": "./../../srvSensorChannel/js/srvChannelSensor",
+        "actuator": "./../../srvChannelActuator/js/srvChannelActuator",
+        "modbusclienttcp": "./../../srvModbusClientTCP/js/srvModbusClientTCP",
+        "proxymodbustcp": "./../../srvProxyModbusTCP/js/srvProxyModbusTCP",
+        "modbusclientrot": "./../../srvModbusClientROT/js/srvModbusClientROT",
+        "proxymodbusrot": "./../../srvProxyModbusROT/js/srvProxyModbusROT",
+        "modbusled": "./../../srvMLED/js/srvMLED",
+        "proxymodbusled": "./../../srvProxyMLED/js/srvProxyMLED",
+        "snmpclient": "./../../srvSNMPClient/js/srvSNMPClient",
+        "proxysnmp": "./../../srvProxySNMP/js/srvProxySNMP",
+        "modbusDRS": "./../../srvMWDRS240/js/srvMWDRS240",
+        "proxymodbusdrs": "./../../srvProxyMWDRS240/js/srvProxyMWDRS240",
+        "modbusNLS": "./../../srvRLNLS/js/srvRLNLS",
+        "proxymodbusnls": "./../../srvProxyRLNLS/js/srvProxyRLNLS",
+        "proxymodbuskcs": "./../../srvProxyKinCony/js/srvProxyKinCony",
+        "modbusKCS": "./../../srvKinCony/js/srvKinCony"
     }
 }

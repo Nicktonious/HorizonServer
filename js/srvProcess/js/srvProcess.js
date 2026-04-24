@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 
 
 /**
@@ -58,12 +58,17 @@ class ClassProcessSrv extends ClassBaseService_S {
      */
     Init() {
         BUS_NAMES_LIST.forEach((element) => {
-            this.CreateBus(element);
+            try {
+                this.CreateBus(element);
+            }
+            catch (e) {
+                console.log(`Failed to create bus: ${element}\n${e}`);
+            }
         });
         this.UpdateBusList();
         this.FillEventOnList('sysBus', EVENT_SYSBUS_LIST);
         this.FillEventOnList('mdbBus', EVENT_MDBBUS_LIST);
-        const config = require('./config.json');
+        const config = require('./app/config.json');
         config.Primary.forEach((sysservice) => {
             try {
                 const servName = sysservice.Name;
@@ -85,10 +90,10 @@ class ClassProcessSrv extends ClassBaseService_S {
             /* debughome */
             this.EmitEvents_logger_log({level: 'E', msg: `No response from DataBase. Using default template for debug`});
 
-            let arr1 = require('Sources');
-            let arr2 = require('Services');
-            let arr3 = require('Templates');
-            let arr4 = require('Channels');
+            let arr1 = require('./app/Sources');
+            let arr2 = require('./app/Services');
+            let arr3 = require('./app/Templates');
+            let arr4 = require('./app/Channels');
             
             this.Fill(arr2, arr1, arr3, arr4);
             /* debugend */
@@ -218,66 +223,86 @@ class ClassProcessSrv extends ClassBaseService_S {
         }
 
         try {
-            const config = require('./config.json').Auxilary;
+            const config = require('./app/config.json').Auxilary;
             // Обновляем основные службы
             _dbServices.forEach(service => {
-                if (service.Importance === 'primary') {
-                    if (this.#_ServicesState[service.Name] && this.#_ServicesState[service.Name].Service) {
-                        service.Service = this.#_ServicesState[service.Name].Service;
-                        this.#_ServicesState[service.Name] = service;
+                try {
+                    if (service.Importance === 'primary') {
+                        if (this.#_ServicesState[service.Name] && this.#_ServicesState[service.Name].Service) {
+                            service.Service = this.#_ServicesState[service.Name].Service;
+                            this.#_ServicesState[service.Name] = service;
+                        }
+                        else {
+                            this.EmitEvents_logger_log({level: 'E', msg: `Primary service ${service.Name} is not initialized.`, obj:  this.#_ServicesState[service.Name]});
+                        }
                     }
-                    else {
-                        this.EmitEvents_logger_log({level: 'E', msg: `Primary service ${service.Name} is not initialized.`, obj:  this.#_ServicesState[service.Name]});
+                    if (service.Importance === 'auxilary' && service.Protocol === 'sys') {
+                        try {
+                            service.Service = new (require(config[service.Name]))({_busList: this.#_GBusList, _node: this.#_Node}, service.AdvancedOptions);
+                            this.#_ServicesState[service.Name] = service;
+                        }
+                        catch (e) {
+                            this.EmitEvents_logger_log({level: 'E', msg: `Failed to start auxilary service ${service.Name}. ${e.message}`, obj:  this.#_ServicesState[service.Name]});
+                        }                    
                     }
                 }
-                if (service.Importance === 'auxilary' && service.Protocol === 'sys') {
-                    try {
-                        service.Service = new (require(config[service.Name]))({_busList: this.#_GBusList, _node: this.#_Node}, service.AdvancedOptions);
-                        this.#_ServicesState[service.Name] = service;
-                    }
-                    catch (e) {
-                        this.EmitEvents_logger_log({level: 'E', msg: `Failed to start auxilary service ${service.Name}. ${e.message}`, obj:  this.#_ServicesState[service.Name]});
-                    }                    
+                catch (e) {
+                    console.log(`_dbServices: ${e}`);
                 }
             })
 
             // Заполняем источники
             _dbSources.forEach(source => {
-                const protocol = source.Protocol.toLowerCase();
-                _dbServices
-                    .filter(service => service.Protocol === protocol && !this.#_ServicesState[service.Name])
-                    .forEach(service => {
-                        if (!this.#_GBusList[service.PrimaryBus]) {
-                            this.CreateBus(service.PrimaryBus);
-                        }
-                        service.Service = new (require(config[service.Name]))({_busList: this.#_GBusList, _node: this.#_Node});
-                        this.#_ServicesState[service.Name] = service;
-                        if (service.Importance === 'exploitary' && !this.#_ServicesState[service.AdvancedOptions.host]) {
-                            let hostService = _dbServices.filter(host => host.Name === service.AdvancedOptions.host)[0];
-                            if (!this.#_GBusList[hostService.PrimaryBus]) {
-                                this.CreateBus(hostService.PrimaryBus);
+                try {
+                    const protocol = source.Protocol.toLowerCase();
+                    _dbServices
+                        .filter(service => service.Protocol === protocol && !this.#_ServicesState[service.Name])
+                        .forEach(service => {
+                            try {
+                                if (!this.#_GBusList[service.PrimaryBus]) {
+                                    this.CreateBus(service.PrimaryBus);
+                                }
+                                service.Service = new (require(config[service.Name]))({_busList: this.#_GBusList, _node: this.#_Node});
+                                this.#_ServicesState[service.Name] = service;
+                                if (service.Importance === 'exploitary' && !this.#_ServicesState[service.AdvancedOptions.host]) {
+                                    let hostService = _dbServices.filter(host => host.Name === service.AdvancedOptions.host)[0];
+                                    if (!this.#_GBusList[hostService.PrimaryBus]) {
+                                        this.CreateBus(hostService.PrimaryBus);
+                                    }
+                                    hostService.Service = new (require(config[hostService.Name]))({_busList: this.#_GBusList, _node: this.#_Node});
+                                    this.#_ServicesState[hostService.Name] = hostService;
+                                }
                             }
-                            hostService.Service = new (require(config[hostService.Name]))({_busList: this.#_GBusList, _node: this.#_Node});
-                            this.#_ServicesState[hostService.Name] = hostService;
-                        }
-                })
-                source.CheckProcess = true;
-                source.IsConnected = false;
-                this.#_SourcesState[source.Name] = source;
+                            catch (e) {
+                                console.log(`Failed to create service: ${service}\n${e}`);
+                            }
+                    })
+                    source.CheckProcess = true;
+                    source.IsConnected = false;
+                    this.#_SourcesState[source.Name] = source;
+                }
+                catch (e) {
+                    console.log(`_dbSources: ${e}`);
+                }
             })
         
             // Создаём каналы
             _dbChannels.forEach(channel => {
-                const source = this.#_SourcesState[channel.SourceName];
-                if (typeof source === 'undefined') {
-                    this.EmitEvents_logger_log({level: 'W', msg: `Cannot find source '${channel.SourceName}' for channel '${channel.Name}'.`});
+                try {
+                    const source = this.#_SourcesState[channel.SourceName];
+                    if (typeof source === 'undefined') {
+                        this.EmitEvents_logger_log({level: 'W', msg: `Cannot find source '${channel.SourceName}' for channel '${channel.Name}'.`});
+                    }
+                    else if (source.Property.includes('r')) {
+                        let chService = Object.assign({}, _dbTemplates.find(template => template.Protocol == source.Protocol));
+                        chService.AdvancedOptions = channel;
+                        chService.Service = new (require(config[channel.ChType]))({_busList: this.#_GBusList, _busNameList: chService.BusList.concat([chService.PrimaryBus]), _advOpts: channel});
+                        chService.Name = chService.Service.Name;
+                        this.#_ServicesState[chService.Name] = chService;
+                    }
                 }
-                else if (source.Property.includes('r')) {
-                    let chService = Object.assign({}, _dbTemplates.find(template => template.Protocol == source.Protocol));
-                    chService.AdvancedOptions = channel;
-                    chService.Service = new (require(config[channel.ChType]))({_busList: this.#_GBusList, _busNameList: chService.BusList.concat([chService.PrimaryBus]), _advOpts: channel});
-                    chService.Name = chService.Service.Name;
-                    this.#_ServicesState[chService.Name] = chService;
+                catch(e) {
+                    console.log(`_dbChannels: ${e}`);
                 }
             })
 

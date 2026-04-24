@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 const mqtt = require('mqtt');
 
 const BUS_NAME_LIST = ['sysBus', 'logBus', 'mqttGwBus'];

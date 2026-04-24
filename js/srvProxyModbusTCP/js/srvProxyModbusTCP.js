@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 
 const THIS_NAME = 'proxymodbustcp';
 const COM_ALL_DATA_RAW_GET = 'all-data-raw-get';

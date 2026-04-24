@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 
 const PRIMARY_BUS = 'modbusledBus';
 const EXPLOIT_BUS = 'modbusrotBus';

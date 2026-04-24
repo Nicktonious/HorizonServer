@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 const Modbus = require('modbus-serial')
 
 class ModbusBase extends ClassBaseService_S {
