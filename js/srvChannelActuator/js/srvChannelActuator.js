@@ -1,3 +1,5 @@
+const ClassChannel_S = require('../../srvChannel/js/srvChannel');
+
 const COM_CH_ALARM = 'all-ch-alarm';
 // ### ПОДПИСКИ
 const COM_ALL_DEVINFO_SET = 'all-device-config-set';
@@ -29,9 +31,7 @@ const VIRTUAL_SOURCE_NAME = 'virtual';
  * @property {[String]} channelNames
  * @property {[String]} channelMeasures
  */
-// DEBUG
-// const ClassChannel_S = require('../../srvChannel/js/srvChannel');
-const ClassChannel_S = require('./srvChannel');
+
 /**
  * @class 
  * Самый "старший" предок в иерархии классов актуаторов. 

@@ -1,5 +1,4 @@
-// const ClassChannel_S = require('../../srvChannel/js/srvChannel'); DEBUG
-const ClassChannel_S = require('./srvChannel');
+const ClassChannel_S = require('../../srvChannel/js/srvChannel'); 
 
 // ### ПОДПИСКИ
 const COM_DATA_RAW_GET = 'all-data-raw-get';
@@ -26,6 +25,10 @@ const VALUE_TYPE_NUMBER = 'number';
 const VALUE_TYPE_STRING = 'string';
 
 const VIRTUAL_SOURCE_NAME = 'virtual';
+
+const valIsEqual = (a, b, x) => {
+    return Math.abs(a - b) <= Math.abs(a) * (x / 100);
+};
 
 /**
  * @typedef SensorOptsType 
@@ -117,7 +120,7 @@ class ClassChannelSensor extends ClassChannel_S {
         super({ _busNameList, _busList, _advOpts });
 
         /** Основные поля */
-        this.#_Value = 0;
+        this.#_Value = undefined;
 
         this._Bypass = false;
         this._DataUpdated = false;
@@ -172,13 +175,15 @@ class ClassChannelSensor extends ClassChannel_S {
             if (this.SavingValues.raw) 
                 this.EmitEvents_providermdb_data_write({ arg: ['raw'], value: [val_preproc] });
         }
-        
+        const prevValue = this.#_Value;
         this.#_Value = val;
-
-        this.EmitEvents_all_data_fine_set();
-        if (this.SavingValues.fine) 
-            this.EmitEvents_providermdb_data_write({ arg: ['fine'], value: [val] });
-
+        if (!valIsEqual(prevValue, val, this.ChangeThreshold)) {
+            this.EmitEvents_all_data_fine_set();
+            
+            if (this.SavingValues.fine) 
+                this.EmitEvents_providermdb_data_write({ arg: ['fine'], value: [val] });
+        }
+        
         this._DataUpdated = true;
         this._DataWasRead = false;
 

@@ -1,5 +1,5 @@
-const ClassBaseService_S = require('./srvService');
-const generateHash = require('./generateHash.js');
+const ClassBaseService_S = require('../../srvService/js/srvService.js');
+const generateHash = require('../../srvUtils/js/generateHash');
 
 // ### ПОДПИСКИ
 const COM_DATA_RAW_GET = 'all-data-raw-get';
@@ -264,7 +264,7 @@ class ClassChannel_S extends ClassBaseChannel_S {
         // работа с БД
         this.SetSavingValues(_advOpts?.SavingValues);
         // математическая конфигурация
-        this.#_ChangeThreshold = _advOpts.ChangeThreshold ?? 0;
+        this.#_ChangeThreshold = typeof _advOpts.ChangeThreshold == 'number' ? _advOpts.ChangeThreshold : 0;
         if (this.ValueType == VALUE_TYPE_NUMBER)
             this.SetupMathChannel(_advOpts.Config);
         // подписка на init
