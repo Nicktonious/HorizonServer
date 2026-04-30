@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('./../../srvService/js/srvService');
+const ClassBaseService_S = require('../../srvService/js/srvService');
 
 const COM_DM_DEVLIST_SET     = 'dm-deviceslist-set';
 const COM_PMQTTC_DEVLIST_GET = 'proxymqttclient-deviceslist-get';
@@ -13,7 +13,7 @@ const EVENT_ON_LIST_SYSBUS = ['all-init-stage1-set'];
 const BUS_NAME_LIST = ['sysBus', 'mqttBus', 'logBus'];
 const EVENT_ON_LIST_MQTTBUS = [COM_PMQTTC_DEVLIST_GET, COM_SUB_SENSALL, COM_PMQTTC_SEND, COM_PMQTTC_MSG_GET];
 
-const channels_dummy = require('./Channels');
+const channels_dummy = require('../../srvProcess/js/app/Channels');
 const get_devlist = (_sourceName) => {
     let list = { sensor: [], actuator: [] }
     channels_dummy
@@ -51,7 +51,7 @@ class ClassProxyMQTTClient_S extends ClassBaseService_S {
     HandlerEvents_all_init_stage1_set(_topic, _msg) {
         super.HandlerEvents_all_init_stage1_set(_topic, _msg);
 
-        Object.keys(this.SourcesState)
+        Object.values(this.SourcesState)
             .filter(_source => _source.Protocol === 'mqtt')
             .forEach(_source => {
                 _source.CheckProxy = true;

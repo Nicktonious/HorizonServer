@@ -1,5 +1,4 @@
-const ClassBaseService_S = require('./../../srvService/js/srvService');
-// const ClassBaseService_S = require('../../srvService/js/srvService.js');
+const ClassBaseService_S = require('../../srvService/js/srvService.js');
 
 const THIS_NAME = 'proxymmtrxmotor';
 const COM_ALL_DATA_RAW_GET = 'all-data-raw-get';
