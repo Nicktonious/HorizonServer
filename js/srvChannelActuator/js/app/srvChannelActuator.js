@@ -23,7 +23,7 @@ const CONST_UNKNOWN = 'unknown';
  * @property {[String]} channelMeasures
  */
 
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('../../../srvService/js/srvService');
 /**
  * @class 
  * Самый "старший" предок в иерархии классов актуаторов. 
