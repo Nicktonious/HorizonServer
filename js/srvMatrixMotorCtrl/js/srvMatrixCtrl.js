@@ -1,5 +1,5 @@
+const ClassBaseService_S = require('../../../srvService/js/srvService');
 const { EventEmitter2 } = require("eventemitter2");
-const ClassBaseService = require('./srvService.js');
 const mqtt = require('mqtt');
 
 /**
@@ -44,20 +44,13 @@ const mqtt = require('mqtt');
  * @property {number} coords.row - Строка (начинается с 0)
  */
 
-/**
- * @typedef {object} TypeElectrCurrentState
- * @property {number} IDLE
- * @property {number} WORK_OK
- * @property {number} STUCK
- */
-
 const PROTOCOL = 'mmtrxmotor';
 const BUS_NAME_LIST = ['sysBus', 'logBus', 'mmtrxmotorBus', 'modBusBus'];
 
 const MOTOR_ON = 1;
 const MOTOR_OFF = 0;
 
-class ClassModBusMatrixMotor_S extends ClassBaseService {
+class ClassModBusMatrixMotor_S extends ClassBaseService_S {
     /**
      * @typedef {object} TypeMatrixCtrl
      * @property {KC868} row  
@@ -183,7 +176,7 @@ class ClassModBusMatrixMotor_S extends ClassBaseService {
         let { col, row } = this.IndexToPos(sourceName, index);
         let ctrl = this.#_MatrixCtrl[sourceName];
         let mtrxOpts = this.#_MatrixOpts[sourceName];
-        const sourceIsRow = mtrxOpts.sourceAxis == 'row';
+        const sourceIsRow = typeof mtrxOpts.sourceAxis =='boolean' ? mtrxOpts.sourceAxis == 'row' : true;
 
         let sourceIO = sourceIsRow ? ctrl.row : ctrl.col;
         let groundIO = sourceIsRow ? ctrl.col : ctrl.row;
