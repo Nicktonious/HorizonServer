@@ -1,4 +1,4 @@
-const ClassModbusBase_S = require('srvModbusBase');
+const ClassModbusBase_S = require('./../../srvModbusBase/js/srvModbusBase');
 
 const CONNECTION_TIMEOUT = 5000;
 const PRIMARY_BUS = 'modbusrotBus';
@@ -84,10 +84,20 @@ class ModbusClientRTUOTCP extends ClassModbusBase_S {
         const [srcName] = _msg.arg;
         const [comm] = _msg.value;
 
-        this.Queue_client_command(this.#_Sources[srcName].client, comm, (data) => {
-            this.EmitEvents_proxymodbusrot_msg_get({arg: [srcName, comm.reg], value: [data]});
-        })
+        try {
+            this.Queue_client_command(this.#_Sources[srcName].client, comm, (data, err) => {
+                if (err) {
+                    console.log(err.message);
+                }
+                else
+                    this.EmitEvents_proxymodbusrot_msg_get({arg: [srcName, comm], value: [data]});
+            })
+        }
+        catch (e) {
+            console.log(e.message);
+        }
     }
+        
      /**
      * @method
      * @description Обработчик события, запускает отправку сообщения по указанному сокету
@@ -116,10 +126,15 @@ class ModbusClientRTUOTCP extends ClassModbusBase_S {
                 dat: val,
                 mbID: dest_group.mbID
             }
-            this.Queue_client_command(this.#_Sources[source_name].client, comm, (data) => {
-                data.data.forEach((dat, i) => {
-                    this.EmitEvents_proxymodbusrot_msg_get({arg: [source_name, i + chNum], value: [dat]});                 
-                })
+            this.Queue_client_command(this.#_Sources[source_name].client, comm, (data, err) => {
+                if (err) {
+                    console.log(err.message);
+                }
+                else {
+                    data.data.forEach((dat, i) => {
+                        this.EmitEvents_proxymodbusrot_msg_get({arg: [source_name, i + chNum], value: [dat]});                 
+                    })
+                }                
             })
         }
         catch (e) {
@@ -159,14 +174,32 @@ class ModbusClientRTUOTCP extends ClassModbusBase_S {
                 commQueue: [], 
                 isOccupied: false, 
                 ip: ip, 
-                port: port
+                port: port,
+                failCounter: 0
             };
         }
         else {
             client = usedSource.client;
         }
+        
+        client.mbclient._port._client.on('connect', () => {
+            _source.IsConnected = true;
+            this.#_Sources[name].IsConnected = true;
+        })
 
-        this.#_Sources[name] = {client: client, groups: _source.Groups, conductor: _conductor};
+        client.mbclient._port._client.on('close', () => {
+            _source.IsConnected = false;
+            this.#_Sources[name].IsConnected = false;
+            console.log('Closed by event');
+        })
+
+        if (client.mbclient != undefined) {
+            this.#_Sources[name] = {client: client, groups: _source.Groups, conductor: _conductor, IsConnected: false};
+        }
+        else {
+            console.log(`${name} out of reach`);
+            this.EmitEvents_logger_log({level: 'W', msg: `Failed to connect to ${name}`, obj: this.SourcesState});
+        }
     }
 
     /**
@@ -175,7 +208,7 @@ class ModbusClientRTUOTCP extends ClassModbusBase_S {
      */
     Start() {
         Object.entries(this.#_Sources).forEach(([name, source]) => {
-            if (source.groups != undefined && source.groups.length > 0) {
+            if (source.groups != undefined && source.groups.length > 0 && source.conductor.dest == PROXY.dest) {
                 source.groups.forEach((group) => {
                     setInterval(() => {
                         let comm = {
@@ -185,14 +218,20 @@ class ModbusClientRTUOTCP extends ClassModbusBase_S {
                             dat: 0,
                             mbID: group.mbID
                         }
-                        this.Queue_client_command(source.client, comm, (data) => {
-                            if (data == null) { this.EmitEvents_logger_log({level: 'W', msg: `No data recieved from: ${name}`, obj: source.client}); }
-                            else {
-                                data.data.forEach((dat, i) => {                                    
-                                    this.EmitEvents_proxymodbusrot_msg_get({arg: [name, i + group.startReg], value: [dat]});
-                                })
-                            }
-                        })
+
+                        if (source.IsConnected) {
+                            this.Queue_client_command(source.client, comm, (data, err) => {
+                                if (err) {
+                                    console.log(err.message);
+                                    this.EmitEvents_logger_log({level: 'W', msg: `No data recieved from: ${name}`, obj: source.client}); 
+                                }
+                                else {
+                                    data.data.forEach((dat, i) => {                                    
+                                        this.EmitEvents_proxymodbusrot_msg_get({arg: [name, i + group.startReg], value: [dat]});
+                                    })
+                                }
+                            })
+                        }
                     },group.interval);
                 })
             }
@@ -206,8 +245,8 @@ class ModbusClientRTUOTCP extends ClassModbusBase_S {
     Connect() {
         let sourcesCount = 0;
         let tOut = setTimeout(() => {
-            this.EmitEvents_logger_log({level: 'I', msg: `Connections done by modbysROT!`, obj: this.SourcesState});
-            console.log(`Connections done by modbysROT!`);
+            this.EmitEvents_logger_log({level: 'I', msg: `Connections done by modbusROT!`, obj: this.SourcesState});
+            console.log(`Connections done by modbusROT!`);
             this.Start();
         }, CONNECTION_TIMEOUT);
         Object.values(this.SourcesState)

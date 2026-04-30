@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('./srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 
 const DEVICELIST_REQ_TIMEOUT = 3000;
 

@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 const snmp = require ("net-snmp");
 
 const CONNECTION_TIMEOUT = 5000;

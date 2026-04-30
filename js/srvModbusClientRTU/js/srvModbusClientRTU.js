@@ -1,4 +1,4 @@
-const ClassModbusBase_S = require('srvModbusBase');
+const ClassModbusBase_S = require('./../../srvModbusBase/js/srvModbusBase');
 
 const CONNECTION_TIMEOUT = 5000;
 const PRIMARY_BUS = 'modburtuBus';

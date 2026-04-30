@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 
 const EVENT_SYSBUS_LIST = ['all-init-stage1-set'];
 const EVENT_LOGBUS_LIST = ['logger-proxy'];

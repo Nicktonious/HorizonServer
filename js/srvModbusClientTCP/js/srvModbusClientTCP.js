@@ -1,4 +1,4 @@
-const ClassModbusBase_S = require('srvModbusBase');
+const ClassModbusBase_S = require('./../../srvModbusBase/js/srvModbusBase');
 
 const CONNECTION_TIMEOUT = 5000;
 const PRIMARY_BUS = 'modbustcpBus';
@@ -92,10 +92,15 @@ class ModbusClientTCP extends ClassModbusBase_S {
                 mbID: 1
             }
 
-            this.Queue_client_command(this.#_Sources[source_name].client, comm, (data) => {
-                data.data.forEach((dat, i) => {                    
-                    this.EmitEvents_proxymodbustcp_msg_get({arg: [source_name, i + chNum], value: [dat]});
-                })
+            this.Queue_client_command(this.#_Sources[source_name].client, comm, (data, err) => {
+                if (err) {
+                    console.log(err.message);
+                }
+                else {
+                    data.data.forEach((dat, i) => {                    
+                        this.EmitEvents_proxymodbustcp_msg_get({arg: [source_name, i + chNum], value: [dat]});
+                    })
+                }
             })
         }
         catch (e) {
@@ -129,14 +134,33 @@ class ModbusClientTCP extends ClassModbusBase_S {
                 commQueue: [], 
                 isOccupied: false, 
                 ip: ip, 
-                port: port
+                port: port,
+                failCounter: 0
             };
         }
         else {
             client = usedSource.client;
         }
 
-        this.#_Sources[name] = {client: client, groups: _source.Groups};
+        client.mbclient._port._client.on('connect', () => {
+            _source.IsConnected = true;
+            this.#_Sources[name].IsConnected = true;
+        })
+
+        client.mbclient._port._client.on('close', () => {
+            _source.IsConnected = false;
+            this.#_Sources[name].IsConnected = false;
+            console.log('Closed by event');
+        })
+
+        if (client.mbclient != undefined) {
+            this.#_Sources[name] = {client: client, groups: _source.Groups, IsConnected: false};
+        }
+        else {
+            console.log(`${name} out of reach`);
+            this.EmitEvents_logger_log({level: 'W', msg: `Failed to connect to ${name}`, obj: this.SourcesState});
+        }
+        
     }
 
     /**
@@ -145,9 +169,9 @@ class ModbusClientTCP extends ClassModbusBase_S {
      */
     Start() {
         Object.entries(this.#_Sources).forEach(([name, source]) => {
-            if (source.groups != undefined && source.groups.length > 0 && source.groups.startReg != null) {
+            if (source.groups != undefined && source.groups.length > 0) {
                 source.groups.forEach((group) => {
-                    if (group.beh == 'Sensor') {
+                    if (group.beh == 'Sensor' && group.startReg != null) {
                         setInterval(() => {
                             let comm = {
                                 id: REG_OUT[group.type],
@@ -156,14 +180,20 @@ class ModbusClientTCP extends ClassModbusBase_S {
                                 dat: 0,
                                 mbID: group.mbID
                             }
-                            this.Queue_client_command(source.client, comm, (data) => {
-                                if (data == null) { this.EmitEvents_logger_log({level: 'W', msg: `No data recieved from: ${name}`, obj: source.client}); }
-                                else {
-                                    data.data.forEach((dat, i) => {
-                                        this.EmitEvents_proxymodbustcp_msg_get({arg: [name, i + group.startReg], value: [dat]});
-                                    })
-                                }
-                            })
+
+                            if (source.IsConnected) {
+                                this.Queue_client_command(source.client, comm, (data, err) => {
+                                    if (err) { 
+                                        console.log(err.message);
+                                    //    this.EmitEvents_logger_log({level: 'W', msg: `No data recieved from: ${name}`, obj: source.client});
+                                    }
+                                    else {
+                                        data.data.forEach((dat, i) => {
+                                            this.EmitEvents_proxymodbustcp_msg_get({arg: [name, i + group.startReg], value: [dat]});
+                                        })
+                                    }
+                                })
+                            }
                         },group.interval);
                     }                   
                 })

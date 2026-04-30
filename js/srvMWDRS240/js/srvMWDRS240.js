@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 
 const PRIMARY_BUS = 'modbusdrsBus';
 const EXPLOIT_BUS = 'modbusrotBus';
@@ -96,10 +96,10 @@ class MW_DRS240 extends ClassBaseService_S {
 
     HandlerEvents_modbusdrs_msg_get( _topic, _msg ){
         const srcName = _msg.arg[0];
-        const srcReg = _msg.arg[1];
+        const srcComm = _msg.arg[1];
         const val = _msg.value[0];
 
-        switch (srcReg) {
+        switch (srcComm.reg) {
             case 0xC0:
                 this.#_Sources[srcName].Scales = {
                     I_OUT: MW_DRS240.SCALE_FACTORS[(val.data[0] & 0xF000) >> 12],
@@ -115,7 +115,19 @@ class MW_DRS240 extends ClassBaseService_S {
                 this.EmitEvents_proxymodbusdrs_msg_get({arg: [srcName, 0], value: [val.data[0] * this.#_Sources[srcName].Scales.V_OUT]});
                 this.EmitEvents_proxymodbusdrs_msg_get({arg: [srcName, 1], value: [val.data[1] * this.#_Sources[srcName].Scales.I_OUT]});
                 break;
-        
+            case 0x40:
+                const status = {
+                    FAN_FAIL: val.data[0] & 1,
+                    INNER_TEMP: (val.data[0] & 2) >> 1,
+                    OUTPUT_VOLT: (val.data[0] & 4) >> 2,
+                    OUTPUT_CURR: (val.data[0] & 8) >> 3,
+                    SHORT_CIRCUIT: (val.data[0] & 16) >> 4,
+                    AC_FAIL: (val.data[0] & 32) >> 5,
+                    DC_FAIL: (val.data[0] & 64) >> 6,
+                    AMB_TEMP: (val.data[0] & 128) >> 7,
+                }
+                this.EmitEvents_proxymodbusdrs_msg_get({arg: [srcName, 2], value: [JSON.stringify(status)]});
+                break;
             default:
                 break;
         }

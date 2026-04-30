@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('./srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 
 const COM_DM_DEVLIST_SET     = 'dm-deviceslist-set';
 const COM_PMQTTC_DEVLIST_GET = 'proxymqttclient-deviceslist-get';

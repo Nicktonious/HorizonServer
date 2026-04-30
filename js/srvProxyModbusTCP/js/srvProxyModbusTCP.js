@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 
 const THIS_NAME = 'proxymodbustcp';
 const COM_ALL_DATA_RAW_GET = 'all-data-raw-get';
@@ -74,6 +74,7 @@ class ProxyModbusTCP extends ClassBaseService_S {
         //const [ source_name ] = _msg.arg;
         //const hash = this.#GetMsgHash(msg_from_plc.com, source_name);
         const source_name = _msg.arg[0];
+        //console.log (this.#_SourceMapNames);
         const ch_name = this.#_SourceMapNames.find(obj => obj.chNum == _msg.arg[1] && obj.source == source_name).Name;
 
         const msg = {
@@ -87,7 +88,7 @@ class ProxyModbusTCP extends ClassBaseService_S {
                 }]
             }
         this.EmitMsg(PRIMARY_BUS, msg.com, msg);
-        //console.log(ch_name + ': ' + _msg.value[0]);
+        //console.log(_msg.arg[1] + ': ' + _msg.value[0]);
     }
     /**
      * @method

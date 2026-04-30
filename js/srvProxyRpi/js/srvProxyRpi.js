@@ -1,4 +1,4 @@
-const ClassBaseService_S = require('srvService');
+const ClassBaseService_S = require('./../../srvService/js/srvService');
 
 // ТОПИКИ/КОМАНДЫ
 const COM_DM_DEVLIST_SET = 'dm-deviceslist-set';
