@@ -735,8 +735,8 @@ class ClassTransform {
     #_B;
     constructor(_opts) {
         if (typeof _opts?.k == 'number' && typeof _opts?.b == 'number') {
-            this.#_K = k;
-            this.#_B = b;
+            this.#_K = _opts.k;
+            this.#_B = _opts.b;
             this.SetLinearFunc(_opts.k, _opts.b);
         } else {
             this.#_K = 1;
