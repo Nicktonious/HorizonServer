@@ -89,6 +89,8 @@ class ClassSensorInfo {
     }
 }
 
+const COM_ALL_DATA_FINE_SET = 'all-data-fine-set';
+const COM_ALL_DATA_FINE_GET = 'all-data-fine-get';
 /**
  * @class
  * @description Класс, представляющий каждый отдельно взятый канал датчика в качестве службы фреймворка.
@@ -121,7 +123,6 @@ class ClassChannelSensor extends ClassChannel_S {
 
         /** Основные поля */
         this.#_Value = undefined;
-
         this._Bypass = false;
         this._DataUpdated = false;
         this._DataWasRead = false;
@@ -201,6 +202,11 @@ class ClassChannelSensor extends ClassChannel_S {
         super.HandlerEvents_all_init_stage1_set(_topic, _msg);
         const busName = this.SourceName == VIRTUAL_SOURCE_NAME ? 'dataBus' : this.ProtocolBusName;
         this.FillEventOnList(busName, [COM_DM_DEVLIST_SET, COM_DATA_RAW_GET]);
+
+        this.FillEventOnList('dataBus', this.StateChName 
+            ? [COM_ALL_DATA_FINE_SET, COM_ALL_DATA_FINE_GET] 
+            : [COM_ALL_DATA_FINE_GET]);
+
         this.EmitEvents_dm_new_channel();
         this.EmitEvents_all_ch_new();
     }
@@ -213,7 +219,7 @@ class ClassChannelSensor extends ClassChannel_S {
     EmitEvents_all_data_fine_set() {
         const msg = {
             dest: 'all',
-            com: COM_DATA_FINE_SET,
+            com: COM_ALL_DATA_FINE_SET,
             arg: [this.Name],
             value: [{
                 Name: this.Name,
@@ -249,6 +255,28 @@ class ClassChannelSensor extends ClassChannel_S {
             }
         } catch (e) {
             this.EmitEvents_logger_log({ msg: `Error while processing data-daw msg`, level: 'E', obj: _msg });
+        }
+    }
+
+    /**
+     * @method
+     * @description Вызывает команду изменения значения при обновление сенсорного state-канала. 
+     * @param {string} _topic 
+     * @param {*} _msg 
+     */
+    HandlerEvents_all_data_fine_set(_topic, _msg) {
+        const [chName] = _msg.arg;
+        if (chName == this.StateChName) {
+            const [{ Value, ValueSuppressed }] = _msg.value;
+            if (!ValueSuppressed)
+                this.SetValue(Value);
+        }
+    }
+    
+    HandlerEvents_all_data_fine_get(_topic, _msg) {
+        const [chName] = _msg.arg;
+        if (chName == this.Name) {
+            this.EmitEvents_all_data_fine_set();
         }
     }
 
