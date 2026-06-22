@@ -1,13 +1,11 @@
 const ClassBaseService_S = require('../../srvService/js/srvService.js');
+const ClassValueBuffer = require('../../srvUtils/js/buffer.js');
 const generateHash = require('../../srvUtils/js/generateHash');
 
 // ### ПОДПИСКИ
-const COM_DATA_RAW_GET = 'all-data-raw-get';
-const COM_ALL_DEVINFO_SET = 'all-device-config-set';
-const COM_DM_DEVLIST_SET = 'dm-deviceslist-set';
 const COM_DM_NEW_CH = 'dm-new-channel';
+
 // EMITS
-const COM_DATA_FINE_SET = 'all-data-fine-set';
 const COM_PMDB_DEV_CONF_GET = 'providermdb-device-config-get';
 
 const COM_CH_ALARM = 'all-ch-alarm';
@@ -108,6 +106,7 @@ class ClassBaseChannel_S extends ClassBaseService_S {
     #_DeviceId;
     #_DeviceIdHash;
     #_Address;
+    #_StateChName;
     #_Group_1 = [];
     #_Group_2 = [];
     #_Group_3 = [];
@@ -138,6 +137,7 @@ class ClassBaseChannel_S extends ClassBaseService_S {
         this.#_SourceName = _advOpts.SourceName;
         this.#_ChAlias = _advOpts.ChAlias;
         this.#_Address = _advOpts.Address;
+        this.#_StateChName = _advOpts.StateChName;
         this.#_DeviceIdHash = _advOpts.DeviceIdHash;
         // свойства для работы
         this.#_ValueType = [VALUE_TYPE_NUMBER, VALUE_TYPE_STRING].includes(_advOpts.ValueType)
@@ -237,6 +237,8 @@ class ClassBaseChannel_S extends ClassBaseService_S {
      * @description Возвращает mqtt-топик 
      */
     get Address() { return this.#_Address; }
+
+    get StateChName() { return this.#_StateChName; }
 }
 
 /**
@@ -344,9 +346,10 @@ class ClassChannel_S extends ClassBaseChannel_S {
             return;
         }
         // определение типа подключения
-        return Object.values(this.ServicesState)
-            .find(_service => _service.Name.toLowerCase().includes('proxy') && _service.Protocol === this.Protocol)
-            .PrimaryBus;
+        // return Object.values(this.ServicesState)
+        //     .find(_service => _service.Name.toLowerCase().includes('proxy') && _service.Protocol === this.Protocol)
+        //     .PrimaryBus;
+        return this.ServicesState[proxyService.Name].PrimaryBus;
     }
     /**
      * @getter
@@ -651,77 +654,6 @@ class ClassChannel_S extends ClassBaseChannel_S {
     EnableAlarms() {
         this.#_Alarms = new ClassAlarms(this);
         this.#_Alarms.SetChannelCb(this.EmitEvents_all_ch_alarm.bind(this));
-    }
-}
-
-/**
- * @class ClassValueBuffer
- * Буфер значений канала
- */
-class ClassValueBuffer {
-    constructor(_opts, _ch) {
-        let opts = _opts ?? {};
-        opts.size = (typeof opts.size == 'number' && opts.size > 0) ? opts.size : 1;
-        this._depth = opts.size;
-        this._rawVal = undefined;
-        this._arr = [];
-        let filterFunc = arr => arr.reduce((p, c) => p + c, 0) / arr.length;
-        this.SetFilterFunc(filterFunc);
-    }
-
-    /**
-     * @setter
-     * Сеттер который устанавливает вместимость кольцевого буфера
-     * @param {Number} _cap 
-    */
-    set Size(_cap) {
-        if (_cap > 1)
-            this._depth = _cap;
-    }
-
-    /**
-     * @method 
-     * Очищает буфер. Фактически сбрасывает текущее значение канала. 
-     */
-    Clear() {
-        while (this._arr.length > 0) this._ValueBuffer._arr.pop();
-    }
-
-    /**
-     * @method
-     * Вызывает функцию-фильтр от переданного массива
-     * @returns {number}
-     */
-    Filter() {
-        return this._FilterFunc(this._arr);
-    }
-
-    /**
-     * @method
-     * Устанавливает функцию-фильтр
-     * @param {Function} _func 
-     * @returns 
-     */
-    SetFilterFunc(_func) {
-        if (!_func) {        //если _func не определен, то устанавливается функция-фильтр по-умолчанию
-            this._FilterFunc = (arr) => arr[arr.length - 1];
-            return true;
-        }
-        if (typeof _func !== 'function') throw new Error('Not a function');
-        this._FilterFunc = _func;
-        return true;
-    }
-
-    ToConfig() {
-        return { size: this._depth }
-    }
-
-    push(_val) {
-        this._rawVal = _val;
-        while (this._arr.length >= this._depth) {
-            this._arr.shift();
-        }
-        this._arr.push(_val);
     }
 }
 
