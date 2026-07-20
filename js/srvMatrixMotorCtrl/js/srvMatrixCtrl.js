@@ -1,6 +1,5 @@
 const ClassBaseService_S = require('./../../srvService/js/srvService');
 const { EventEmitter2 } = require("eventemitter2");
-const TypeMatrixCtrlAdvOpts = require('./srvMatrixCtrl').TypeMatrixCtrlAdvOpts;
 /**
  * @typedef {object} TypeCoords
  * @property {number} coords.col - Столбец (начинается с 0)
@@ -13,7 +12,7 @@ const BUS_NAME_LIST = ['sysBus', 'logBus', PRIMARY_BUS, 'modBusBus'];
 
 const MOTOR_ON = 1;
 const MOTOR_OFF = 0;
-const CH_RES_MAX_TIME = 150;
+const CH_RES_MAX_TIME = 750;
 
 class ClassModBusMatrixMotor_S extends ClassBaseService_S {
     /**
@@ -21,9 +20,8 @@ class ClassModBusMatrixMotor_S extends ClassBaseService_S {
      * @property {KC868} rows  
      * @property {KC868} cols 
      */
-    /** @type {Object<string, TypeMatrixCtrl>} */
-    // #_MatrixCtrl = {};
-    /** @type {Object<string, TypeMatrixCtrlAdvOpts>} */
+    // /** @type {Map<string, import('./srvMatrixCtrl').TypeMatrixCtrlAdvOpts>} */
+   /** @type {Map<string, { size: { rows: number, cols: number } }>} */
     #_SourceOpts = new Map();
 
     #_ListenChannels = false;
@@ -84,6 +82,7 @@ class ClassModBusMatrixMotor_S extends ClassBaseService_S {
                 try {
                     await this.On(sourceName, target, ...args);
                 } catch (e) {
+                    this.EmitEvents_logger_log({ msg: `[Matrx] error: ${e}`, obj: e });
                     error = true;
                     // TODO: log
                 }
@@ -93,6 +92,7 @@ class ClassModBusMatrixMotor_S extends ClassBaseService_S {
                 try {
                     await this.Off(sourceName, target, ...args);
                 } catch (e) {
+                    this.EmitEvents_logger_log({ msg: `[Matrx] error: ${e}`, obj: e });
                     error = true;
                 }
                 break;
@@ -158,16 +158,18 @@ class ClassModBusMatrixMotor_S extends ClassBaseService_S {
         let { step } = opts ?? {};
         let { col, row } = this.IndexToPos(sourceName, index);
         let mtrxOpts = this.SourcesState[sourceName].AdvOpts;
-        const sourceIsRow = typeof mtrxOpts.sourceAxis =='boolean' ? mtrxOpts.sourceAxis == 'rows' : true;
+        const sourceAxis = typeof mtrxOpts.sourceAxis =='boolean' ? mtrxOpts.sourceAxis : 'rows';
+        const sourceIsRow = sourceAxis == 'rows';
+        const gndAxis = sourceIsRow ? 'cols' : 'rows';
 
         let srcSwChNum = sourceIsRow ? row : col;
         let gndSwChNum = sourceIsRow ? col : row;
 
         switch (step) {
             case 1:
-                return await this.Switch(sourceName, 'cols', gndSwChNum, MOTOR_ON);
+                return await this.Switch(sourceName, sourceAxis, srcSwChNum, MOTOR_ON);
             case 2:
-                return await this.Switch(sourceName, 'rows', srcSwChNum, MOTOR_ON);
+                return await this.Switch(sourceName, gndAxis, gndSwChNum, MOTOR_ON);
             default:
                 return Promise.reject(`Invaild request: step must be specified and be in range 1..2`);
         }
@@ -184,19 +186,46 @@ class ClassModBusMatrixMotor_S extends ClassBaseService_S {
      */
     async Off(sourceName, index, opts) {
         let { step } = opts ?? {};
+        if (typeof index != 'number') {
+            return await this.SwitchOffAll(sourceName);
+        }
         let { col, row } = this.IndexToPos(sourceName, index);
         let mtrxOpts = this.SourcesState[sourceName].AdvOpts;
-        const sourceIsRow = mtrxOpts.sourceAxis == 'rows';
+        const sourceAxis = typeof mtrxOpts.sourceAxis =='boolean' ? mtrxOpts.sourceAxis : 'rows';
+        const sourceIsRow = sourceAxis == 'rows';
+        const gndAxis = sourceIsRow ? 'cols' : 'rows';
 
         let srcSwChNum = sourceIsRow ? row : col;
         let gndSwChNum = sourceIsRow ? col : row;
+
         switch (step) {
+            case undefined:
+                return await this.SwitchOffAll(sourceName);
             case 1:
-                return await this.Switch(sourceName, 'cols', gndSwChNum, MOTOR_OFF);
+                return await this.Switch(sourceName, sourceAxis, srcSwChNum, MOTOR_OFF);
             case 2:
-                return await this.Switch(sourceName, 'rows', srcSwChNum, MOTOR_OFF);
+                return await this.Switch(sourceName, gndAxis, gndSwChNum, MOTOR_OFF);
             default:
                 return Promise.reject(`Invaild request: step must be specified and be in range 1..2`);
+        }
+    }
+
+    async SwitchOffAll(sourceName) {
+        for (let rowNum = 0; rowNum < this.#_SourceOpts.get(sourceName).size.rows; rowNum++) {
+            try {
+                await this.Switch(sourceName, 'rows', rowNum, MOTOR_OFF);
+                // console.log(`[Matrix] ${sourceName} row ${rowNum} OFF`);
+            } catch (e) {
+                this.EmitEvents_logger_log({ msg: `[Matrix] failed to ${sourceName} row ${rowNum} OFF` });
+            }
+        }
+        for (let colNum = 0; colNum < this.#_SourceOpts.get(sourceName).size.cols; colNum++ ) {
+            try {
+                await this.Switch(sourceName, 'cols', colNum, MOTOR_OFF);
+                // console.log(`[Matrix] ${sourceName} col ${colNum} OFF`);
+            } catch (e) {
+                this.EmitEvents_logger_log({ msg: `[Matrix] failed to ${sourceName} col ${colNum} OFF` });
+            }
         }
     }
 
@@ -232,7 +261,7 @@ class ClassModBusMatrixMotor_S extends ClassBaseService_S {
             timeout: CH_RES_MAX_TIME,
             filter: (v) => v === value
         });
-    }
+    } 
 }
 
 module.exports = ClassModBusMatrixMotor_S;

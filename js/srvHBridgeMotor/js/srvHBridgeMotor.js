@@ -12,23 +12,21 @@ const KEY_OFF = 0;
 /**
  * ATTENTION:
  * S{0..3} - index of _BridgeState array
- * 
- *        VCC (+)
-         |
-         +--------------------+--------------------+
-         |                    |                    |
-        [ S0 ]                |                   [ S1 ]
-         |               +----+----+               |
-         |               |         |               |
-         +---------------+  Motor  +---------------+
-         |               |         |               |
-         |               +----+----+               |
-        [ S2 ]                |                   [ S3 ]
-         |                    |                    |
-         +--------------------+--------------------+
-         |
-        GND (-)
-
+ * * VCC (+)
+ * |
+ * +--------------------+--------------------+
+ * |                    |                    |
+ * [ S0 ]                |                   [ S1 ]
+ * |               +----+----+               |
+ * |               |         |               |
+ * +---------------+  Motor  +---------------+
+ * |               |         |               |
+ * |               +----+----+               |
+ * [ S2 ]                |                   [ S3 ]
+ * |                    |                    |
+ * +--------------------+--------------------+
+ * |
+ * GND (-)
  */
 
 class ClassModBusHBridge_S extends ClassBaseService {
@@ -36,6 +34,9 @@ class ClassModBusHBridge_S extends ClassBaseService {
     /** @type {Map<string, Array<number>>} */
     _SwState = new Map(); //Array(4).fill();
     #_Events = new EventEmitter2();
+    
+    // Map для хранения очередей по каждому источнику
+    #_CmdQueues = new Map(); 
 
     constructor({ _busList, _primaryBus, _advOpts }) {
         super({ _name: NAME, _busNameList: [_primaryBus, ...BUS_NAME_LIST], _busList });
@@ -61,6 +62,7 @@ class ClassModBusHBridge_S extends ClassBaseService {
 
         for (let source of this.Sources()) {
             this._SwState.set(source.Name, [undefined, undefined, undefined, undefined]);
+            this.#_CmdQueues.set(source.Name, Promise.resolve());
         }
         this.#_ListenChannels = true;
     }
@@ -70,26 +72,44 @@ class ClassModBusHBridge_S extends ClassBaseService {
         const [ sourceName ] = msg.arg;
         const [{ cmd, args, value }] = msg.value;
 
-        let error = false;
-
-        try {
-            switch (cmd) {
-                case 'Forward':
-                    await this.Forward(sourceName, ...args)
-                    break;
-                case 'Reverse':
-                    await this.Reverse(sourceName, ...args);
-                    break;
-                case 'Off':
-                    await this.Stop(sourceName, ...args);
-                    break;
-            }
-        } catch (e) {
-            error = true;
+        // Если источник прислал команду до инициализации, создаем ему очередь
+        if (!this.#_CmdQueues.has(sourceName)) {
+            this.#_CmdQueues.set(sourceName, Promise.resolve());
         }
 
-        let resValue = { ...msg.value[0], error };
-        this.EmitEvents_proxymhbridge_res({ hash, arg: [sourceName], value: [resValue] });
+        // Оборачиваем логику выполнения в асинхронную функцию
+        const task = async () => {
+            let error = false;
+            try {
+                switch (cmd) {
+                    case 'Forward':
+                        await this.Forward(sourceName, ...args)
+                        break;
+                    case 'Reverse':
+                        await this.Reverse(sourceName, ...args);
+                        break;
+                    case 'Off':
+                        await this.Stop(sourceName, ...args);
+                        break;
+                }
+            } catch (e) {
+                console.log(`[HBridge]: error ${e}`);
+                error = true;
+            }
+
+            let resValue = { ...msg.value[0], error };
+            this.EmitEvents_proxymhbridge_res({ hash, arg: [sourceName], value: [resValue] });
+        };
+
+        // Добавляем задачу в конец очереди для конкретного источника
+        const nextQueue = this.#_CmdQueues.get(sourceName)
+            .then(task)
+            .catch((err) => {
+                console.error(`[${NAME}] Queue execution error for source ${sourceName}:`, err);
+            });
+
+        // Сохраняем обновленную цепочку обратно в словарь
+        this.#_CmdQueues.set(sourceName, nextQueue);
     }
 
     HandlerEvents_mhbridge_ch_set(_topic, _msg) {
@@ -118,7 +138,6 @@ class ClassModBusHBridge_S extends ClassBaseService {
         let { step = undefined } = opts;
 
         switch (step) {
-
             case 1: // отключаем ключи в верхнем плече
                 await this.Switch(_sourceName, 0, KEY_OFF);
                 await this.Switch(_sourceName, 1, KEY_OFF);
@@ -135,9 +154,7 @@ class ClassModBusHBridge_S extends ClassBaseService {
     }
 
     async Reverse(_sourceName, { step }) {
-
         switch (step) {
-
             case 1:
                 await this.Switch(_sourceName, 2, KEY_OFF);
                 await this.Switch(_sourceName, 3, KEY_OFF);
@@ -180,7 +197,6 @@ class ClassModBusHBridge_S extends ClassBaseService {
     }
 
     /**
-     * 
      * @param {string} sourceName 
      * @param {number} chNum 
      * @param {number} value 
