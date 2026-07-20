@@ -8,7 +8,7 @@ class ClassValueBuffer {
         this._head = 0;  // Индекс для записи следующего элемента
         this._count = 0; // Текущее количество элементов в буфере
 
-        let filterFunc = arr => arr.reduce((acc, val) => val ? acc + Number(val) : acc, 0);
+        let filterFunc = arr => arr.reduce((acc, val) => val ? acc + Number(val) : acc, 0) / arr.length;
             
         this.SetFilterFunc(filterFunc);
     }
@@ -60,6 +60,7 @@ class ClassValueBuffer {
     }
 
     push(_val) {
+        if (typeof _val != 'number') return;
         this._rawVal = _val;
         this._arr[this._head] = _val;
     
