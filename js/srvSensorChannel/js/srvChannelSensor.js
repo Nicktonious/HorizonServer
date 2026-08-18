@@ -97,7 +97,7 @@ const COM_ALL_DATA_FINE_GET = 'all-data-fine-get';
  */
 class ClassChannelSensor extends ClassChannel_S {
     #_Value;
-
+    #_ValueAvg;
     /**
      * @typedef TypeServiceOpts
      * @property {[ClassBus_S]} _busList
@@ -122,7 +122,11 @@ class ClassChannelSensor extends ClassChannel_S {
         super({ _busNameList, _busList, _advOpts });
 
         /** Основные поля */
-        this.#_Value = undefined;
+        this.#_Value = _advOpts?.Value;
+        if (typeof this.#_Value === 'number') {
+            this.Buffer.push(this.#_Value);
+        }
+        this.#_ValueAvg = _advOpts?.Value;
         this._Bypass = false;
         this._DataUpdated = false;
         this._DataWasRead = false;
@@ -137,12 +141,19 @@ class ClassChannelSensor extends ClassChannel_S {
         // if (this.Status != STATUS_ACTIVE) return undefined;
 
         this._DataUpdated = false;
-        this._Value = (this._DataWasRead || this._Bypass || this.ValueType != VALUE_TYPE_NUMBER)
-            ? this.#_Value
-            : this.Buffer.Filter();
         this._DataWasRead = true;
 
         return this.#_Value;
+    }
+
+    get ValueAvg() {
+        this._DataUpdated = false;
+        this.#_ValueAvg = this._DataWasRead ? this.#_ValueAvg 
+                       : this._Bypass || this.ValueType != VALUE_TYPE_NUMBER ? this.#_Value
+                       : this.Buffer.Filter();
+        this._DataWasRead = true;
+
+        return this.#_ValueAvg;
     }
 
     /**
@@ -170,9 +181,9 @@ class ClassChannelSensor extends ClassChannel_S {
             if (typeof val != 'number') {
                 val = val_preproc;
                 this.EmitEvents_logger_log({ level: 'W', msg: `Failed to apply math transform to value ${_val}`, obj: this });
-            } else
+            } else {
                 this.Buffer.push(val);
-
+            }
             if (this.SavingValues.raw) 
                 this.EmitEvents_providermdb_data_write({ arg: ['raw'], value: [val_preproc] });
         }
@@ -224,6 +235,7 @@ class ClassChannelSensor extends ClassChannel_S {
             value: [{
                 Name: this.Name,
                 Value: this.Value,
+                ValueAvg: this.ValueAvg,
                 ValueSuppressed: this._ValueSuppressed,
                 ChName: this.ChName,
                 ChAlias: this.ChAlias,
