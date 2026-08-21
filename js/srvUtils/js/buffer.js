@@ -42,7 +42,7 @@ class ClassValueBuffer {
     }
 
     Filter() {
-        return this._FilterFunc(this._arr/*this.GetOrderedArray()*/);
+        return this._FilterFunc(this.GetOrderedArray());
     }
 
     SetFilterFunc(_func) {
