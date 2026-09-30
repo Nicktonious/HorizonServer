@@ -7,6 +7,7 @@ const COM_DM_NEW_CH = 'dm-new-channel';
 
 // EMITS
 const COM_PMDB_DEV_CONF_GET = 'providermdb-device-config-get';
+const COM_PMDB_LAST_VALUE_GET = 'providermdb-last-value-get';
 
 const COM_CH_ALARM = 'all-ch-alarm';
 const COM_ALL_CH_NEW = 'all-ch-new';
@@ -247,7 +248,8 @@ class ClassBaseChannel_S extends ClassBaseService_S {
  */
 class ClassChannel_S extends ClassBaseChannel_S {
     #_MappingCompleted = false;
-    #_Activated = false;
+    #_SourceOk = true;
+    #_Activated = true;
     #_ChangeThreshold;
 
     #_DeviceInfo = null;
@@ -302,7 +304,7 @@ class ClassChannel_S extends ClassBaseChannel_S {
      * active - служба сопоставлена с каналом источника, подключение к источнику есть
      */
     get Status() {
-        return (this.SourcesState[this.SourceName]?.IsConnected && this.#_MappingCompleted && this.#_Activated) ? STATUS_ACTIVE : STATUS_INACTIVE;
+        return (this.SourcesState[this.SourceName]?.IsConnected || this.#_SourceOk) && this.#_Activated ? STATUS_ACTIVE : STATUS_INACTIVE;
     }
 
     /**
@@ -541,6 +543,20 @@ class ClassChannel_S extends ClassBaseChannel_S {
 
     /**
      * @method
+     * @description Сохраняет информацию о источниках.
+     * @param {string} _topic
+     * @param {ClassBusMsg_S} _msg  
+     * @returns 
+     */
+    async HandlerEvents_all_connections_done(_topic, _msg) {
+        const source_names = _msg.value;
+        if (!source_names.includes(this.SourceName)) return;
+        this.#_SourceOk = true;
+        // TODO: _Activated только сейчас, чтобы игнорировать сообщения пока канал не получит старое значение из БД.
+    }
+
+    /**
+     * @method
      * @public
      * @description Отправляет сообщение о деактивации канала
      * @returns 
@@ -613,6 +629,15 @@ class ClassChannel_S extends ClassBaseChannel_S {
             dest: 'providermdb',
             demandRes: true,
             com: COM_PMDB_DEV_CONF_GET,
+        }
+        this.EmitMsg('mdbBus', msg.com, msg, { timeout: DEV_CONF_GET_TIMEOUT });
+    }
+
+    async EmitEvents_providermdb_last_value_get() {
+        const msg = {
+            dest: 'providermdb',
+            demandRes: true,
+            com: COM_PMDB_LAST_VALUE_GET,
         }
         this.EmitMsg('mdbBus', msg.com, msg, { timeout: DEV_CONF_GET_TIMEOUT });
     }
