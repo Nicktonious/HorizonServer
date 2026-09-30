@@ -247,8 +247,7 @@ class ClassBaseChannel_S extends ClassBaseService_S {
  * @description Класс, представляющий каждый отдельно взятый канал датчика в качестве службы фреймворка.
  */
 class ClassChannel_S extends ClassBaseChannel_S {
-    #_MappingCompleted = false;
-    #_SourceOk = true;
+    #_SourceOk = true;  // TODO: временно true по умолчанию, пока не будет реализован механизм получения сообщений от соурсов
     #_Activated = true;
     #_ChangeThreshold;
 
@@ -476,7 +475,6 @@ class ClassChannel_S extends ClassBaseChannel_S {
         // ChType - всегда ключ 'sensor' | 'actuator'
         const list_includes_ch = sens_act_lists[this.ChType]?.find(_note => _note === this.Name || _note === this.NameLHP);
         if (list_includes_ch && source_name === this.SourceName) {
-            this.#_MappingCompleted = true;
             this.#_Activated = true;
         }
     }
