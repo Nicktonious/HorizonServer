@@ -92,11 +92,11 @@
 Также **ClassChannelSensor_S** реализует [подписки](../../srvChannel/res/README.md/#подписки) базового класса
 
 ### Исходящие сообщения
-- 'all-data-fine-get' — сообщение с последним обработанным значением канала; транслируется на **dataBus**. 
+- 'all-data-fine-set' — сообщение с последним обработанным значением канала; транслируется на **dataBus**. 
 Сокращенный формат сообщения: 
 ```js
 {
-    com: 'all-get-data-fine',
+    com: 'all-data-fine-set',
     arg: ['source1_name-00-01'],
     value: [ {
         Name,
