@@ -25,13 +25,13 @@ class ClassProxyModBusHBridgeMotor_S extends ClassProxyActuatorDriver_S {
             _node,
             _clientName: CLIENT_NAME,
             _protocol: PROTOCOL,
-            _busNamesList: BUS_NAMES_LIST,
+            _busNamesList: [_primaryBus, ...BUS_NAMES_LIST],
         });
         /** @type {Map<string, import('../../srvHBridgeMotor/js/srvHBridgeMotor').IHBridgeConfig>}   */
         this._SourcesOpts = new Map();
         this.FillEventOnList('sysBus', EVENT_SYSBUS_LIST);
         this.FillEventOnList(this.PrimaryBus, EVENT_PRIMBUS_LIST);
-        this.FillEventOnList('dataBus', [COM_ALL_DATA_FINE_SET]);
+        // this.FillEventOnList('dataBus', [COM_ALL_DATA_FINE_SET]);
         // this.EmitEvents_logger_log({ level: 'I', msg: 'ProxyModbusHBridgeMotor initialized.' });
     }
 
