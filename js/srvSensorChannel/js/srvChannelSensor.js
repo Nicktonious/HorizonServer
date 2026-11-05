@@ -213,7 +213,7 @@ class ClassChannelSensor extends ClassChannel_S {
     HandlerEvents_all_init_stage1_set(_topic, _msg) {
         super.HandlerEvents_all_init_stage1_set(_topic, _msg);
         const busName = this.SourceName == VIRTUAL_SOURCE_NAME ? 'dataBus' : this.ProtocolBusName;
-        this.FillEventOnList(busName, [COM_DM_DEVLIST_SET, COM_DATA_RAW_GET, COM_ALL_CONN_DONE]);
+        this.FillEventOnList(busName, [COM_DM_DEVLIST_SET, COM_DATA_RAW_GET]);
 
         this.FillEventOnList('dataBus', this.StateChName 
             ? [COM_ALL_DATA_FINE_SET, COM_ALL_DATA_FINE_GET] 
@@ -323,12 +323,12 @@ class ClassChannelSensor extends ClassChannel_S {
      * @param {ClassBusMsg_S} _msg  
      * @returns 
      */
-    async HandlerEvents_all_connections_done(_topic, _msg) {
+    /*async HandlerEvents_all_connections_done(_topic, _msg) {
         super.HandlerEvents_all_connections_done(_topic, _msg);
         try {
             this.#_Value = await this.EmitEvents_providermdb_last_value_get();
         } catch (e) {}
-    }
+    }*/
 }
 
 module.exports = ClassChannelSensor;
