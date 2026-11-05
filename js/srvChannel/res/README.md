@@ -77,7 +77,11 @@
 - get ValueKey — возвращает имя ключа, по которому поступают данные от источника;
 - get Address — возвращает адрес канала в системе передачи данных (например, MQTT-топик или Modbus-адрес);
 - get Group_1, `get Group_2`, `get Group_3` — возвращают значения групповой принадлежности канала, применяемые для логической классификации;
-- get Status — возвращает `"active"` или `"inactive"` в зависимости от текущего состояния маппинга и доступности источника.
+- get Status — возвращает объект текущего статуса `{ enabled, sourceConnected, active }`;
+- get Enabled — возвращает административный статус канала (включен/отключен);
+- get SourceConnected — возвращает статус подключения источника данных канала;
+- get Active — возвращает результирующий рабочий статус канала (enabled && sourceConnected);
+- get SourceOk — возвращает sourceConnected (для обратной совместимости).
 
 <div style="color: #555">
 
@@ -107,8 +111,10 @@
 ```
 
 ### Поля
+- #_Enabled — административный статус канала (включен/отключен пользователем или командой);
+- #_SourceConnected — статус физической доступности источника данных;
+- #_Active — результирующий рабочий статус канала (`enabled && sourceConnected`);
 - #_MappingCompleted — выполнено ли сопоставление канала с активным источником;
-- #_Activated — источник подтвердил наличие канала сообщением `dm-deviceslist-set`;
 - #_ChangeThreshold — порог изменения для значений канала;
 - #_DeviceInfo — информация о физическом датчике;
 - #_Transform — настройки преобразования данных;
@@ -119,7 +125,11 @@
 - #_SavingValues — объект с флагами управления записи значений в канал; По умолчанию `{ raw: false, fine: true }`.
 
 ### Аксессоры
-- get Status — возвращает статус канала: "active" если источник подключён и канал сопоставлен, иначе "inactive";
+- get Status — возвращает объект текущего статуса: `{ enabled: boolean, sourceConnected: boolean, active: boolean }`;
+- get Enabled — возвращает флаг административного включения `#_Enabled`;
+- get SourceConnected — возвращает флаг доступности источника `#_SourceConnected`;
+- get Active — возвращает результирующий статус `#_Active` (`#_Enabled && #_SourceConnected`);
+- get SourceOk — возвращает `#_SourceConnected` (для обратной совместимости);
 - get Protocol — возвращает строковое обозначение протокола (например, "mqtt", "ws") источника, к которому привязан канал;
 - get ProtocolBusName — возвращает имя шины, через которую осуществляется взаимодействие с прокси-службой, связанной с данным протоколом;
 - get Group_1, get Group_2, get Group_3 — возвращают значения групповой принадлежности канала, применяемые для логической классификации;
@@ -128,15 +138,29 @@
 
 ### Подписки
 sysBus:
-- 'all-init-stage1-set' - этап инициализации системы;
+- 'all-init-stage1-set' — этап инициализации системы;
+- 'all-source-connected' — уведомление об успешном подключении или восстановлении связи с источником:
+```js
+{
+    com: 'all-source-connected',
+    arg: [source_name]
+}
+```
+- 'all-source-disconnected' — уведомление об обрыве связи с источником:
+```js
+{
+    com: 'all-source-disconnected',
+    arg: [source_name]
+}
+```
 
 dataBus:
-- 'all-ch-status-set' - команда на активацию/деактивацию канала;
+- 'all-ch-status-set' — команда на включение/выключение канала (обновляет флаг `enabled`):
 ```js
 {
     com: 'all-ch-status-set',
     arg: [ch_name],
-    value: [status]     //'active'/'inactive'
+    value: [status]     // boolean (true/false) | string ('active'/'inactive') | { enabled: boolean }
 }
 ```
 
@@ -151,12 +175,16 @@ sysBus:
 }
 ```
 dataBus:
-- 'all-ch-status-get' - сообщение с актуальным статусом канала;
+- 'all-ch-status-get' — сообщение с актуальным объектом статусов канала (публикуется при любом изменении `enabled` или `sourceConnected`):
 ```js
 {
     com: 'all-ch-status-get',
     arg: [ch_name],
-    value: [ch_status]  // 'active'/'inactive'
+    value: [{
+        enabled: true,
+        sourceConnected: true,
+        active: true
+    }]
 }
 ```
 - 'all-ch-alarm' — сообщение об изменении ткущей зоны измерения канала; транслируется на `dataBus`. 
@@ -174,9 +202,11 @@ dataBus:
 - SetupMathChannel(config) — конфигурирует обработку данных на канале в соответствии с переданными параметрами (`ChConfigOpts`);
 - HandlerEvents\_dm\_deviceslist\_set(_topic, _msg) — обрабатывает список каналов, полученный от PLC или прокси-службы источника;
 - HandlerEvents\_all\_device\_config\_set(_topic, _msg) — обрабатывает получение конфигурации устройств с шины данных;
-- HandlerEvents\_all\_source\_disconnected(_topic, _msg) — при отключении источника проверяет, относится ли к нему текущий канал, и отправляет сообщение о деактивации, если да;
-- HandlerEvents\_all\_ch\_status\_set(_topic, msg) — обрабатывает событие установки статуса канала (обычно после внешнего воздействия);
-- EmitEvents\_all\_ch\_status\_get() — отправляет сообщение о текущем статусе канала (active/inactive) в шину `dataBus`;
+- HandlerEvents\_all\_source\_connected(_topic, _msg) — при подключении источника проверяет соответствие (`_msg.arg[0] === this.SourceName`), переводит `sourceConnected: true` и пересчитывает `active`;
+- HandlerEvents\_all\_source\_disconnected(_topic, _msg) — при отключении источника проверяет соответствие (`_msg.arg[0] === this.SourceName`), переводит `sourceConnected: false` и пересчитывает `active`;
+- HandlerEvents\_all\_ch\_status\_set(_topic, _msg) — обрабатывает команду установки административного статуса канала (`enabled`);
+- EmitEvents\_all\_ch\_status\_get() — отправляет сообщение с объектом `{ enabled, sourceConnected, active }` в шину `dataBus`;
+- EmitMsg(_busName, _topic, _msg) — переопределенный метод отправки сообщений: если канал неактивен (`!this.#_Active`), отправка любых прикладных сообщений в шину `dataBus` блокируется (кроме запроса статуса `all-ch-status-get`);
 - EmitEvents\_providermdb\_data\_write(_topic, _msg) — отправляет запрос на получение конфигурации устройства в шину `mdbBus`;
 - EmitEvents\_providermdb\_device\_config\_get(_topic, _msg) — отправляет запрос на получение конфигурации устройства в шину `mdbBus`;
 - EmitEvents\_dm\_new\_channel() — уведомляет о создании нового канала, отправляя сообщение в системную шину `sysBus`;
