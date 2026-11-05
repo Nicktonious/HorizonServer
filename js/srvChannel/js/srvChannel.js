@@ -18,6 +18,8 @@ const COM_ALL_CH_STATUS_SET = 'all-ch-status-set';
 
 const COM_ALL_CH_CONFIG_GET = 'all-ch-config-get';
 const COM_ALL_CH_CONFIG_SET = 'all-ch-config-set';
+const COM_ALL_SOURCE_CONNECTED = 'all-source-connected';
+const COM_ALL_SOURCE_DISCONNECTED = 'all-source-disconnected';
 
 // ### ПРОЧЕЕ
 const DEV_CONF_GET_TIMEOUT = 500;
@@ -247,8 +249,9 @@ class ClassBaseChannel_S extends ClassBaseService_S {
  * @description Класс, представляющий каждый отдельно взятый канал датчика в качестве службы фреймворка.
  */
 class ClassChannel_S extends ClassBaseChannel_S {
-    #_SourceOk = true;  // TODO: временно true по умолчанию, пока не будет реализован механизм получения сообщений от соурсов
-    #_Activated = true;
+    #_Enabled = true;
+    #_SourceConnected = true;
+    #_Active = true;
     #_ChangeThreshold;
 
     #_DeviceInfo = null;
@@ -264,6 +267,9 @@ class ClassChannel_S extends ClassBaseChannel_S {
     constructor({ _busList, _busNameList, _advOpts }) {
         // имя службы - поле Name канала
         super({ _busList, _busNameList, _advOpts });
+        if (typeof _advOpts?.Enabled === 'boolean') this.#_Enabled = _advOpts.Enabled;
+        if (typeof _advOpts?.SourceConnected === 'boolean') this.#_SourceConnected = _advOpts.SourceConnected;
+        this.#_Active = this.#_Enabled && this.#_SourceConnected;
         // работа с БД
         this.SetSavingValues(_advOpts?.SavingValues);
         // математическая конфигурация
@@ -271,7 +277,7 @@ class ClassChannel_S extends ClassBaseChannel_S {
         if (this.ValueType == VALUE_TYPE_NUMBER)
             this.SetupMathChannel(_advOpts.Config);
         // подписка на init
-        this.FillEventOnList('sysBus', [COM_ALL_INIT1]);
+        this.FillEventOnList('sysBus', [COM_ALL_INIT1, COM_ALL_SOURCE_CONNECTED, COM_ALL_SOURCE_DISCONNECTED]);
         this.FillEventOnList('dataBus', [COM_ALL_CH_STATUS_SET]);
     }
 
@@ -303,8 +309,20 @@ class ClassChannel_S extends ClassBaseChannel_S {
      * active - служба сопоставлена с каналом источника, подключение к источнику есть
      */
     get Status() {
-        return (this.SourcesState[this.SourceName]?.IsConnected || this.#_SourceOk) && this.#_Activated ? STATUS_ACTIVE : STATUS_INACTIVE;
+        return {
+            enabled: this.#_Enabled,
+            sourceConnected: this.#_SourceConnected,
+            active: this.#_Active
+        };
     }
+
+    get Enabled() { return this.#_Enabled; }
+
+    get SourceConnected() { return this.#_SourceConnected; }
+
+    get Active() { return this.#_Active; }
+
+    get SourceOk() { return this.#_SourceConnected; }
 
     /**
      * @getter
@@ -475,7 +493,6 @@ class ClassChannel_S extends ClassBaseChannel_S {
         // ChType - всегда ключ 'sensor' | 'actuator'
         const list_includes_ch = sens_act_lists[this.ChType]?.find(_note => _note === this.Name || _note === this.NameLHP);
         if (list_includes_ch && source_name === this.SourceName) {
-            this.#_Activated = true;
         }
     }
 
@@ -508,24 +525,49 @@ class ClassChannel_S extends ClassBaseChannel_S {
      * @description Обрабатывает событие об отключении источника: проверяет не относится ли данный канал к нему
      * @returns 
      */
-    HandlerEvents_all_source_disconnected(_topic, _msg) {
-        let [source_name] = _msg.arg;
-        if (source_name == this.SourceName)
+    #SetStatus({ enabled, sourceConnected }) {
+        const prevEnabled = this.#_Enabled;
+        const prevSourceConnected = this.#_SourceConnected;
+        const prevActive = this.#_Active;
+
+        if (typeof enabled === 'boolean') {
+            this.#_Enabled = enabled;
+        }
+        if (typeof sourceConnected === 'boolean') {
+            this.#_SourceConnected = sourceConnected;
+        }
+
+        this.#_Active = this.#_Enabled && this.#_SourceConnected;
+
+        if (this.#_Enabled !== prevEnabled || this.#_SourceConnected !== prevSourceConnected || this.#_Active !== prevActive) {
             this.EmitEvents_all_ch_status_get();
+        }
     }
 
-    /**
-     * @method
-     * @public
-     * @description Обрабатывает событие об отключении источника: проверяет не относится ли канал к нему
-     * @returns 
-     */
+    HandlerEvents_all_source_disconnected(_topic, _msg) {
+        let [source_name] = _msg.arg;
+        if (source_name == this.SourceName) {
+            this.#SetStatus({ sourceConnected: false });
+        }
+    }
+
+    HandlerEvents_all_source_connected(_topic, _msg) {
+        let [source_name] = _msg.arg;
+        if (source_name == this.SourceName) {
+            this.#SetStatus({ sourceConnected: true });
+        }
+    }
+
     HandlerEvents_all_ch_status_set(_topic, _msg) {
         let [ch_name] = _msg.arg;
         let [status] = _msg.value;
         if (ch_name == this.Name) {
-            this.#_Activated = status.toLowerCase() == STATUS_ACTIVE;
-            this.EmitEvents_all_ch_status_get();
+            const isEnabled = typeof status === 'boolean'
+                ? status
+                : typeof status === 'object' && status !== null && typeof status.enabled === 'boolean'
+                    ? status.enabled
+                    : String(status).toLowerCase() === STATUS_ACTIVE || String(status).toLowerCase() === 'enabled' || String(status).toLowerCase() === 'true';
+            this.#SetStatus({ enabled: isEnabled });
         }
     }
 
@@ -547,10 +589,9 @@ class ClassChannel_S extends ClassBaseChannel_S {
      * @returns 
      */
     async HandlerEvents_all_connections_done(_topic, _msg) {
-        const source_names = _msg.value;
+        const source_names = _msg.value || _msg.arg || [];
         if (!source_names.includes(this.SourceName)) return;
-        this.#_SourceOk = true;
-        // TODO: _Activated только сейчас, чтобы игнорировать сообщения пока канал не получит старое значение из БД.
+        this.#SetStatus({ sourceConnected: true });
     }
 
     /**
@@ -559,12 +600,23 @@ class ClassChannel_S extends ClassBaseChannel_S {
      * @description Отправляет сообщение о деактивации канала
      * @returns 
      */
+    async EmitMsg(_busName, _topic, _msg, _opts) {
+        if (_busName === 'dataBus' && !this.#_Active && _topic !== COM_ALL_CH_STATUS_GET) {
+            return false;
+        }
+        return super.EmitMsg(_busName, _topic, _msg, _opts);
+    }
+
     EmitEvents_all_ch_status_get() {
         const msg = {
             dest: 'all',
             com: COM_ALL_CH_STATUS_GET,
             arg: [this.Name],
-            value: [this.Status]
+            value: [{
+                enabled: this.#_Enabled,
+                sourceConnected: this.#_SourceConnected,
+                active: this.#_Active
+            }]
         }
         this.EmitMsg('dataBus', msg.com, msg);
     }
