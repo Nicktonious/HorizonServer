@@ -74,10 +74,10 @@ class ClassBaseService_S {
      */
     constructor({ _name, _busNameList, _busList, _node }) {
         /* реализация Singleton */
-        const instancedAlready =
+        /*const instancedAlready =
         ClassBaseService_S.#_InstancedNameList.includes(_name);
         // если служба уже была создана - ошибка
-        if (instancedAlready) throw new Error(ERROR_ALREADY_INSTANCED);
+        if (instancedAlready) throw new Error(ERROR_ALREADY_INSTANCED);*/
         /* закомментировано на пока не устаканится список служб
         const validName = ClassBaseService_S.#_ServicesNameList.includes(_name);
         // неожиданное имя службы - ошибка
@@ -92,7 +92,7 @@ class ClassBaseService_S {
         // подтягивание требуемых шин из глобального объекта
         this.UpdateBusList();
 
-        ClassBaseService_S.#_InstancedNameList.push(_name);
+        // ClassBaseService_S.#_InstancedNameList.push(_name);
     }
 
     /**
