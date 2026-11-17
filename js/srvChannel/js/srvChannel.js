@@ -20,6 +20,11 @@ const COM_ALL_CH_CONFIG_GET = 'all-ch-config-get';
 const COM_ALL_CH_CONFIG_SET = 'all-ch-config-set';
 const COM_ALL_SOURCE_CONNECTED = 'all-source-connected';
 const COM_ALL_SOURCE_DISCONNECTED = 'all-source-disconnected';
+const COM_DATA_RAW_GET = 'all-data-raw-get';
+const COM_ALL_DATA_FINE_SET = 'all-data-fine-set';
+const COM_ALL_DATA_FINE_GET = 'all-data-fine-get';
+const COM_DM_DEVLIST_SET = 'dm-deviceslist-set';
+const VIRTUAL_SOURCE_NAME = 'virtual';
 
 // ### ПРОЧЕЕ
 const DEV_CONF_GET_TIMEOUT = 500;
@@ -159,12 +164,6 @@ class ClassBaseChannel_S extends ClassBaseService_S {
      * Возвращает уникальный идентификатор канала
      */
     get ID() { return generateHash(this.Name, '-'); }
-
-    /**
-     * @getter
-     * @description возвращает идентификатор канала в формате <deviceId>-<chNum>, который используется в ws/lhp 
-     */
-    get NameLHP() { return `${this.#_DeviceId}-${this.#_ChNum}` }
     /**
      * 
      */
@@ -279,6 +278,9 @@ class ClassChannel_S extends ClassBaseChannel_S {
         // подписка на init
         this.FillEventOnList('sysBus', [COM_ALL_INIT1, COM_ALL_SOURCE_CONNECTED, COM_ALL_SOURCE_DISCONNECTED]);
         this.FillEventOnList('dataBus', [COM_ALL_CH_STATUS_SET]);
+
+        const comDataRawGet = `${this.Name}-data-raw-get`;
+        this[`HandlerEvents_${comDataRawGet.replace(/-/g, '_')}`] = this.#handleDataRawGet.bind(this);
     }
 
     get Buffer() { return this.#_ValueBuffer; }
@@ -443,11 +445,17 @@ class ClassChannel_S extends ClassBaseChannel_S {
      * @property {Function} cbHigh
     */
     /**
+     * @typedef FilterOpts
+     * @property {number} size
+     * @property {Function} [func]
+     */
+    /**
      * @typedef ChConfigOpts
      * @property {TransformOpts} transform
      * @property {SuppressionOpts} suppression
      * @property {ZoneOpts} zones
      * @property {number} buffer
+     * @property {FilterOpts} [filter]
      */
     /**
      * @method
@@ -457,6 +465,10 @@ class ClassChannel_S extends ClassBaseChannel_S {
      */
     SetupMathChannel(_config = {}) {
         this.#_ValueBuffer = new ClassValueBuffer(_config.buffer);
+        this.#_Filter = _config.filter ? new ClassValueBuffer(_config.filter) : null;
+        if (this.#_Filter) {
+            this.#_Filter.SetFilterFunc(_config.filter.func);
+        }
         this.#_Transform = new ClassTransform(_config.transform);
         this.#_Suppression = new ClassSuppression(_config.suppression);
         this.#_Alarms = null;
@@ -473,6 +485,7 @@ class ClassChannel_S extends ClassBaseChannel_S {
     ToConfig() {
         return ({
             buffer: this.#_ValueBuffer.ToConfig(),
+            filter: this.#_Filter?.ToConfig(),
             transform: this.#_Transform.ToConfig(),
             suppression: this.#_Suppression.ToConfig(),
             zones: this.Alarms?.ToConfig()
@@ -491,7 +504,7 @@ class ClassChannel_S extends ClassBaseChannel_S {
         const [sens_act_lists] = msg_lhp.value;
         const [source_name] = _msg.arg;
         // ChType - всегда ключ 'sensor' | 'actuator'
-        const list_includes_ch = sens_act_lists[this.ChType]?.find(_note => _note === this.Name || _note === this.NameLHP);
+        const list_includes_ch = sens_act_lists[this.ChType]?.find(_note => _note === this.Name);
         if (list_includes_ch && source_name === this.SourceName) {
         }
     }
@@ -545,15 +558,15 @@ class ClassChannel_S extends ClassBaseChannel_S {
     }
 
     HandlerEvents_all_source_disconnected(_topic, _msg) {
-        let [source_name] = _msg.arg;
-        if (source_name == this.SourceName) {
+        let source_names = _msg.arg;
+        if (source_names.includes(this.SourceName)) {
             this.#SetStatus({ sourceConnected: false });
         }
     }
 
     HandlerEvents_all_source_connected(_topic, _msg) {
-        let [source_name] = _msg.arg;
-        if (source_name == this.SourceName) {
+        let source_names = _msg.arg;
+        if (source_names.includes(this.SourceName)) {
             this.#SetStatus({ sourceConnected: true });
         }
     }
@@ -579,6 +592,118 @@ class ClassChannel_S extends ClassBaseChannel_S {
             this.SetupMathChannel(config);
             this.EmitEvents_all_ch_config_get({ hash });
         }
+    }
+
+    /**
+     * @method
+     * @public
+     * @description Обработчик команды на инициализацию службы
+     * @param {string} _topic
+     * @param {ClassBusMsg_S} _msg
+     */
+    HandlerEvents_all_init_stage1_set(_topic, _msg) {
+        super.HandlerEvents_all_init_stage1_set(_topic, _msg);
+        this.FillEventOnList('dataBus', this.StateChName
+            ? [COM_ALL_DATA_FINE_SET, COM_ALL_DATA_FINE_GET]
+            : [COM_ALL_DATA_FINE_GET]);
+        this.EmitEvents_dm_new_channel();
+        this.EmitEvents_all_ch_new();
+    }
+
+    /**
+     * @method
+     * @protected
+     * @description Хук обработки raw-значения канала, переопределяется в наследниках
+     * @param {*} _value
+     */
+    OnDataRaw(_value) { }
+
+    /**
+     * @method
+     * @private
+     * @description Обрабатывает входящее raw-сообщение от источника
+     * @param {string} _topic
+     * @param {ClassBusMsg_S} _msg
+     */
+    #handleDataRawGet(_topic, _msg) {
+        try {
+            const [source_name] = _msg.arg;
+            const [ch_name] = _msg.value[0].arg;
+            if (ch_name === this.Name && source_name === this.SourceName) {
+                const value = _msg.value[0]?.value[0];
+                this.OnDataRaw(value);
+            }
+        } catch (e) {
+            this.EmitEvents_logger_log({ msg: `Error while processing data-raw msg`, level: 'E', obj: _msg });
+        }
+    }
+
+    /**
+     * @method
+     * @public
+     * @deprecated Используйте адресный обработчик `<this.Name>-data-raw-get`
+     * @param {string} _topic
+     * @param {ClassBusMsg_S} _msg
+     */
+    HandlerEvents_all_data_raw_get(_topic, _msg) {
+        this.#handleDataRawGet(_topic, _msg);
+    }
+
+    /**
+     * @method
+     * @description Вызывает команду изменения значения при обновлении state-канала.
+     * @param {string} _topic
+     * @param {*} _msg
+     */
+    HandlerEvents_all_data_fine_set(_topic, _msg) {
+        const [chName] = _msg.arg;
+        if (chName == this.StateChName) {
+            const [{ Value, ValueSuppressed }] = _msg.value;
+            if (!ValueSuppressed)
+                this.SetValue?.(Value);
+        }
+    }
+
+    HandlerEvents_all_data_fine_get(_topic, _msg) {
+        const [chName] = _msg.arg;
+        if (chName == this.Name) {
+            this.EmitEvents_all_data_fine_set({ value: [this.Value] });
+        }
+    }
+
+    /**
+     * @method
+     * @protected
+     * @description Формирует объект полезной нагрузки для сообщения all-data-fine-set
+     * @param {*} _value
+     * @returns {object}
+     */
+    BuildFinePayload(_value = this.Value) {
+        return {
+            Name: this.Name,
+            Value: _value,
+            ChName: this.ChName,
+            ChAlias: this.ChAlias,
+            ChMeas: this.ChMeas,
+            CurrZone: this.Alarms?.CurrZone
+        };
+    }
+
+    /**
+     * @method
+     * @public
+     * @description Отправляет на dataBus сообщение со значением канала
+     * @param {object} [param0]
+     */
+    EmitEvents_all_data_fine_set({ value } = {}) {
+        const val = Array.isArray(value) ? value[0] : this.Value;
+        const msg = {
+            dest: 'all',
+            com: COM_ALL_DATA_FINE_SET,
+            arg: [this.Name],
+            value: [this.BuildFinePayload(val)]
+        };
+        this.EmitMsg('dataBus', msg.com, msg);
     }
 
     /**
@@ -776,6 +901,8 @@ class ClassTransform {
      */
     SetLinearFunc(_k, _b) {
         if (typeof _k !== 'number' || typeof _b !== 'number') throw new Error('k and b must be values');
+        this.#_K = _k;
+        this.#_B = _b;
         this.#_TransformFunc = (x) => _k * x + _b;
         return true;
     }
@@ -794,8 +921,8 @@ class ClassTransform {
      * @returns {TransformOpts}
      */
     ToConfig() {
-        if (typeof _opts?.k == 'number' && typeof _opts?.b == 'number')
-            return ({ k: this.k, b: this.b });
+        if (typeof this.#_K === 'number' && typeof this.#_B === 'number')
+            return ({ k: this.#_K, b: this.#_B });
         else
             return { func: this.#_TransformFunc.toString() };
     }

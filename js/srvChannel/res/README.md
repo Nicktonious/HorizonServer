@@ -65,7 +65,6 @@
 <div style="color: #555">
 
 - get ID — возвращает уникальный идентификатор канала, сформированный хешем от имени канала;
-- get NameLHP — возвращает идентификатор канала в формате `<deviceId>-<chNum>`, используемый в протоколе `ws/lhp`;
 - get SourceName — возвращает имя источника (например, брокера), с которым связан канал;
 - get DeviceId — возвращает идентификатор устройства, к которому относится канал;
 - get DeviceIdHash — возвращает хеш-идентификатор устройства;
@@ -117,9 +116,10 @@
 - #_MappingCompleted — выполнено ли сопоставление канала с активным источником;
 - #_ChangeThreshold — порог изменения для значений канала;
 - #_DeviceInfo — информация о физическом датчике;
+- #_ValueBuffer — буфер для усреднения значений канала (`ClassValueBuffer`);
 - #_Transform — настройки преобразования данных;
 - #_Suppression — настройки подавления данных;
-- #_Filter — фильтр для значений канала;
+- #_Filter — опциональный буфер фильтрации значений канала (`ClassValueBuffer`, создаётся при наличии `Config.filter`);
 - #_Alarms — объект для работы с тревогами;
 - #_Proxy — прокси-обертка для предосталвения пользователю
 - #_SavingValues — объект с флагами управления записи значений в канал; По умолчанию `{ raw: false, fine: true }`.
@@ -130,6 +130,8 @@
 - get SourceConnected — возвращает флаг доступности источника `#_SourceConnected`;
 - get Active — возвращает результирующий статус `#_Active` (`#_Enabled && #_SourceConnected`);
 - get SourceOk — возвращает `#_SourceConnected` (для обратной совместимости);
+- get Buffer — возвращает буфер усреднения `#_ValueBuffer`;
+- get Filter — возвращает буфер фильтрации `#_Filter` (или `null`, если фильтр не задан);
 - get Protocol — возвращает строковое обозначение протокола (например, "mqtt", "ws") источника, к которому привязан канал;
 - get ProtocolBusName — возвращает имя шины, через которую осуществляется взаимодействие с прокси-службой, связанной с данным протоколом;
 - get Group_1, get Group_2, get Group_3 — возвращают значения групповой принадлежности канала, применяемые для логической классификации;
@@ -163,6 +165,12 @@ dataBus:
     value: [status]     // boolean (true/false) | string ('active'/'inactive') | { enabled: boolean }
 }
 ```
+- 'all-data-fine-get' — запрос на повторную публикацию текущего значения канала в `dataBus`;
+- 'all-data-fine-set' — (при заданном `StateChName`) обновление значения зависимого канала.
+
+Протокольная шина (подписывается в наследниках, регистрируется в `ClassChannel_S`):
+- '<chName>-data-raw-get' — адресное получение сырого значения канала (обработчик `HandlerEvents_<chName>_data_raw_get`);
+- 'all-data-raw-get' — *(deprecated, оставлен для совместимости)* общее событие получения сырого значения.
 
 ### События
 sysBus:
@@ -199,7 +207,14 @@ dataBus:
 
 ### Методы
 
-- SetupMathChannel(config) — конфигурирует обработку данных на канале в соответствии с переданными параметрами (`ChConfigOpts`);
+- SetupMathChannel(config) — конфигурирует обработку данных на канале (`buffer`, опциональный `filter`, `transform`, `suppression`, `zones`);
+- ToConfig() — возвращает текущую математическую конфигурацию канала;
+- OnDataRaw(_value) — хук обработки входящего raw-значения (переопределяется в наследниках);
+- BuildFinePayload(_value) — формирует объект полезной нагрузки для сообщения `all-data-fine-set`;
+- EmitEvents\_all\_data\_fine\_set({ value }) — отправляет сообщение со значением канала в `dataBus`;
+- HandlerEvents\_all\_data\_raw\_get(_topic, _msg) — *(deprecated)* обработчик `all-data-raw-get`, делегирующий в общий приватный обработчик;
+- HandlerEvents\_all\_data\_fine\_set(_topic, _msg) — обновляет канал при получении данных от `StateChName`;
+- HandlerEvents\_all\_data\_fine\_get(_topic, _msg) — отвечает на запрос значения отправкой `all-data-fine-set`;
 - HandlerEvents\_dm\_deviceslist\_set(_topic, _msg) — обрабатывает список каналов, полученный от PLC или прокси-службы источника;
 - HandlerEvents\_all\_device\_config\_set(_topic, _msg) — обрабатывает получение конфигурации устройств с шины данных;
 - HandlerEvents\_all\_source\_connected(_topic, _msg) — при подключении источника проверяет соответствие (`_msg.arg[0] === this.SourceName`), переводит `sourceConnected: true` и пересчитывает `active`;

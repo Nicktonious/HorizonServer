@@ -88,9 +88,9 @@ class ClassChannelActuator extends ClassChannel_S {
         // const service_name = _advOpts.Name;
         super({ _busNameList, _busList, _advOpts });
         this.#_ValueConfirm = _advOpts.ValueConfirm ?? false;
-        /****** */
-        this.SetupMathChannel(_advOpts);
-        this.FillEventOnList('dataBus', [COM_ALL_ACT_SET]);
+        const comActSet = `${this.Name}-actuator-set`;
+        this[`HandlerEvents_${comActSet.replace(/-/g, '_')}`] = this.#handleActuatorSet.bind(this);
+        this.FillEventOnList('dataBus', [comActSet, COM_ALL_ACT_SET]);
     }
 
     get Value() {
@@ -108,14 +108,9 @@ class ClassChannelActuator extends ClassChannel_S {
         super.HandlerEvents_all_init_stage1_set(_topic, _msg);
         const busName = this.SourceName == VIRTUAL_SOURCE_NAME ? 'dataBus': this.ProtocolBusName;
         this.FillEventOnList(busName,
-            this.#_ValueConfirm ? [COM_DM_DEVLIST_SET, COM_ALL_DATA_RAW_GET] : [COM_DM_DEVLIST_SET]);
-        
-        this.FillEventOnList('dataBus', this.StateChName 
-            ? [COM_ALL_DATA_FINE_SET, COM_ALL_DATA_FINE_GET] 
-            : [COM_ALL_DATA_FINE_GET]);
-
-        this.EmitEvents_dm_new_channel();
-        this.EmitEvents_all_ch_new();
+            this.#_ValueConfirm 
+                ? [COM_DM_DEVLIST_SET, COM_ALL_DATA_RAW_GET, `${this.Name}-data-raw-get`] 
+                : [COM_DM_DEVLIST_SET]);
     }
 
     /**
@@ -150,27 +145,18 @@ class ClassChannelActuator extends ClassChannel_S {
     }
 
     /**
- * @method
- * @public
- * @description 
- * @param {string} _topic 
- * @param {ClassBusMsg_S} _msg 
- */
-    HandlerEvents_all_data_raw_get(_topic, _msg) {
+     * @method
+     * @protected
+     * @description Обрабатывает входящее raw-значение подтверждения от источника
+     * @param {*} _value
+     */
+    OnDataRaw(_value) {
         this._allDataRawGetTime = new Date().getTime();
-        try {
-            const [source_name] = _msg.arg;
-            const [ch_name] = _msg.value[0].arg;
-            if ((ch_name === this.NamePLC || ch_name === this.Name) && source_name === this.SourceName) {
-                this.#_Value = _msg.value[0]?.value[0];
+        this.#_Value = _value;
 
-                this.EmitEvents_all_data_fine_set({ value: [this.#_Value] });
-                if (this.SavingValues.fine)
-                    this.EmitEvents_providermdb_data_write({ arg: ['fine'], value: [this.#_Value] });
-            }
-        } catch (e) {
-            this.EmitEvents_logger_log({ msg: `Error while processing data-raw msg`, level: 'E', obj: _msg });
-        }
+        this.EmitEvents_all_data_fine_set({ value: [this.#_Value] });
+        if (this.SavingValues.fine)
+            this.EmitEvents_providermdb_data_write({ arg: ['fine'], value: [this.#_Value] });
     }
 
     /**
@@ -181,41 +167,32 @@ class ClassChannelActuator extends ClassChannel_S {
     GetInfo(_opts) {
         return this.DeviceInfo.GetInfo?.(this.ChNum, _opts);
     }
+    
     /**
      * @method
-     * @description Вызывает команду изменения состояния актуатора при обновление сенсорного state-канала. 
-     * @param {string} _topic 
-     * @param {*} _msg 
+     * @private
+     * @description Вызывает команду изменения состояния актуатора согласно полученной команде
+     * @param {string} _topic
+     * @param {*} _msg
      */
-    HandlerEvents_all_data_fine_set(_topic, _msg) {
-        const [chName] = _msg.arg;
-        if (chName == this.StateChName) {
-            const [{ Value, ValueSuppressed }] = _msg.value;
-            if (!ValueSuppressed)
-                this.SetValue(Value);
-        }
-    }
-
-    HandlerEvents_all_data_fine_get(_topic, _msg) {
-        const [chName] = _msg.arg;
-        if (chName == this.Name) {
-            this.EmitEvents_all_data_fine_set({ value: [this.Value] });
-        }
-    }
-
-    /**
-     * @method
-     * @public
-     * @description Вызывает команду изменения состояния актуатора согласно полученной команде 'all-actuator-set'
-     * @param {string} _topic 
-     * @param {*} _msg 
-     */
-    HandlerEvents_all_actuator_set(_topic, _msg) {
+    #handleActuatorSet(_topic, _msg) {
         this._allActuatorSetTime = new Date().getTime();
         const [ch_name] = _msg.arg;
         const [val_input] = _msg.value;
         if (ch_name === this.Name/* && typeof val_input == 'number'*/)
             this.SetValue(val_input);
+    }
+
+    /**
+     * @method
+     * @public
+     * @deprecated Используйте адресный обработчик `<this.Name>-actuator-set`
+     * @description Вызывает команду изменения состояния актуатора согласно полученной команде 'all-actuator-set'
+     * @param {string} _topic 
+     * @param {*} _msg 
+     */
+    HandlerEvents_all_actuator_set(_topic, _msg) {
+        this.#handleActuatorSet(_topic, _msg);
     }
 
     /**
@@ -239,34 +216,12 @@ class ClassChannelActuator extends ClassChannel_S {
             com: com_send,
             arg: [this.SourceName],
             value: [{
-                arg: [this.Protocol === 'lhp' ? this.NamePLC : this.Name],
+                arg: [this.Name],
                 value
             }]
         }
 
         this.EmitMsg(this.ProtocolBusName, com_send, msg);
-    }
-
-    /**
-     * @method
-     * @public
-     * @description Отправляет на dataBus сообщение со значением канала
-     */
-    EmitEvents_all_data_fine_set({ value }) {
-        const msg = {
-            dest: 'all',
-            com: COM_ALL_DATA_FINE_SET,
-            arg: [this.Name],
-            value: [{
-                Name: this.Name,
-                Value: value[0],
-                ChName: this.ChName,
-                ChAlias: this.ChAlias,
-                ChMeas: this.ChMeas,
-                CurrZone: this.Alarms?.CurrZone
-            }]
-        }
-        this.EmitMsg('dataBus', msg.com, msg);
     }
 }
 

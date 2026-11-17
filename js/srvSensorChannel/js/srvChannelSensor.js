@@ -99,6 +99,8 @@ const COM_ALL_DATA_FINE_GET = 'all-data-fine-get';
 class ClassChannelSensor extends ClassChannel_S {
     #_Value;
     #_ValueAvg;
+    #_ValueMin;
+    #_ValueMax;
     /**
      * @typedef TypeServiceOpts
      * @property {[ClassBus_S]} _busList
@@ -125,7 +127,10 @@ class ClassChannelSensor extends ClassChannel_S {
         /** Основные поля */
         this.#_Value = _advOpts?.Value;
         if (typeof this.#_Value === 'number') {
+            this.Filter?.push(this.#_Value);
             this.Buffer.push(this.#_Value);
+            this.#_ValueMin = this.#_Value;
+            this.#_ValueMax = this.#_Value;
         }
         this.#_ValueAvg = _advOpts?.Value;
         this._Bypass = false;
@@ -158,6 +163,34 @@ class ClassChannelSensor extends ClassChannel_S {
     }
 
     /**
+     * @getter
+     * @public
+     * @description Возвращает минимальное зафиксированное значение канала
+     */
+    get ValueMin() {
+        return this.#_ValueMin;
+    }
+
+    /**
+     * @getter
+     * @public
+     * @description Возвращает максимальное зафиксированное значение канала
+     */
+    get ValueMax() {
+        return this.#_ValueMax;
+    }
+
+    /**
+     * @method
+     * @public
+     * @description Сбрасывает накопленные минимальное и максимальное значения канала
+     */
+    ResetMinMax() {
+        this.#_ValueMin = typeof this.#_Value === 'number' ? this.#_Value : undefined;
+        this.#_ValueMax = typeof this.#_Value === 'number' ? this.#_Value : undefined;
+    }
+
+    /**
      * @setter
      * Добавляет значение в буфер   
      * @param {Number} _val 
@@ -179,14 +212,26 @@ class ClassChannelSensor extends ClassChannel_S {
             val = this.Suppression.SuppressValue(val);
             this._ValueSuppressed = val != val_preproc;
             val = this.Transform.TransformValue(val);
-            if (typeof val != 'number') {
+            if (typeof val != 'number' || Number.isNaN(val)) {
                 val = val_preproc;
                 this.EmitEvents_logger_log({ level: 'W', msg: `Failed to apply math transform to value ${_val}`, obj: this });
             } else {
+                if (this.Filter) {
+                    this.Filter.push(val);
+                    val = this.Filter.Filter();
+                }
                 this.Buffer.push(val);
             }
             if (this.SavingValues.raw) 
                 this.EmitEvents_providermdb_data_write({ arg: ['raw'], value: [val_preproc] });
+        }
+        if (typeof val === 'number' && !Number.isNaN(val)) {
+            if (this.#_ValueMin === undefined || val < this.#_ValueMin) {
+                this.#_ValueMin = val;
+            }
+            if (this.#_ValueMax === undefined || val > this.#_ValueMax) {
+                this.#_ValueMax = val;
+            }
         }
         const prevValue = this.#_Value;
         this.#_Value = val;
@@ -213,84 +258,44 @@ class ClassChannelSensor extends ClassChannel_S {
     HandlerEvents_all_init_stage1_set(_topic, _msg) {
         super.HandlerEvents_all_init_stage1_set(_topic, _msg);
         const busName = this.SourceName == VIRTUAL_SOURCE_NAME ? 'dataBus' : this.ProtocolBusName;
-        this.FillEventOnList(busName, [COM_DM_DEVLIST_SET, COM_DATA_RAW_GET]);
+        this.FillEventOnList(busName, [COM_DM_DEVLIST_SET, COM_DATA_RAW_GET, `${this.Name}-data-raw-get`]);
+    }
 
-        this.FillEventOnList('dataBus', this.StateChName 
-            ? [COM_ALL_DATA_FINE_SET, COM_ALL_DATA_FINE_GET] 
-            : [COM_ALL_DATA_FINE_GET]);
-
-        this.EmitEvents_dm_new_channel();
-        this.EmitEvents_all_ch_new();
+    /**
+     * @method
+     * @protected
+     * @description Формирует объект полезной нагрузки для сообщения all-data-fine-set
+     * @returns {object}
+     */
+    BuildFinePayload() {
+        return {
+            ...super.BuildFinePayload(this.Value),
+            ValueAvg: this.ValueAvg,
+            ValueMin: this.ValueMin,
+            ValueMax: this.ValueMax,
+            ValueSuppressed: this._ValueSuppressed
+        };
     }
 
     /**
      * @method
      * @public
-     * @description Отправляет на dataBus сообщение со значением канала
+     * @description Устанавливает значение сенсорного канала
+     * @param {*} _val
      */
-    EmitEvents_all_data_fine_set() {
-        const msg = {
-            dest: 'all',
-            com: COM_ALL_DATA_FINE_SET,
-            arg: [this.Name],
-            value: [{
-                Name: this.Name,
-                Value: this.Value,
-                ValueAvg: this.ValueAvg,
-                ValueSuppressed: this._ValueSuppressed,
-                ChName: this.ChName,
-                ChAlias: this.ChAlias,
-                ChMeas: this.ChMeas,
-                CurrZone: this.Alarms?.CurrZone
-            }]
-        }
-        this.EmitMsg('dataBus', msg.com, msg);
+    SetValue(_val) {
+        this.Value = _val;
     }
 
     /**
      * @method
-     * @public
-     * @description 
-     * @param {string} _topic 
-     * @param {ClassBusMsg_S} _msg 
+     * @protected
+     * @description Обрабатывает входящее raw-значение от источника
+     * @param {*} _value
      */
-    HandlerEvents_all_data_raw_get(_topic, _msg) {
+    OnDataRaw(_value) {
         this.allDataRawGetEvent = Date.now();
-        try {
-            const [source_name] = _msg.arg;
-            const [ch_name] = _msg.value[0].arg;
-            // ВНИМАНИЕ: от lhp-источников ch_name придет в формате <device_id>-<ch_num> а не <source_name>-<device_id>-<ch_num>
-            // console.log(`(${ch_name} === ${this.NamePLC} || ${ch_name} === ${this.Name}) && ${source_name} === ${this.#_SourceName})`);
-            if ((ch_name === this.NamePLC || ch_name === this.Name) && source_name === this.SourceName) {
-                this.allDataRawGetEvent = Date.now();
-                const value = _msg.value[0]?.value[0];
-                this.Value = value;
-            }
-        } catch (e) {
-            this.EmitEvents_logger_log({ msg: `Error while processing data-daw msg`, level: 'E', obj: _msg });
-        }
-    }
-
-    /**
-     * @method
-     * @description Вызывает команду изменения значения при обновление сенсорного state-канала. 
-     * @param {string} _topic 
-     * @param {*} _msg 
-     */
-    HandlerEvents_all_data_fine_set(_topic, _msg) {
-        const [chName] = _msg.arg;
-        if (chName == this.StateChName) {
-            const [{ Value, ValueSuppressed }] = _msg.value;
-            if (!ValueSuppressed)
-                this.SetValue(Value);
-        }
-    }
-    
-    HandlerEvents_all_data_fine_get(_topic, _msg) {
-        const [chName] = _msg.arg;
-        if (chName == this.Name) {
-            this.EmitEvents_all_data_fine_set();
-        }
+        this.Value = _value;
     }
 
     /**

@@ -63,15 +63,17 @@
 
 ### Подписки
 
-- 'all-actuator-set' - команда на изменение значения канала;
+- '<chName>-actuator-set' — адресная команда на изменение значения канала (обработчик `HandlerEvents_<chName>_actuator_set`);
+- 'all-actuator-set' — *(deprecated, оставлен для совместимости)* общая команда на изменение значения канала;
 ```js
 {
-    com: 'all-actuator-set',
-    arg: [ch_name]
+    com: '<chName>-actuator-set',
+    arg: [ch_name],
     value: [x]
 }
 ```
-Также **ClassChannelActuator_S** реализует [подписки](../../srvChannel/res/README.md/#подписки) базового класса
+- '<chName>-data-raw-get' (и *(deprecated)* 'all-data-raw-get') — при `ValueConfirm === true` подтверждение установленного значения от источника на протокольной шине.
+Также **ClassChannelActuator** реализует [подписки](../../srvChannel/res/README.md/#подписки) базового класса
 
 ### События
 
@@ -117,10 +119,11 @@
 
 - SetValue(_val, _opts) - отправляет на транспортную шину команду с указанным значением канала;
 - GetInfo - Метод предназначен для предоставления дополнительных сведений об измерительном канале или физическом устройстве;
-- HandlerEvents_all_init_stage1_set(_topic, _msg) - Обрабатывает команду 'all-init-stage1-set' на инициализацию службы: выполняет подписку на сообщения по транспортной шине и вызывает `super.EmitEvents_dm_new_channel()`;
-- HandlerEvents_all_actuator_set(_topic, _msg) - обрабатывает запрос из userspace на изменение значения актуатора; в зависимости от значения поля `SavingValues.raw`, `SavingValues.fine` в методе вызываются запись в БД "сырого" и обработанного значения соответсвенно; 
+- HandlerEvents_all_init_stage1_set(_topic, _msg) - Обрабатывает команду 'all-init-stage1-set' на инициализацию службы: подписывается на `dm-deviceslist-set` (а при `ValueConfirm === true` также на `<chName>-data-raw-get` и `all-data-raw-get` *(deprecated)*);
+- HandlerEvents_all_actuator_set(_topic, _msg) - *(deprecated)* обрабатывает запрос на изменение значения актуатора по общему топику `all-actuator-set` (используйте `<chName>-actuator-set`);
+- OnDataRaw(_value) - обновляет `#_Value` при получении подтверждения от источника и отправляет `all-data-fine-set`;
 - EmitEvents_proxy_send({ value }) - отправляет на прокси-службу команду на изменение значения актуатора;
-- EmitEvents_all_data_fine_set({ value }) - отправляет на dataBus сообщение со значением канала.
+- EmitEvents_all_data_fine_set({ value }) - *(наследуется от ClassChannel_S)* отправляет на dataBus сообщение со значением канала.
 
 </div>
 
