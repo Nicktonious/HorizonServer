@@ -9,11 +9,12 @@ const path = require('node:path');
 const dotenv = require('dotenv');
 
 // Загрузка переменных окружения из .env.dev и .env
-dotenv.config({ path: path.resolve(__dirname, '../../.env.dev') });
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+const rootDir = path.dirname(require.resolve('#root/package.json'));
+dotenv.config({ path: path.join(rootDir, '.env.dev') });
+dotenv.config({ path: path.join(rootDir, '.env') });
 
-const { createTestHarness } = require('../harness');
-const ClassMQTTClient_S = require('../../js/srvMQTTClient/js/srvMQTTClient');
+const { createTestHarness } = require('#harness');
+const ClassMQTTClient_S = require('#js/srvMQTTClient/js/srvMQTTClient');
 
 /**
  * Объект источника данных в стандартном формате фреймворка Horizon

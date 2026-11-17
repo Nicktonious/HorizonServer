@@ -1,4 +1,10 @@
 {
+  "imports": {
+    "#root/*": "./*",
+    "#harness": "./tests/harness/index.js",
+    "#tests/*": "./tests/*.js",
+    "#js/*": "./js/*.js"
+  },
   "scripts": {
     "test": "node --test tests/**/*.test.js",
     "test:unit": "node --test tests/unit/**/*.test.js",
